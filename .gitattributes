@@ -1,0 +1,6 @@
+# Scripts precisam manter LF mesmo em checkouts Windows, senão o
+# shebang quebra ao rodar em containers Linux/VPS ("bad interpreter").
+*.sh text eol=lf
+Caddyfile* text eol=lf
+docker-entrypoint.sh text eol=lf
+.husky/* text eol=lf

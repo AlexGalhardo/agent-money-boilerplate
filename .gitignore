@@ -1,0 +1,49 @@
+# dependencies
+node_modules
+**/node_modules
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# build output
+dist
+build
+**/dist
+**/build
+api/server
+api/server.exe
+**/.tanstack
+
+# prisma
+**/generated
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# testing
+coverage
+playwright-report
+test-results
+
+# logs
+*.log
+npm-debug.log*
+
+# misc
+.DS_Store
+*.pem
+**/*.trace
+**/*.zip
+**/*.tar.gz
+**/*.tgz
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# editor
+.vscode/*
+!.vscode/settings.json

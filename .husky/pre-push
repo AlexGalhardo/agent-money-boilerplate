@@ -1,0 +1,4 @@
+set -e
+
+(cd api && bunx --bun tsc --noEmit && bun run test:setup && bun run test && bun run build)
+(cd frontend && bunx --bun tsc --noEmit && bun run build)

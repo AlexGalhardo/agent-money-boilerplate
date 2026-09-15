@@ -1,0 +1,27 @@
+{
+	"name": "@elysia-galhardo-finances/bot",
+	"private": true,
+	"version": "0.0.1-alpha",
+	"engines": {
+		"bun": ">=1.4.0"
+	},
+	"scripts": {
+		"dev": "bun run --watch src/index.ts",
+		"start": "bun run src/index.ts",
+		"test": "bun --env-file=.env.test test",
+		"test:unit": "bun --env-file=.env.test test src/**/*.unit.test.ts",
+		"hash-password": "bun run scripts/hash-password.ts"
+	},
+	"dependencies": {
+		"@elysia-galhardo-finances/api": "workspace:*",
+		"@grammyjs/conversations": "2.1.1",
+		"bcryptjs": "3.0.3",
+		"grammy": "1.46.0",
+		"pdfkit": "0.20.2",
+		"zod": "4.6.2"
+	},
+	"devDependencies": {
+		"@types/bun": "1.4.2",
+		"@types/pdfkit": "0.17.6"
+	}
+}

@@ -1,0 +1,170 @@
+@baseUrl = http://localhost:4000
+@origin = http://localhost:4001
+
+### Health check
+GET {{baseUrl}}/
+
+### Swagger / OpenAPI docs
+GET {{baseUrl}}/docs
+
+########################################
+### Auth (better-auth)
+########################################
+
+### Signup
+# @name signup
+POST {{baseUrl}}/api/auth/sign-up/email
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+	"name": "Admin",
+	"email": "admin@gmail.com",
+	"password": "adminBR@123"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/api/auth/sign-in/email
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+	"email": "admin@gmail.com",
+	"password": "adminBR@123"
+}
+
+### Request password reset
+POST {{baseUrl}}/api/auth/request-password-reset
+Content-Type: application/json
+Origin: {{origin}}
+
+{
+	"email": "admin@gmail.com",
+	"redirectTo": "{{origin}}/reset-password"
+}
+
+### Sign out
+POST {{baseUrl}}/api/auth/sign-out
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+########################################
+### Users
+########################################
+
+### Get profile
+GET {{baseUrl}}/users/me
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Update profile
+PUT {{baseUrl}}/users/me
+Content-Type: application/json
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+{
+	"name": "Admin Atualizado"
+}
+
+### Delete account
+DELETE {{baseUrl}}/users/me
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+########################################
+### Transactions
+########################################
+
+### List transactions
+GET {{baseUrl}}/transactions?page=1&perPage=20
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### List transactions filtered
+GET {{baseUrl}}/transactions?category=food&search=mercado
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Statistics (para o gráfico de pizza)
+GET {{baseUrl}}/transactions/statistics
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Get transaction by id
+GET {{baseUrl}}/transactions/00000000-0000-0000-0000-000000000000
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Create transaction
+# @name createTransaction
+POST {{baseUrl}}/transactions
+Content-Type: application/json
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+{
+	"description": "Supermercado",
+	"amount": 15000,
+	"category": "food",
+	"type": "expense"
+}
+
+### Update transaction
+PUT {{baseUrl}}/transactions/{{createTransaction.response.body.$.transaction.id}}
+Content-Type: application/json
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+{
+	"amount": 17000
+}
+
+### Delete transaction
+DELETE {{baseUrl}}/transactions/{{createTransaction.response.body.$.transaction.id}}
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+########################################
+### Payments (AbacatePay PIX) — requer ENABLE_ABACATEPAY=true
+########################################
+
+### Plan status
+GET {{baseUrl}}/payments/status
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Payment history
+GET {{baseUrl}}/payments/history
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Create PIX checkout
+# @name createPixCheckout
+POST {{baseUrl}}/payments/pix/checkout
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+Content-Type: application/json
+
+{
+	"plan": "monthly"
+}
+
+### Check PIX checkout status
+GET {{baseUrl}}/payments/pix/{{createPixCheckout.response.body.$.id}}/status
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+### Simulate PIX payment (requer ABACATEPAY_PIX_TEST_MODE=true)
+POST {{baseUrl}}/payments/pix/{{createPixCheckout.response.body.$.id}}/simulate
+Origin: {{origin}}
+Cookie: better-auth.session_token={{login.response.body.$.token}}
+
+########################################
+### Cron
+########################################
+
+### Check expired plans (Vercel Cron chama com Authorization: Bearer <CRON_SECRET>)
+GET {{baseUrl}}/cron/check-expired-plans
+Authorization: Bearer {{cronSecret}}

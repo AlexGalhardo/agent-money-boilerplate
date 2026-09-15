@@ -1,0 +1,4 @@
+set -e
+
+bun run format
+bun run lint

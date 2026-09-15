@@ -1,0 +1,34 @@
+import tailwindcss from "@tailwindcss/vite";
+import { devtools } from "@tanstack/devtools-vite";
+
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+
+import viteReact from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+const config = defineConfig({
+	resolve: { tsconfigPaths: true },
+	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+	build: {
+		rollupOptions: {
+			output: {
+				// O build de produção roda o client e o SSR como duas builds
+				// separadas (ver TanStack Start), e cada uma reprocessa o CSS do
+				// Tailwind de forma independente — a ordem de descoberta das
+				// classes não é 100% determinística entre as duas, então o hash
+				// de conteúdo do CSS às vezes sai diferente entre elas. O bundle
+				// de SSR referencia o nome que ELE calculou, não o que o client
+				// realmente gerou, e esse descompasso faz o <link rel="stylesheet">
+				// apontar pra um arquivo que não existe (reproduzido em builds
+				// dentro de container Docker; nem sempre em builds locais).
+				// Nome fixo (sem hash) só pro CSS elimina esse descompasso.
+				assetFileNames: (asset) => {
+					const name = asset.name ?? asset.names?.[0] ?? "";
+					return name.endsWith(".css") ? "assets/[name][extname]" : "assets/[name]-[hash][extname]";
+				},
+			},
+		},
+	},
+});
+
+export default config;

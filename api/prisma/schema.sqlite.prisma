@@ -1,0 +1,159 @@
+// Prisma nao permite que o "provider" do datasource seja dinamico (env()),
+// entao mantemos um schema por banco (SQLite para dev local leve, Postgres
+// para dev local completo e producao). Os models abaixo devem ficar
+// identicos ao schema.postgresql.prisma — qualquer mudanca de model precisa
+// ser replicada nos dois arquivos. Selecionado via DATABASE_PROVIDER em
+// prisma7.config.ts.
+
+generator client {
+  provider = "prisma-client"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id               String    @id
+  name             String
+  email            String    @unique
+  emailVerified    Boolean   @default(false)
+  image            String?
+  twoFactorEnabled Boolean   @default(false)
+  planStatus       String    @default("inactive")
+  planExpiresAt    DateTime?
+  telegramChatId       String?   @unique
+  freeTransactionCount Int       @default(0)
+  deletionRequestedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sessions     Session[]
+  accounts     Account[]
+  transactions Transaction[]
+  twoFactor    TwoFactor?
+  paymentLogs  PaymentLog[]
+  pixCharges   PixCharge[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+/// Tabela usada pelo plugin de 2FA do better-auth. So e populada quando
+/// ENABLE_2FA=true, mas o model existe sempre para nao exigir migracao
+/// condicional de schema.
+model TwoFactor {
+  id          String @id
+  secret      String
+  backupCodes String
+  userId      String @unique
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("two_factor")
+}
+
+/// description e amount sao criptografados (AES-256-GCM) na camada de
+/// aplicacao antes de persistir — ver src/lib/encryption.ts. amount
+/// representa centavos (Int) depois de descriptografado.
+model Transaction {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  description String
+  amount      String
+  category    String
+  type        String
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime?
+
+  @@index([userId])
+  @@index([userId, category])
+  @@map("transaction")
+}
+
+/// Log de eventos/webhooks da AbacatePay (criacao de cobranca, confirmacao,
+/// falha), usado para auditoria de cobranca. Nao usado pelo cronjob de
+/// verificacao de plano (que so olha User.planStatus/planExpiresAt).
+model PaymentLog {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  externalId String   @unique
+  eventType  String
+  status     String
+  amount     Int?
+  currency   String?
+  rawPayload String
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("payment_log")
+}
+
+/// Cobranca PIX criada via AbacatePay (Checkout Transparente /v2). O
+/// webhook confirma o pagamento de forma assincrona; GET
+/// /payments/pix/:id/status tambem reconsulta a AbacatePay diretamente como
+/// fallback, ja que webhooks exigem endpoint HTTPS publico (nao alcancam
+/// localhost em dev sem tunel).
+model PixCharge {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  externalId    String    @unique
+  plan          String
+  amount        Int
+  status        String    @default("pending")
+  brCode        String
+  brCodeBase64  String
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("pix_charge")
+}

@@ -1,0 +1,41 @@
+{
+	"name": "elysia-galhardo-finances",
+	"private": true,
+	"version": "0.0.1-alpha",
+	"license": "MIT",
+	"workspaces": [
+		"api",
+		"frontend",
+		"bot"
+	],
+	"scripts": {
+		"api:dev": "bun run --cwd api dev",
+		"api:build": "bun run --cwd api build",
+		"api:test": "bun run --cwd api test",
+		"frontend:dev": "bun run --cwd frontend dev",
+		"frontend:build": "bun run --cwd frontend build",
+		"bot:dev": "bun run --cwd bot dev",
+		"bot:test": "bun run --cwd bot test",
+		"lint": "biome check .",
+		"lint:fix": "biome check --write .",
+		"format": "biome format --write .",
+		"typecheck:api": "bun run --cwd api tsc --noEmit",
+		"typecheck:frontend": "bun run --cwd frontend tsc --noEmit",
+		"typecheck:bot": "bun run --cwd bot tsc --noEmit",
+		"docker:sqlite:up": "docker compose -f docker-compose.sqlite.yml up -d --build",
+		"docker:sqlite:down": "docker compose -f docker-compose.sqlite.yml down",
+		"docker:postgres:up": "docker compose up -d --build",
+		"docker:postgres:down": "docker compose down",
+		"pm2:start": "pm2 start ecosystem.local.config.js --only elysia-api,elysia-frontend",
+		"pm2:start:bot": "pm2 start ecosystem.local.config.js --only elysia-bot",
+		"pm2:stop": "pm2 stop ecosystem.local.config.js",
+		"pm2:restart": "pm2 restart ecosystem.local.config.js",
+		"pm2:delete": "pm2 delete ecosystem.local.config.js",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.13",
+		"husky": "9.1.7",
+		"typescript": "7.0.2"
+	}
+}

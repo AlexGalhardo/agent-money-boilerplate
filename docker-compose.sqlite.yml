@@ -1,0 +1,46 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    env_file:
+      - ./api/.env
+    environment:
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:/data/dev.db
+    volumes:
+      - sqlite_data:/data
+    ports:
+      - "4000:4000"
+      # Prisma Studio (sob demanda, ver `print_prisma_studio_hint` em
+      # scripts/common.sh) — o SQLite fica num volume nomeado, só visível
+      # de dentro do container, então o Studio também precisa rodar lá.
+      - "5555:5555"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:4000
+    ports:
+      - "4001:4001"
+    depends_on:
+      - api
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    env_file:
+      - ./bot/.env
+    environment:
+      DATABASE_PROVIDER: sqlite
+      DATABASE_URL: file:/data/dev.db
+    volumes:
+      - sqlite_data:/data
+    depends_on:
+      - api
+
+volumes:
+  sqlite_data:

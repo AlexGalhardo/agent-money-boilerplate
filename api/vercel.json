@@ -1,0 +1,8 @@
+{
+	"crons": [
+		{
+			"path": "/cron/check-expired-plans",
+			"schedule": "0 3 * * *"
+		}
+	]
+}
