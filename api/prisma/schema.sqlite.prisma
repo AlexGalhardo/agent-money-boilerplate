@@ -35,6 +35,7 @@ model User {
   twoFactor    TwoFactor?
   paymentLogs  PaymentLog[]
   pixCharges   PixCharge[]
+  apiKeys      Apikey[]
 
   @@map("user")
 }
@@ -156,4 +157,39 @@ model PixCharge {
 
   @@index([userId])
   @@map("pix_charge")
+}
+
+/// Tabela usada pelo plugin @better-auth/api-key (Fase 4 — API para
+/// desenvolvedores). Nome do model em minusculas ("Apikey") de proposito —
+/// o adaptor Prisma do better-auth resolve o model pelo nome interno "apikey"
+/// (client.apikey), nao "apiKey".
+model Apikey {
+  id                  String    @id @default(uuid())
+  configId            String
+  name                String?
+  start               String?
+  referenceId         String
+  user                User      @relation(fields: [referenceId], references: [id], onDelete: Cascade)
+  prefix              String?
+  key                 String
+  refillInterval      Int?
+  refillAmount        Int?
+  lastRefillAt        DateTime?
+  enabled             Boolean   @default(true)
+  rateLimitEnabled    Boolean   @default(true)
+  rateLimitTimeWindow Int?
+  rateLimitMax        Int?
+  requestCount        Int?
+  remaining           Int?
+  lastRequest         DateTime?
+  expiresAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  permissions         String?
+  metadata            String?
+
+  @@index([referenceId])
+  @@index([configId])
+  @@index([key])
+  @@map("api_key")
 }

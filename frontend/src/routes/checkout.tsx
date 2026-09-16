@@ -8,7 +8,7 @@ import { requireAuth } from "../lib/require-auth";
 import { useAppConfig } from "../lib/use-app-config";
 
 export const Route = createFileRoute("/checkout")({
-	head: () => ({ meta: [{ title: "Escolha seu plano — Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Escolha seu plano — Money" }] }),
 	beforeLoad: requireAuth,
 	component: CheckoutPage,
 });

@@ -8,6 +8,10 @@ export const categoryLabels = {
 	shopping: "Compras",
 	salary: "Salário",
 	investment: "Investimentos",
+	rental_income: "Aluguel",
+	extra_income: "Renda Extra",
+	gifts: "Presentes",
+	prizes: "Prêmios",
 	transfers: "Transferências",
 	credit_card_bill: "Fatura do cartão",
 	insurance: "Seguro",
@@ -17,6 +21,23 @@ export const categoryLabels = {
 export type TransactionCategory = keyof typeof categoryLabels;
 
 export const categoryOptions = Object.keys(categoryLabels) as TransactionCategory[];
+
+// Categorias de receita exibidas no card "Receitas por categoria", nos
+// filtros e no modal de adicionar/editar transação quando o tipo é
+// "income" — lista curada (não é só "o resto do enum"), por pedido do
+// dono do produto.
+export const incomeCategories: TransactionCategory[] = [
+	"salary",
+	"investment",
+	"rental_income",
+	"extra_income",
+	"gifts",
+	"prizes",
+];
+
+export const expenseCategories: TransactionCategory[] = categoryOptions.filter(
+	(category) => !incomeCategories.includes(category),
+);
 
 export function getCategoryLabel(category: string): string {
 	return category in categoryLabels ? categoryLabels[category as TransactionCategory] : category;
@@ -51,16 +72,7 @@ export const expenseCategoryColor = buildColorMap([
 	"other",
 ]);
 
-export const incomeCategoryColor = buildColorMap([
-	"salary",
-	"investment",
-	"transfers",
-	"other",
-	"food",
-	"transport",
-	"housing",
-	"health",
-]);
+export const incomeCategoryColor = buildColorMap(incomeCategories);
 
 export function formatCurrencyCents(cents: number): string {
 	return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

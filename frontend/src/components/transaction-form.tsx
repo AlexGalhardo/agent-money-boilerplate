@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { z } from "zod";
 import type { TransactionCategory } from "../lib/categories";
-import { categoryLabels, categoryOptions } from "../lib/categories";
+import { expenseCategories, incomeCategories } from "../lib/categories";
 import { FormField } from "./auth-card";
-
-const categoryTuple = categoryOptions as [TransactionCategory, ...TransactionCategory[]];
+import { CategorySelect } from "./category-select";
 
 export const transactionFormSchema = z.object({
 	description: z
@@ -13,7 +12,7 @@ export const transactionFormSchema = z.object({
 		.min(4, "A descrição precisa ter pelo menos 4 caracteres")
 		.max(32, "A descrição pode ter no máximo 32 caracteres"),
 	amount: z.coerce.number().positive("Informe um valor maior que zero"),
-	category: z.enum(categoryTuple),
+	category: z.enum([...incomeCategories, ...expenseCategories] as [TransactionCategory, ...TransactionCategory[]]),
 	type: z.enum(["income", "expense"]),
 	date: z.string().min(1, "Informe a data da transação"),
 });
@@ -72,6 +71,8 @@ export function TransactionForm({
 }) {
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [type, setType] = useState<"income" | "expense">(fixedType ?? initial?.type ?? "expense");
+	const categoryList = type === "income" ? incomeCategories : expenseCategories;
+	const [category, setCategory] = useState<TransactionCategory>(initial?.category ?? categoryList[0] ?? "food");
 	const [amountCents, setAmountCents] = useState(initial?.amount ?? 0);
 	const scheme = colorSchemes[type];
 	const inputClassName = `w-full rounded-lg border px-3 py-2 outline-none ${scheme.input}`;
@@ -88,7 +89,7 @@ export function TransactionForm({
 		const result = transactionFormSchema.safeParse({
 			description: formData.get("description"),
 			amount: amountCents / 100,
-			category: formData.get("category"),
+			category,
 			type,
 			date: formData.get("date"),
 		});
@@ -120,7 +121,12 @@ export function TransactionForm({
 					<select
 						id="type"
 						value={type}
-						onChange={(event) => setType(event.target.value as "income" | "expense")}
+						onChange={(event) => {
+							const nextType = event.target.value as "income" | "expense";
+							setType(nextType);
+							const nextList = nextType === "income" ? incomeCategories : expenseCategories;
+							setCategory((current) => (nextList.includes(current) ? current : (nextList[0] ?? current)));
+						}}
 						className={inputClassName}
 					>
 						<option value="expense">Despesa</option>
@@ -171,18 +177,12 @@ export function TransactionForm({
 			</FormField>
 
 			<FormField label="Categoria" id="category" error={errors.category}>
-				<select
+				<CategorySelect
 					id="category"
-					name="category"
-					defaultValue={initial?.category ?? "food"}
-					className={inputClassName}
-				>
-					{categoryOptions.map((category) => (
-						<option key={category} value={category}>
-							{categoryLabels[category]}
-						</option>
-					))}
-				</select>
+					value={category}
+					options={categoryList}
+					onChange={(value) => value && setCategory(value)}
+				/>
 			</FormField>
 
 			<FormField label="Data da transação" id="date" error={errors.date}>

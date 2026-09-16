@@ -152,12 +152,14 @@ export const transactionService = {
 			}
 		}
 
-		return Array.from(totals.entries()).map(([key, value]) => {
-			const category = key.split(":")[1] ?? "other";
-			const base = value.type === "income" ? incomeTotal : expenseTotal;
-			const percentage = base > 0 ? Number(((value.total / base) * 100).toFixed(2)) : 0;
+		return Array.from(totals.entries())
+			.map(([key, value]) => {
+				const category = key.split(":")[1] ?? "other";
+				const base = value.type === "income" ? incomeTotal : expenseTotal;
+				const percentage = base > 0 ? Number(((value.total / base) * 100).toFixed(2)) : 0;
 
-			return { category, type: value.type, total: value.total, percentage };
-		});
+				return { category, type: value.type, total: value.total, percentage };
+			})
+			.sort((a, b) => b.total - a.total);
 	},
 };

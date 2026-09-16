@@ -1,3 +1,4 @@
+import { apiKey } from "@better-auth/api-key";
 import { render } from "@react-email/render";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -50,6 +51,7 @@ export const auth = betterAuth({
 			: {}),
 	},
 	plugins: [
+		apiKey({ enableSessionForAPIKeys: true }),
 		...(env.ENABLE_2FA
 			? [
 					twoFactor({

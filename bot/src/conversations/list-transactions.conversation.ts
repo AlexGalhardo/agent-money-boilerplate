@@ -33,7 +33,7 @@ export async function listTransactionsConversation(conversation: BotConversation
 
 	for (;;) {
 		const reply = await conversation.waitFor("callback_query:data", {
-			otherwise: (otherCtx) => otherCtx.reply("Use o botão acima para ver mais, ou /cancelar para sair."),
+			otherwise: (otherCtx) => otherCtx.reply("Use o botão acima para ver mais."),
 		});
 		const data = reply.callbackQuery.data;
 		await reply.answerCallbackQuery();

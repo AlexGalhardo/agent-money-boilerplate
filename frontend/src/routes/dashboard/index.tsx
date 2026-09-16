@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { AccordionCard } from "../../components/accordion-card";
 import { BalanceCard } from "../../components/balance-card";
 import { CategoryPieChart } from "../../components/category-pie-chart";
+import { CategorySelect } from "../../components/category-select";
 import { ImportTransactionsModal } from "../../components/import-transactions-modal";
 import { Modal } from "../../components/modal";
 import { PageLayout } from "../../components/page-layout";
@@ -21,12 +22,13 @@ import {
 	formatCurrencyCents,
 	incomeCategoryColor,
 } from "../../lib/categories";
+import { CategoryIcon } from "../../lib/category-icons";
 import { exportTransactionsToCsv, exportTransactionsToXlsx } from "../../lib/export-transactions";
 import { FREE_TRANSACTION_LIMIT, hasActivePlan } from "../../lib/plan";
 import { requireAuth } from "../../lib/require-auth";
 
 export const Route = createFileRoute("/dashboard/")({
-	head: () => ({ meta: [{ title: "Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Money" }] }),
 	beforeLoad: requireAuth,
 	component: DashboardPage,
 });
@@ -155,6 +157,13 @@ function DashboardPage() {
 	const searched =
 		search.trim().length >= 3 ? fuse.search(search.trim()).map((result) => result.item) : allTransactions;
 
+	const searchedIncomeTotal = searched
+		.filter((transaction) => transaction.type === "income")
+		.reduce((sum, transaction) => sum + transaction.amount, 0);
+	const searchedExpenseTotal = searched
+		.filter((transaction) => transaction.type === "expense")
+		.reduce((sum, transaction) => sum + transaction.amount, 0);
+
 	const total = searched.length;
 	const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
 	const currentPage = Math.min(page, totalPages);
@@ -226,7 +235,7 @@ function DashboardPage() {
 					</p>
 				)}
 
-				<div className={`grid gap-6 lg:grid-cols-[400px_1fr] ${freeLimitReached ? "mt-3" : ""}`}>
+				<div className={`grid gap-6 lg:grid-cols-[320px_1fr] ${freeLimitReached ? "mt-3" : ""}`}>
 					<div className="flex flex-col gap-6">
 						<BalanceCard incomeTotal={incomeTotal} expenseTotal={expenseTotal} />
 						<AccordionCard title="Despesas por categoria" defaultOpen>
@@ -285,6 +294,20 @@ function DashboardPage() {
 							/>
 						</div>
 
+						{search.trim().length >= 3 && (
+							<div className="mt-3 flex w-full items-center justify-between gap-4 rounded-lg border border-(--color-border) bg-(--color-bg-subtle) px-3 py-2 text-sm">
+								<span className="text-(--color-fg-muted)">
+									{searched.length} resultado{searched.length === 1 ? "" : "s"} para "{search.trim()}"
+								</span>
+								<span className="flex gap-4 tabular-nums">
+									<span className="text-emerald-600">
+										+ {formatCurrencyCents(searchedIncomeTotal)}
+									</span>
+									<span className="text-red-500">− {formatCurrencyCents(searchedExpenseTotal)}</span>
+								</span>
+							</div>
+						)}
+
 						<div className="mt-3 flex flex-wrap items-end justify-between gap-3">
 							<div className="flex flex-col gap-1">
 								<label
@@ -293,22 +316,16 @@ function DashboardPage() {
 								>
 									Categoria
 								</label>
-								<select
+								<CategorySelect
 									id="category-filter"
 									value={category}
-									onChange={(event) => {
-										setCategory(event.target.value as TransactionCategory | "");
+									options={categoryOptions}
+									placeholder="Todas"
+									onChange={(value) => {
+										setCategory(value);
 										resetPage();
 									}}
-									className="rounded-lg border border-(--color-border) bg-(--color-bg) px-3 py-1.5 text-sm outline-none focus:border-brand-500"
-								>
-									<option value="">Todas</option>
-									{categoryOptions.map((option) => (
-										<option key={option} value={option}>
-											{categoryLabels[option]}
-										</option>
-									))}
-								</select>
+								/>
 							</div>
 
 							<div className="flex flex-col gap-1">
@@ -379,7 +396,17 @@ function DashboardPage() {
 										>
 											<td className="px-4 py-3">{transaction.description}</td>
 											<td className="px-4 py-3">
-												{categoryLabels[transaction.category] ?? transaction.category}
+												<span
+													title={categoryLabels[transaction.category] ?? transaction.category}
+												>
+													<CategoryIcon
+														category={transaction.category}
+														className="size-5 text-(--color-fg-muted)"
+													/>
+													<span className="sr-only">
+														{categoryLabels[transaction.category] ?? transaction.category}
+													</span>
+												</span>
 											</td>
 											<td className="px-4 py-3 text-(--color-fg-muted)">
 												{new Date(transaction.date).toLocaleDateString("pt-BR")}

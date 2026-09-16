@@ -1,22 +1,17 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { signOut, useSession } from "../lib/auth-client";
+import { useSession } from "../lib/auth-client";
+import { UserMenu } from "./user-menu";
 
 export function SiteHeader({ actions }: { actions?: ReactNode }) {
 	const { data: session, isPending } = useSession();
-	const navigate = useNavigate();
-
-	async function handleSignOut(): Promise<void> {
-		await signOut();
-		await navigate({ to: "/" });
-	}
 
 	return (
 		<header className="sticky top-0 z-10 border-b border-(--color-border) bg-(--color-bg)/90 backdrop-blur">
 			<div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
 				<Link to="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-					<span className="inline-block size-2.5 rounded-full bg-brand-500" aria-hidden="true" />
-					Elysia Finanças
+					<img src="/favicon.svg" alt="" aria-hidden="true" className="size-5" />
+					Money
 				</Link>
 
 				{actions ? (
@@ -49,13 +44,7 @@ export function SiteHeader({ actions }: { actions?: ReactNode }) {
 									>
 										Dashboard
 									</Link>
-									<button
-										type="button"
-										onClick={handleSignOut}
-										className="rounded-lg border border-(--color-border) px-3 py-1.5 text-sm font-medium text-(--color-fg) hover:bg-brand-500/10"
-									>
-										Sair
-									</button>
+									<UserMenu name={session.user.name} />
 								</>
 							) : (
 								!isPending && (

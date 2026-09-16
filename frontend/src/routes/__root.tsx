@@ -21,11 +21,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 				name: "description",
 				content: "Controle suas finanças pessoais: transações, categorias e relatórios em um só lugar.",
 			},
-			{ title: "Elysia Finanças" },
+			{ title: "Money" },
 		],
 		links: [
 			{ rel: "preconnect", href: "https://fonts.googleapis.com" },
 			{ rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+			{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
 			{
 				rel: "stylesheet",
 				href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap",

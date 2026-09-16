@@ -6,10 +6,7 @@ import { useSession } from "../lib/auth-client";
 
 export const Route = createFileRoute("/contato")({
 	head: () => ({
-		meta: [
-			{ title: "Contato — Elysia Finanças" },
-			{ name: "description", content: "Fale com o time da Elysia Finanças." },
-		],
+		meta: [{ title: "Contato — Money" }, { name: "description", content: "Fale com o time da Money." }],
 	}),
 	component: ContactPage,
 });

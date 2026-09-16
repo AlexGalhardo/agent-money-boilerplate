@@ -125,6 +125,7 @@ describe("paymentService", () => {
 			prismaMock.pixCharge.findFirst.mockResolvedValue(buildCharge({ expiresAt: new Date(Date.now() - 1000) }));
 			prismaMock.pixCharge.update.mockResolvedValue({});
 			prismaMock.pixCharge.findUniqueOrThrow.mockResolvedValue(buildCharge({ status: "expired" }));
+			prismaMock.paymentLog.upsert.mockResolvedValue({});
 
 			const result = await paymentService.getCheckoutStatus("user-1", "charge-1");
 
@@ -134,6 +135,23 @@ describe("paymentService", () => {
 				data: { status: "expired" },
 			});
 			expect(result.status).toBe("expired");
+		});
+
+		it("logs a pix.expired payment event when a pending charge has expired", async () => {
+			prismaMock.pixCharge.findFirst.mockResolvedValue(buildCharge({ expiresAt: new Date(Date.now() - 1000) }));
+			prismaMock.pixCharge.update.mockResolvedValue({});
+			prismaMock.pixCharge.findUniqueOrThrow.mockResolvedValue(buildCharge({ status: "expired" }));
+			prismaMock.paymentLog.upsert.mockResolvedValue({});
+
+			await paymentService.getCheckoutStatus("user-1", "charge-1");
+
+			expect(prismaMock.paymentLog.upsert).toHaveBeenCalledWith(
+				expect.objectContaining({
+					where: { externalId: "ext-1" },
+					create: expect.objectContaining({ eventType: "pix.expired", status: "expired" }),
+					update: expect.objectContaining({ status: "expired" }),
+				}),
+			);
 		});
 
 		it("activates the plan once AbacatePay confirms the charge as PAID", async () => {

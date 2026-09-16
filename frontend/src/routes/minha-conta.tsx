@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
+import { AccordionCard } from "../components/accordion-card";
 import { FormField, inputClassName } from "../components/auth-card";
 import { DeleteAccountSection } from "../components/delete-account-section";
 import { PageLayout } from "../components/page-layout";
@@ -13,7 +14,7 @@ import { requireAuth } from "../lib/require-auth";
 import { useAppConfig } from "../lib/use-app-config";
 
 export const Route = createFileRoute("/minha-conta")({
-	head: () => ({ meta: [{ title: "Minha conta — Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Minha conta — Money" }] }),
 	beforeLoad: requireAuth,
 	component: ProfilePage,
 });
@@ -28,7 +29,7 @@ const telegramChatIdSchema = z.object({
 
 const paymentEventLabels: Record<string, string> = {
 	succeeded: "Pagamento confirmado",
-	failed: "Pagamento falhou",
+	expired: "PIX expirado",
 };
 
 function ProfilePage() {
@@ -188,7 +189,7 @@ function ProfilePage() {
 							{config?.enableAbacatepay && (
 								<Link
 									to="/checkout"
-									className="mt-4 inline-block rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-black hover:bg-brand-400"
+									className="mt-4 inline-block rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-500/30 hover:bg-orange-400"
 								>
 									Assinar um plano
 								</Link>
@@ -196,25 +197,28 @@ function ProfilePage() {
 						</>
 					)}
 
-					{historyQuery.data && historyQuery.data.length > 0 && (
+					{historyQuery.data?.some((log) => log.status === "succeeded" || log.status === "expired") && (
 						<div className="mt-5 border-t border-(--color-border) pt-4">
-							<h3 className="text-sm font-semibold">Histórico de pagamentos</h3>
-							<ul className="mt-2 flex flex-col gap-2">
-								{historyQuery.data.map((log) => (
-									<li
-										key={log.id}
-										className="flex items-center justify-between text-sm text-(--color-fg-muted)"
-									>
-										<span>
-											{paymentEventLabels[log.status] ?? log.status}
-											{log.amount != null
-												? ` — ${(log.amount / 100).toFixed(2)} ${(log.currency ?? "").toUpperCase()}`
-												: ""}
-										</span>
-										<span>{new Date(log.createdAt).toLocaleDateString("pt-BR")}</span>
-									</li>
-								))}
-							</ul>
+							<AccordionCard title="Histórico de pagamentos">
+								<ul className="flex flex-col gap-2">
+									{historyQuery.data
+										.filter((log) => log.status === "succeeded" || log.status === "expired")
+										.map((log) => (
+											<li
+												key={log.id}
+												className="flex items-center justify-between text-sm text-(--color-fg-muted)"
+											>
+												<span>
+													{paymentEventLabels[log.status] ?? log.status}
+													{log.amount != null
+														? ` — ${(log.amount / 100).toFixed(2)} ${(log.currency ?? "").toUpperCase()}`
+														: ""}
+												</span>
+												<span>{new Date(log.createdAt).toLocaleString("pt-BR")}</span>
+											</li>
+										))}
+								</ul>
+							</AccordionCard>
 						</div>
 					)}
 				</div>

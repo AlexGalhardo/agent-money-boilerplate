@@ -8,7 +8,7 @@ import { signUp } from "../lib/auth-client";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
 export const Route = createFileRoute("/criar-conta")({
-	head: () => ({ meta: [{ title: "Criar conta — Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Criar conta — Money" }] }),
 	beforeLoad: redirectIfAuthenticated,
 	component: SignupPage,
 });
@@ -23,7 +23,7 @@ const signupSchema = z.object({
 		.trim()
 		.min(4, "O nome precisa ter pelo menos 4 letras")
 		.max(16, "O nome pode ter no máximo 16 caracteres"),
-	email: z.email("E-mail inválido"),
+	email: z.email("E-mail inválido").max(48, "O e-mail pode ter no máximo 48 caracteres"),
 	password: z.string().refine(isStrongPassword, "A senha não atende aos requisitos abaixo"),
 });
 
@@ -131,6 +131,7 @@ function SignupPage() {
 							name="email"
 							type="email"
 							placeholder="seu@email.com"
+							maxLength={48}
 							className={inputClassName}
 							aria-invalid={Boolean(errors.email)}
 						/>

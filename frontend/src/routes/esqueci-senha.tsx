@@ -6,7 +6,7 @@ import { requestPasswordReset } from "../lib/auth-client";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
 export const Route = createFileRoute("/esqueci-senha")({
-	head: () => ({ meta: [{ title: "Recuperar senha — Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Recuperar senha — Money" }] }),
 	beforeLoad: redirectIfAuthenticated,
 	component: ForgetPasswordPage,
 });

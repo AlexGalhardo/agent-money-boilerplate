@@ -200,4 +200,16 @@ describe("transactionService", () => {
 		expect(food).toMatchObject({ total: 300, percentage: 75 });
 		expect(salary).toMatchObject({ total: 1000, percentage: 100 });
 	});
+
+	it("statsByCategory() returns rows sorted by total descending", async () => {
+		repositoryMock.findAllForStats.mockResolvedValue([
+			{ amount: encrypt("100"), category: "food", type: "expense" },
+			{ amount: encrypt("500"), category: "transport", type: "expense" },
+			{ amount: encrypt("300"), category: "housing", type: "expense" },
+		]);
+
+		const stats = await transactionService.statsByCategory("user-1");
+
+		expect(stats.map((row) => row.category)).toEqual(["transport", "housing", "food"]);
+	});
 });

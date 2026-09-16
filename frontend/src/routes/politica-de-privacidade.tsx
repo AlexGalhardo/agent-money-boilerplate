@@ -4,8 +4,8 @@ import { PageLayout } from "../components/page-layout";
 export const Route = createFileRoute("/politica-de-privacidade")({
 	head: () => ({
 		meta: [
-			{ title: "Política de privacidade — Elysia Finanças" },
-			{ name: "description", content: "Como a Elysia Finanças trata seus dados pessoais e financeiros." },
+			{ title: "Política de privacidade — Money" },
+			{ name: "description", content: "Como a Money trata seus dados pessoais e financeiros." },
 		],
 	}),
 	component: PrivacyPage,

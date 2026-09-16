@@ -126,6 +126,14 @@ export const paymentService = {
 
 		if (charge.status === "pending" && charge.expiresAt < new Date()) {
 			await prisma.pixCharge.update({ where: { id: charge.id }, data: { status: "expired" } });
+			await logPaymentEvent({
+				userId,
+				externalId: charge.externalId,
+				eventType: "pix.expired",
+				status: "expired",
+				amount: charge.amount,
+				rawPayload: { chargeId: charge.id, expiresAt: charge.expiresAt },
+			});
 		} else if (charge.status === "pending") {
 			const remote = await abacatepay.checkPixCharge(charge.externalId);
 			if (remote.status === "PAID" || remote.status === "COMPLETED") {

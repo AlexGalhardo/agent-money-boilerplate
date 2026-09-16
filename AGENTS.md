@@ -1,98 +1,111 @@
-# AGENTS.md
+# CLAUDE.md
 
-Instruções para agentes de codificação (Claude Code, Codex, Cursor, etc.) neste
-repositório. Se a ferramenta que você está usando também lê `CLAUDE.md`, os dois
-arquivos são consistentes entre si; este aqui é a versão agnóstica de ferramenta.
+Guia para o Claude Code (e outros agentes de IA) trabalhando neste repositório.
 
-## Setup
+## IMPORTANTE
 
-```bash
-bun install
-cp api/.env.example api/.env
-# preencher BETTER_AUTH_SECRET e ENCRYPTION_KEY com `openssl rand -hex 32` cada
-cd api && bun run db:deploy && bun run db:generate && bun run db:seed && cd ..
+- Não crie nem edite nenhum arquivo changelod.md
+
+## O que é este projeto
+
+**Elysia Finanças** — controle de finanças pessoais (transações, categorias,
+relatórios visuais). Monorepo Bun com dois workspaces:
+
+```
+/api/           → ElysiaJS (REST API, auth, pagamentos, cron)
+/frontend/      → TanStack Start (SSR)
+/bot/           → bot do Telegram (reusa Prisma/criptografia/regras da API)
+/http-client/   → chamadas HTTP de referência (api.http)
+/docs/          → guias de setup e deploy
 ```
 
-Ou, tudo de uma vez, com um dos 4 scripts na raiz (todos perguntam SQLite ou
-Postgres, ou aceitam o banco como argumento: `./setup-unix-using-docker.sh postgres`):
-`setup-unix-using-docker.sh`, `setup-unix-using-pm2.sh`,
-`setup-windows-using-docker.sh`, `setup-windows-using-pm2.sh` — detalhes em
-`docs/setup-unix-using-docker.md` e demais `docs/setup-*.md`.
+Tipagem ponta-a-ponta entre API e frontend via [Eden](https://elysiajs.com/eden/overview.html)
+(`frontend/src/lib/api.ts` importa o tipo `App` exportado por `api/src/server.ts`) —
+qualquer rota nova na API já fica tipada no frontend sem gerar nada.
 
-Rodar localmente (dois processos):
+## Stack
+
+| Camada        | Tecnologia                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------ |
+| Runtime / API | Bun + ElysiaJS                                                                                   |
+| ORM           | Prisma (schema duplicado: `schema.sqlite.prisma` e `schema.postgresql.prisma` — ver nota abaixo) |
+| Validação     | Zod                                                                                              |
+| Autenticação  | better-auth (sessão via cookie, plugin de 2FA opcional)                                          |
+| Frontend      | TanStack Start + Tailwind CSS v4                                                                 |
+| Testes        | `bun:test` (unit/integration/smoke) + Playwright (E2E)                                           |
+| Lint/format   | Biome (tabs, largura de linha 120)                                                               |
+
+## Comandos essenciais
+
+Rodar a partir da raiz do monorepo:
 
 ```bash
-bun run api:dev        # http://localhost:4000
-bun run frontend:dev   # http://localhost:4001
+bun install                 # instala tudo (workspaces)
+bun run api:dev             # API em http://localhost:4000
+bun run frontend:dev        # frontend em http://localhost:4001
+bun run lint                # biome check
+bun run typecheck:api       # tsc --noEmit da API
+bun run typecheck:frontend  # tsc --noEmit do frontend
 ```
 
-## Estrutura
+Dentro de `api/`:
 
-Monorepo com três workspaces Bun:
+```bash
+bun run test:unit           # só *.unit.test.ts, sem precisar de banco
+bun run test                # unit + integration (sobe um banco sqlite de teste primeiro)
+bun run db:seed             # popula o banco (ver "Usuários de seed" abaixo)
+bun run db:deploy && bun run db:generate   # aplica migrations + gera o Prisma Client
+```
 
-- `api/` — ElysiaJS + Prisma + better-auth + Zod. Módulos por domínio em
-  `api/src/modules/<dominio>/`, cada um com `*.routes.ts` → `*.service.ts` →
-  `*.repository.ts`. Só o `*.repository.ts` importa o cliente Prisma.
-- `frontend/` — TanStack Start + Tailwind v4. Rotas em
-  `frontend/src/routes/`, componentes reutilizáveis em `frontend/src/components/`.
-  Cliente HTTP tipado via Eden em `frontend/src/lib/api.ts` (importa o tipo
-  `App` da API diretamente — não existe geração de client separada).
-- `bot/` — bot do Telegram (grammY + `@grammyjs/conversations`), multi-tenant
-  (cada chat se vincula à própria conta, exige plano ativo). Importa
-  Prisma/criptografia/regras de negócio (inclusive `paymentService`)
-  diretamente de `@elysia-galhardo-finances/api` (mesmo banco, sem HTTP entre
-  os dois) — ver `docs/telegram-bot.md`.
+Setup completo do zero, 4 variantes conforme SO e uso ou não de Docker (todas
+perguntam interativamente SQLite ou Postgres, ou aceitam o banco como
+argumento para pular a pergunta — ex: `./setup-unix-using-docker.sh postgres`):
 
-## Testes
+- `./setup-unix-using-docker.sh` — Linux/macOS, sobe api+frontend+bot via Docker Compose
+- `./setup-unix-using-pm2.sh` — Linux/macOS, sobe os 3 com PM2, sem Docker
+- `./setup-windows-using-docker.sh` — Windows 11 + WSL2, via Docker Desktop
+- `./setup-windows-using-pm2.sh` — Windows 11 + WSL2, com PM2, sem Docker
+
+Detalhes de cada um em `docs/setup-unix-using-docker.md`,
+`docs/setup-unix-using-pm2.md`, `docs/setup-windows-using-docker.md` e
+`docs/setup-windows-using-pm2.md`.
+
+## Convenções de código
+
+- **Sem comentários óbvios.** Só comente o _porquê_ quando não for óbvio pelo
+  código (uma restrição escondida, um workaround, um invariante). O código
+  existente segue isso à risca — mantenha o padrão.
+- **Tabs, não espaços.** Formatação é responsabilidade do Biome
+  (`bun run format`), não do editor.
+- **Módulos por domínio** em `api/src/modules/<dominio>/`, sempre com o padrão
+  `*.routes.ts` (Elysia + validação Zod inline) → `*.service.ts` (regra de
+  negócio, testável isolado) → `*.repository.ts` (única camada que toca o
+  Prisma). Veja `api/src/modules/transactions/` como referência.
+- **Testes ficam ao lado do arquivo testado**: `foo.service.ts` e
+  `foo.service.unit.test.ts` no mesmo diretório, não em `__tests__/`.
+- **Categorias de transação são um enum fixo** (`transactionCategories` em
+  `api/src/modules/transactions/transaction.schema.ts`), não uma tabela no
+  banco. Adicionar categoria = editar essa lista **e** `categoryLabels` em
+  `frontend/src/lib/categories.ts` **e** em `bot/src/formatting/format.ts`
+  (e revisar as paletas de cor do frontend — ver seção de dataviz abaixo).
+  Três arquivos, sincronia manual — o bot duplica os rótulos de propósito
+  para não depender do workspace do frontend (React/TanStack) só por causa
+  de um mapa de strings.
+
+## Como rodar um teste específico
 
 ```bash
 cd api
-bun run test:unit          # rápido, sem banco
-bun run test               # unit + integration (sobe banco sqlite de teste)
-
-cd ../frontend
-bunx playwright test       # E2E, sobe API + frontend em portas dedicadas
+bun test src/modules/transactions/transaction.service.unit.test.ts
 ```
 
-Todo teste unitário fica ao lado do arquivo testado (`foo.service.ts` +
-`foo.service.unit.test.ts`), mockando a camada de repositório com
-`mock.module` do `bun:test` — nunca bata num banco real em teste unitário.
+## Antes de abrir PR / dar como pronto
 
-## Estilo de código
-
-- Formatação e lint via Biome (`bun run lint`, `bun run lint:fix`,
-  `bun run format`) — tabs, largura de linha 120. Não formate manualmente.
-- Sem comentários que descrevem o óbvio. Comente só quando o *porquê* não é
-  óbvio pelo código (restrição escondida, workaround de bug específico,
-  invariante não trivial).
-- Não introduza abstrações, flags de feature ou tratamento de erro para
-  cenários que não podem acontecer. Siga o padrão já estabelecido no módulo
-  mais próximo antes de inventar um novo.
-- Categorias de transação são um enum fixo definido em
-  `api/src/modules/transactions/transaction.schema.ts`
-  (`transactionCategories`), com rótulos duplicados de propósito em
-  `frontend/src/lib/categories.ts` e `bot/src/formatting/format.ts`
-  (`categoryLabels`) — os três precisam ser editados juntos, não há tabela de
-  categorias no banco.
-- Existem **dois schemas Prisma** (`schema.sqlite.prisma` e
-  `schema.postgresql.prisma`) que devem ter modelos idênticos sempre — qualquer
-  mudança de `model` precisa ser replicada nos dois arquivos manualmente.
-
-## Antes de considerar uma tarefa pronta
+O hook `pre-push` já roda isso automaticamente, mas para checar manualmente:
 
 ```bash
 (cd api && bunx --bun tsc --noEmit && bun run test:setup && bun run test && bun run build)
 (cd frontend && bunx --bun tsc --noEmit && bun run build)
 ```
 
-Isso é exatamente o que o hook `pre-push` do Husky roda — se falhar aqui, vai
-falhar no push. Não pule hooks (`--no-verify`) para contornar uma falha real.
-
-## Instruções de PR
-
-- Mensagens de commit e descrições de PR em português, no mesmo tom objetivo
-  do `CHANGELOG.md` existente (o quê + por quê, sem enrolação).
-- Nunca commite `.env`, chaves ou segredos — `.gitignore` já cobre `api/.env`,
-  mas confira antes de um `git add` amplo.
-- Rode lint + typecheck + testes localmente antes de abrir o PR; CI
-  (`.github/workflows/ci.yml`) roda os mesmos passos e bloqueia merge se falhar.
+Não use `--no-verify` para pular os hooks do Husky sem confirmar com quem pediu a tarefa.

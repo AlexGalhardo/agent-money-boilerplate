@@ -24,6 +24,10 @@ const descriptionsByCategory: Record<(typeof transactionCategories)[number], str
 	shopping: ["Roupas", "Eletrônicos", "Presente"],
 	salary: ["Salário mensal", "Décimo terceiro", "Bônus"],
 	investment: ["Aporte em ações", "Renda fixa", "Dividendos recebidos"],
+	rental_income: ["Aluguel recebido"],
+	extra_income: ["Freelance", "Venda de item usado", "Cashback"],
+	gifts: ["Presente recebido"],
+	prizes: ["Prêmio de sorteio", "Bônus de indicação"],
 	transfers: ["Pix enviado", "Pix recebido"],
 	credit_card_bill: ["Pagamento de fatura"],
 	insurance: ["Seguro de vida", "Seguro residencial", "Seguro veicular"],
@@ -83,7 +87,12 @@ async function seedTransactions(userId: string): Promise<void> {
 	const data = Array.from({ length: TRANSACTIONS_COUNT }, () => {
 		const category = randomFrom(transactionCategories);
 		const type =
-			category === "salary" || category === "investment"
+			category === "salary" ||
+			category === "investment" ||
+			category === "rental_income" ||
+			category === "extra_income" ||
+			category === "gifts" ||
+			category === "prizes"
 				? "income"
 				: category === "credit_card_bill" || category === "insurance"
 					? "expense"

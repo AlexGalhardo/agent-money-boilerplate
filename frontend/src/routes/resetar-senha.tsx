@@ -9,7 +9,7 @@ const searchSchema = z.object({ token: z.string().optional() });
 const passwordSchema = z.object({ password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres") });
 
 export const Route = createFileRoute("/resetar-senha")({
-	head: () => ({ meta: [{ title: "Redefinir senha — Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Redefinir senha — Money" }] }),
 	beforeLoad: redirectIfAuthenticated,
 	validateSearch: searchSchema,
 	component: ResetPasswordPage,

@@ -3,10 +3,7 @@ import { PageLayout } from "../components/page-layout";
 
 export const Route = createFileRoute("/termos-de-uso")({
 	head: () => ({
-		meta: [
-			{ title: "Termos de uso — Elysia Finanças" },
-			{ name: "description", content: "Termos de uso da Elysia Finanças." },
-		],
+		meta: [{ title: "Termos de uso — Money" }, { name: "description", content: "Termos de uso da Money." }],
 	}),
 	component: TermsPage,
 });
@@ -20,15 +17,15 @@ function TermsPage() {
 
 				<div className="mt-8 flex flex-col gap-6 text-sm leading-relaxed text-(--color-fg-muted)">
 					<p>
-						Ao criar uma conta e usar a Elysia Finanças, você concorda com estes termos. Se não concordar,
-						não utilize o serviço.
+						Ao criar uma conta e usar a Money, você concorda com estes termos. Se não concordar, não utilize
+						o serviço.
 					</p>
 
 					<div>
 						<h2 className="text-base font-semibold text-(--color-fg)">1. Uso do serviço</h2>
 						<p className="mt-2">
-							A Elysia Finanças é uma ferramenta de controle financeiro pessoal. Você é responsável pela
-							veracidade dos dados inseridos e pela guarda das credenciais da sua conta.
+							A Money é uma ferramenta de controle financeiro pessoal. Você é responsável pela veracidade
+							dos dados inseridos e pela guarda das credenciais da sua conta.
 						</p>
 					</div>
 
@@ -51,8 +48,8 @@ function TermsPage() {
 					<div>
 						<h2 className="text-base font-semibold text-(--color-fg)">4. Limitação de responsabilidade</h2>
 						<p className="mt-2">
-							A Elysia Finanças é fornecida "como está". Não nos responsabilizamos por decisões
-							financeiras tomadas com base nos dados do serviço.
+							A Money é fornecida "como está". Não nos responsabilizamos por decisões financeiras tomadas
+							com base nos dados do serviço.
 						</p>
 					</div>
 

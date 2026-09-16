@@ -117,11 +117,11 @@ export async function searchConversation(conversation: BotConversation, ctx: Con
 
 	for (;;) {
 		const reply = await conversation.waitFor("message:text", {
-			otherwise: (otherCtx) => otherCtx.reply("Não entendi, envie em texto ou /cancelar para sair."),
+			otherwise: (otherCtx) => otherCtx.reply("Não entendi, envie em texto:"),
 		});
 		const text = reply.message.text.trim();
 		if (!text) {
-			await reply.reply("Não entendi, tente novamente ou /cancelar para sair.");
+			await reply.reply("Não entendi, tente novamente:");
 			continue;
 		}
 
@@ -153,7 +153,7 @@ export async function searchConversation(conversation: BotConversation, ctx: Con
 			}
 		} catch (error) {
 			if (error instanceof InvalidDateRangeError) {
-				await reply.reply(`${error.message}. Tente novamente ou /cancelar para sair.`);
+				await reply.reply(`${error.message}. Tente novamente:`);
 				continue;
 			}
 			throw error;

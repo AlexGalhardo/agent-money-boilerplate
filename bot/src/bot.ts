@@ -8,37 +8,11 @@ import { deleteTransactionConversation } from "./conversations/delete-transactio
 import { listTransactionsConversation } from "./conversations/list-transactions.conversation";
 import { reportConversation } from "./conversations/report.conversation";
 import { searchConversation } from "./conversations/search.conversation";
+import { startConversation } from "./conversations/start.conversation";
 import { categoryLabels } from "./formatting/format";
 import { findUserIdByChatId, unlinkChatFromUser } from "./lib/current-user";
+import { buildMenuMessage, HELP_TEXT, mainMenuKeyboard, withMainMenu } from "./lib/menu";
 import type { BotContext } from "./types";
-
-const HELP_TEXT = [
-	"💬 *Elysia Finanças — bot pessoal*",
-	"",
-	"Use os botões abaixo para navegar. Toda operação que acessa seus dados",
-	"pede sua senha pessoal antes de continuar.",
-	"",
-	"Só um fluxo por vez: use /cancelar antes de iniciar outro.",
-].join("\n");
-
-function mainMenuKeyboard(): InlineKeyboard {
-	return new InlineKeyboard()
-		.text("💸 Despesa", "menu:despesa")
-		.text("💰 Receita", "menu:receita")
-		.row()
-		.text("📃 Transações", "menu:transacoes")
-		.text("📊 Resumo", "menu:resumo")
-		.row()
-		.text("🔎 Buscar", "menu:buscar")
-		.text("🗑️ Apagar", "menu:apagar")
-		.row()
-		.text("📄 Relatório PDF", "menu:relatorio")
-		.row()
-		.text("📂 Categorias", "menu:categorias")
-		.text("❓ Ajuda", "menu:ajuda")
-		.row()
-		.text("🔌 Trocar de conta", "menu:trocar-conta");
-}
 
 function confirmLogoutKeyboard(): InlineKeyboard {
 	return new InlineKeyboard().text("✅ Sim, desconectar", "logout:confirm").text("❌ Cancelar", "logout:cancel");
@@ -61,23 +35,26 @@ export function createBot(): Bot<BotContext> {
 	// (por chat), sem precisar do `session()` clássico do grammY.
 	bot.use(conversations());
 
-	bot.use(createConversation(createAddTransactionConversation("expense", "despesa"), "add-expense"));
-	bot.use(createConversation(createAddTransactionConversation("income", "receita"), "add-income"));
-	bot.use(createConversation(listTransactionsConversation, "list-transactions"));
-	bot.use(createConversation(balanceConversation, "balance"));
-	bot.use(createConversation(searchConversation, "search"));
-	bot.use(createConversation(deleteTransactionConversation, "delete-transaction"));
-	bot.use(createConversation(reportConversation, "report"));
+	bot.use(createConversation(withMainMenu(startConversation), "start"));
+	bot.use(createConversation(withMainMenu(createAddTransactionConversation("expense", "despesa")), "add-expense"));
+	bot.use(createConversation(withMainMenu(createAddTransactionConversation("income", "receita")), "add-income"));
+	bot.use(createConversation(withMainMenu(listTransactionsConversation), "list-transactions"));
+	bot.use(createConversation(withMainMenu(balanceConversation), "balance"));
+	bot.use(createConversation(withMainMenu(searchConversation), "search"));
+	bot.use(createConversation(withMainMenu(deleteTransactionConversation), "delete-transaction"));
+	bot.use(createConversation(withMainMenu(reportConversation), "report"));
 
 	// Comando de escape — funciona mesmo com uma conversation em andamento,
 	// já que sai de TODAS antes de qualquer outro middleware processar o update.
 	bot.command("cancelar", async (ctx) => {
 		await ctx.conversation.exitAll();
-		await ctx.reply("Operação cancelada.");
+		const chatId = ctx.chat?.id;
+		const text = chatId === undefined ? HELP_TEXT : await buildMenuMessage(chatId);
+		await ctx.reply(text, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
 	});
 
 	bot.command("start", async (ctx) => {
-		await ctx.reply(HELP_TEXT, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
+		await ctx.conversation.enter("start");
 	});
 
 	bot.callbackQuery(/^menu:/, async (ctx) => {
@@ -91,7 +68,9 @@ export function createBot(): Bot<BotContext> {
 		}
 
 		if (action === "ajuda") {
-			await ctx.reply(HELP_TEXT, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
+			const chatId = ctx.chat?.id;
+			const text = chatId === undefined ? HELP_TEXT : await buildMenuMessage(chatId);
+			await ctx.reply(text, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
 			return;
 		}
 
@@ -141,7 +120,9 @@ export function createBot(): Bot<BotContext> {
 
 	bot.catch(({ error, ctx }) => {
 		console.error(`Erro não tratado para update ${ctx.update.update_id}:`, error);
-		ctx.reply("⚠️ Ocorreu um erro inesperado. Tente novamente com /cancelar.").catch(() => undefined);
+		ctx.reply("⚠️ Ocorreu um erro inesperado. Toque em um botão abaixo para continuar:", {
+			reply_markup: mainMenuKeyboard(),
+		}).catch(() => undefined);
 	});
 
 	return bot;

@@ -3,12 +3,13 @@ import { useState } from "react";
 import { z } from "zod";
 import { AuthCard, FormField, inputClassName } from "../components/auth-card";
 import { GoogleButton } from "../components/google-button";
+import { PasswordInput } from "../components/password-input";
 import { TwoFactorModal } from "../components/two-factor-modal";
 import { authClient, signIn } from "../lib/auth-client";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
 export const Route = createFileRoute("/entrar")({
-	head: () => ({ meta: [{ title: "Entrar — Elysia Finanças" }] }),
+	head: () => ({ meta: [{ title: "Entrar — Money" }] }),
 	beforeLoad: redirectIfAuthenticated,
 	component: LoginPage,
 });
@@ -21,6 +22,7 @@ const loginSchema = z.object({
 function LoginPage() {
 	const navigate = useNavigate();
 	const [errors, setErrors] = useState<Record<string, string>>({});
+	const [password, setPassword] = useState("");
 	const [formError, setFormError] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
@@ -34,7 +36,7 @@ function LoginPage() {
 		const formData = new FormData(event.currentTarget);
 		const result = loginSchema.safeParse({
 			email: formData.get("email"),
-			password: formData.get("password"),
+			password,
 		});
 
 		if (!result.success) {
@@ -114,7 +116,7 @@ function LoginPage() {
 	}
 
 	return (
-		<AuthCard title="Entrar" subtitle="Acesse sua conta para ver seu painel financeiro.">
+		<AuthCard title="Entrar" subtitle="Acesse sua conta para ver seu painel financeiro." centerHeader>
 			<div className="flex flex-col gap-4">
 				<GoogleButton label="Entrar com Google" />
 
@@ -142,13 +144,7 @@ function LoginPage() {
 					</FormField>
 
 					<FormField label="Senha" id="password" error={errors.password}>
-						<input
-							id="password"
-							name="password"
-							type="password"
-							className={inputClassName}
-							aria-invalid={Boolean(errors.password)}
-						/>
+						<PasswordInput id="password" name="password" value={password} onChange={setPassword} />
 					</FormField>
 
 					<Link to="/esqueci-senha" className="text-right text-sm text-brand-600 hover:underline">

@@ -5,7 +5,7 @@ export function SiteFooter() {
 	return (
 		<footer className="border-t border-(--color-border) py-8 text-sm text-(--color-fg-muted)">
 			<div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-4 sm:flex-row">
-				<p>© {new Date().getFullYear()} Elysia Finanças. Todos os direitos reservados.</p>
+				<p>© {new Date().getFullYear()} Money. Todos os direitos reservados.</p>
 				<nav className="flex items-center gap-4">
 					<Link to="/termos-de-uso" className="hover:text-(--color-fg)">
 						Termos de uso

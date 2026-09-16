@@ -1,5 +1,6 @@
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatCurrencyCents, getCategoryLabel } from "../lib/categories";
+import { CategoryIcon } from "../lib/category-icons";
 import { useIsDarkTheme } from "./theme-toggle";
 
 export type PieDatum = {
@@ -38,13 +39,15 @@ export function CategoryPieChart({
 		return <p className="py-8 text-center text-sm text-(--color-fg-muted)">{emptyLabel}</p>;
 	}
 
+	const sorted = [...data].sort((a, b) => b.total - a.total);
+
 	return (
 		<div>
 			<div className="h-72 w-full">
 				<ResponsiveContainer width="100%" height="100%">
 					<PieChart>
 						<Pie
-							data={data}
+							data={sorted}
 							dataKey="percentage"
 							nameKey="category"
 							innerRadius="55%"
@@ -53,29 +56,37 @@ export function CategoryPieChart({
 							strokeWidth={2}
 							stroke="var(--color-surface)"
 						>
-							{data.map((entry) => {
+							{sorted.map((entry) => {
 								const color = colors[entry.category];
 								const fill = color ? (isDark ? color.dark : color.light) : "#898781";
 								return <Cell key={entry.category} fill={fill} />;
 							})}
 						</Pie>
 						<Tooltip content={<TooltipContent />} />
-						<Legend
-							formatter={(value: string) => (
-								<span className="text-sm text-(--color-fg)">{getCategoryLabel(value)}</span>
-							)}
-						/>
 					</PieChart>
 				</ResponsiveContainer>
 			</div>
 
 			<ul className="mt-2 flex flex-col divide-y divide-(--color-border) border-t border-(--color-border)">
-				{data.map((entry) => (
-					<li key={entry.category} className="flex items-center justify-between gap-4 py-2 text-sm">
-						<span>{getCategoryLabel(entry.category)}</span>
-						<span className="font-medium tabular-nums">{formatCurrencyCents(entry.total)}</span>
-					</li>
-				))}
+				{sorted.map((entry) => {
+					const color = colors[entry.category];
+					const swatch = color ? (isDark ? color.dark : color.light) : "#898781";
+					return (
+						<li key={entry.category} className="flex items-center gap-3 py-2 text-sm">
+							<span
+								className="size-2.5 shrink-0 rounded-full"
+								style={{ backgroundColor: swatch }}
+								aria-hidden="true"
+							/>
+							<CategoryIcon
+								category={entry.category}
+								className="size-4 shrink-0 text-(--color-fg-muted)"
+							/>
+							<span className="flex-1">{getCategoryLabel(entry.category)}</span>
+							<span className="font-medium tabular-nums">{formatCurrencyCents(entry.total)}</span>
+						</li>
+					);
+				})}
 			</ul>
 		</div>
 	);

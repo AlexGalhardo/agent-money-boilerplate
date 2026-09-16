@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "../lib/auth-client";
+import { ThemeToggle } from "./theme-toggle";
 
 export function UserMenu({ name }: { name: string }) {
 	const navigate = useNavigate();
@@ -38,7 +39,7 @@ export function UserMenu({ name }: { name: string }) {
 			{open && (
 				<div
 					role="menu"
-					className="absolute right-0 z-10 mt-2 w-44 rounded-lg border border-(--color-border) bg-(--color-surface) py-1 shadow-lg"
+					className="absolute right-0 z-10 mt-2 w-48 rounded-lg border border-(--color-border) bg-(--color-surface) py-1 shadow-lg"
 				>
 					<Link
 						to="/minha-conta"
@@ -48,6 +49,19 @@ export function UserMenu({ name }: { name: string }) {
 					>
 						Minha Conta
 					</Link>
+					<Link
+						to="/api"
+						role="menuitem"
+						onClick={() => setOpen(false)}
+						className="block px-4 py-2 text-sm hover:bg-brand-500/10"
+					>
+						API
+					</Link>
+					<div className="flex items-center justify-between px-4 py-2 text-sm">
+						<span>Tema</span>
+						<ThemeToggle />
+					</div>
+					<hr className="my-1 border-(--color-border)" />
 					<button
 						type="button"
 						role="menuitem"

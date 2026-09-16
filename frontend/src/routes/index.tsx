@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MatrixRain } from "../components/matrix-rain";
 import { ThemeToggle, useIsDarkTheme } from "../components/theme-toggle";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
@@ -26,22 +27,26 @@ function Home() {
 
 	return (
 		<div
-			className={`${isDark ? "dark" : ""} flex h-dvh w-dvw flex-col overflow-hidden bg-(--color-bg) text-(--color-fg)`}
+			className={`${isDark ? "dark" : ""} relative flex h-dvh w-dvw flex-col overflow-hidden bg-(--color-bg) text-(--color-fg)`}
 		>
+			<MatrixRain className="pointer-events-none absolute inset-0 -z-10" />
+
 			<header className="flex items-center justify-between px-6 py-5 sm:px-10">
-				<span className="flex items-center gap-2 text-lg font-bold tracking-tight">
-					<span className="inline-block size-2.5 rounded-full bg-brand-500" aria-hidden="true" />
-					Money
-				</span>
-				<Link
-					to="/entrar"
-					className="rounded-lg border border-(--color-border) px-4 py-2 text-sm font-medium hover:bg-brand-500/10"
-				>
-					Entrar
-				</Link>
+				<div className="mx-auto flex w-full max-w-6xl items-center justify-between">
+					<span className="flex items-center gap-2 text-lg font-bold tracking-tight">
+						<img src="/favicon.svg" alt="" aria-hidden="true" className="size-5" />
+						Money
+					</span>
+					<Link
+						to="/entrar"
+						className="rounded-lg border border-(--color-border) px-4 py-2 text-sm font-medium hover:bg-brand-500/10"
+					>
+						Entrar
+					</Link>
+				</div>
 			</header>
 
-			<main className="flex min-h-0 flex-1 items-center justify-center overflow-hidden px-6 sm:px-10">
+			<main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 items-center justify-center overflow-hidden px-4 sm:px-10">
 				<div className="mx-auto w-full text-center lg:w-1/2">
 					<h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl">
 						<span className="block bg-gradient-to-r from-brand-300 via-brand-500 to-brand-700 bg-clip-text text-transparent">
@@ -54,19 +59,21 @@ function Home() {
 			</main>
 
 			<footer className="flex items-center justify-between px-6 py-5 text-sm text-(--color-fg-muted) sm:px-10">
-				<p>© {new Date().getFullYear()} Money.</p>
-				<nav className="flex items-center gap-4">
-					<Link to="/contato" className="hover:text-(--color-fg)">
-						Contato
-					</Link>
-					<Link to="/politica-de-privacidade" className="hover:text-(--color-fg)">
-						Política de Privacidade
-					</Link>
-					<Link to="/termos-de-uso" className="hover:text-(--color-fg)">
-						Termos de Uso
-					</Link>
-					<ThemeToggle />
-				</nav>
+				<div className="mx-auto flex w-full max-w-6xl items-center justify-between">
+					<p>© {new Date().getFullYear()} Money.</p>
+					<nav className="flex items-center gap-4">
+						<Link to="/contato" className="hover:text-(--color-fg)">
+							Contato
+						</Link>
+						<Link to="/politica-de-privacidade" className="hover:text-(--color-fg)">
+							Política de Privacidade
+						</Link>
+						<Link to="/termos-de-uso" className="hover:text-(--color-fg)">
+							Termos de Uso
+						</Link>
+						<ThemeToggle />
+					</nav>
+				</div>
 			</footer>
 		</div>
 	);
