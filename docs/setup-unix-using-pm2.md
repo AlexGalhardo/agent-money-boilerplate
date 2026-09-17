@@ -1,6 +1,6 @@
 # Setup local com PM2 (Linux/macOS, sem Docker)
 
-Roda os 3 workspaces (`api`, `frontend`, `bot`) como processos PM2 em modo
+Roda os 3 workspaces (`backend`, `frontend`, `bot`) como processos PM2 em modo
 watch (`bun run dev` de cada um), direto no host — sem containers. Para
 rodar via Docker em vez disso, veja
 [`setup-unix-using-docker.md`](./setup-unix-using-docker.md). No Windows,
@@ -37,13 +37,13 @@ O script:
 
 1. Instala o PM2 globalmente (`bun install -g pm2`) se ainda não estiver
    disponível, e roda `bun install` no monorepo.
-2. Cria `api/.env` e `bot/.env` (gerando segredos na primeira vez), e, se
+2. Cria `backend/.env` e `bot/.env` (gerando segredos na primeira vez), e, se
    Postgres foi escolhido, sobe só o container do banco
    (`docker compose up -d postgres`) quando o Docker está disponível.
 3. Aplica migrations, gera o Prisma Client e popula o banco
    (`db:seed` — `admin@gmail.com` / `adminBR@123` + `aleexgvieira@gmail.com` / `galhardyn`).
-4. Sobe `elysia-api` e `elysia-frontend` com
-   `pm2 start ecosystem.local.config.js --only elysia-api,elysia-frontend`.
+4. Sobe `elysia-backend` e `elysia-frontend` com
+   `pm2 start ecosystem.local.config.js --only elysia-backend,elysia-frontend`.
    `elysia-bot` só é iniciado automaticamente se `bot/.env` já tiver
    `TELEGRAM_BOT_TOKEN` preenchido (ver abaixo).
 
@@ -75,15 +75,15 @@ UI opcional para inspecionar/editar dados direto no banco, iniciada sob
 demanda (não sobe junto com os outros serviços):
 
 ```bash
-cd api && bun run db:studio   # abre em http://localhost:5555
+cd backend && bun run db:studio   # abre em http://localhost:5555
 ```
 
 ## Comandos úteis
 
 ```bash
 pm2 status
-pm2 logs                     # logs em tempo real dos 3 serviços (api, frontend, bot)
-pm2 logs elysia-api          # ou elysia-frontend / elysia-bot, para um serviço só
+pm2 logs                     # logs em tempo real dos 3 serviços (backend, frontend, bot)
+pm2 logs elysia-backend          # ou elysia-frontend / elysia-bot, para um serviço só
 pm2 restart ecosystem.local.config.js
 pm2 stop ecosystem.local.config.js
 pm2 delete ecosystem.local.config.js

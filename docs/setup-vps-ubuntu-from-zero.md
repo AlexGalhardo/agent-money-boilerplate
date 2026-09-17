@@ -53,10 +53,10 @@ bun install -g pm2
 git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
 cd elysia-tanstack-finances
 bun install
-cp api/.env.example api/.env
+cp backend/.env.example backend/.env
 ```
 
-Edite `api/.env`:
+Edite `backend/.env`:
 
 ```env
 NODE_ENV=production
@@ -76,11 +76,11 @@ necessários para as feature flags correspondentes funcionarem em produção).
 ## 7. Build
 
 ```bash
-(cd api && bun run db:deploy:postgres && bun run build)
+(cd backend && bun run db:deploy:postgres && bun run build)
 (cd frontend && VITE_API_URL=https://api.SEU_DOMINIO bun run build)
 ```
 
-O build da API gera o binário executável `api/server`; o do frontend gera
+O build da API gera o binário executável `backend/server`; o do frontend gera
 `frontend/dist/` (assets + SSR) — servido em produção por `frontend/server.ts`,
 que soma o handler de SSR do TanStack Start com os arquivos estáticos de
 `dist/client/assets` (o `dist/server/server.js` gerado pelo build sozinho não
@@ -96,7 +96,7 @@ pm2 save
 pm2 startup   # siga a instrução impressa para o PM2 iniciar no boot
 ```
 
-Comandos úteis: `pm2 status`, `pm2 logs elysia-api`, `pm2 restart elysia-api`.
+Comandos úteis: `pm2 status`, `pm2 logs elysia-backend`, `pm2 restart elysia-backend`.
 
 ## 9. Configurar o Caddy
 
@@ -128,7 +128,7 @@ Adicione:
 cd elysia-tanstack-finances
 git pull
 bun install
-(cd api && bun run db:deploy:postgres && bun run build)
+(cd backend && bun run db:deploy:postgres && bun run build)
 (cd frontend && VITE_API_URL=https://api.SEU_DOMINIO bun run build)
 pm2 restart ecosystem.config.js
 ```

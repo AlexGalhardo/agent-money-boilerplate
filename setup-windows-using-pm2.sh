@@ -38,12 +38,12 @@ if [ "$DB_CHOICE" = "postgres" ]; then
 		echo "==> Subindo Postgres via Docker Desktop (docker compose up -d postgres)"
 		docker compose up -d postgres
 	else
-		echo "Docker Desktop não está rodando (ou não foi encontrado) — abra-o antes de continuar, ou suba um Postgres em localhost:5432 (usuário/senha/banco: elysia/elysia/elysia_financas) por conta própria e ajuste DATABASE_URL em api/.env e bot/.env depois deste script rodar." >&2
+		echo "Docker Desktop não está rodando (ou não foi encontrado) — abra-o antes de continuar, ou suba um Postgres em localhost:5432 (usuário/senha/banco: elysia/elysia/elysia_financas) por conta própria e ajuste DATABASE_URL em backend/.env e bot/.env depois deste script rodar." >&2
 	fi
 else
 	PROVIDER="sqlite"
 	API_DATABASE_URL="file:./dev.db"
-	BOT_DATABASE_URL="file:../api/dev.db"
+	BOT_DATABASE_URL="file:../backend/dev.db"
 fi
 
 write_api_env "$PROVIDER" "$API_DATABASE_URL"
@@ -53,18 +53,18 @@ write_abacatepay_env "$TEST_MODE_CHOICE"
 
 echo "==> Aplicando migrations e gerando o Prisma Client"
 if [ "$PROVIDER" = "postgresql" ]; then
-	(cd api && bun run db:deploy:postgres && bun run db:generate:postgres)
+	(cd backend && bun run db:deploy:postgres && bun run db:generate:postgres)
 else
-	(cd api && bun run db:deploy && bun run db:generate)
+	(cd backend && bun run db:deploy && bun run db:generate)
 fi
 
 echo "==> Populando banco (admin@gmail.com / adminBR@123 + aleexgvieira@gmail.com / galhardyn)"
-(cd api && bun run db:seed)
+(cd backend && bun run db:seed)
 
 write_bot_env "$PROVIDER" "$BOT_DATABASE_URL"
 
 echo "==> Subindo api + frontend com PM2 (ecosystem.local.config.js)"
-pm2 start ecosystem.local.config.js --only elysia-api,elysia-frontend
+pm2 start ecosystem.local.config.js --only elysia-backend,elysia-frontend
 
 if bot_is_configured; then
 	echo "==> bot/.env já configurado, subindo elysia-bot também"
@@ -82,7 +82,7 @@ echo "  API:      http://localhost:4000 (docs em /docs)"
 echo "  Frontend: http://localhost:4001"
 print_prisma_studio_hint
 echo ""
-echo "3 serviços no PM2: elysia-api, elysia-frontend, elysia-bot"
+echo "3 serviços no PM2: elysia-backend, elysia-frontend, elysia-bot"
 echo "  (elysia-bot só sobe de fato depois de bot/.env configurado — ver acima)"
 echo ""
 echo "Comandos úteis:"

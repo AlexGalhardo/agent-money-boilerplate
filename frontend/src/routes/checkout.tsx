@@ -1,15 +1,15 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageLayout } from "../components/page-layout";
 import { PixCheckoutModal } from "../components/pix-checkout-modal";
 import { api } from "../lib/api";
-import { requireAuth } from "../lib/require-auth";
+import { requireNoActivePlan } from "../lib/redirect-if-active-plan";
 import { useAppConfig } from "../lib/use-app-config";
 
 export const Route = createFileRoute("/checkout")({
 	head: () => ({ meta: [{ title: "Escolha seu plano — Money" }] }),
-	beforeLoad: requireAuth,
+	beforeLoad: requireNoActivePlan,
 	component: CheckoutPage,
 });
 
@@ -34,12 +34,10 @@ const plans: {
 function CheckoutPage() {
 	const { data: config } = useAppConfig();
 	const queryClient = useQueryClient();
-	const navigate = useNavigate();
 
 	const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [charge, setCharge] = useState<Charge | null>(null);
-	const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
 	async function handlePay(plan: PlanId): Promise<void> {
 		setError(null);
@@ -56,15 +54,13 @@ function CheckoutPage() {
 		setCharge({ id: data.id, brCode: data.brCode, brCodeBase64: data.brCodeBase64, expiresAt: data.expiresAt });
 	}
 
-	function handlePaid(planExpiresAt: string): void {
+	function handlePaid(): void {
+		// O próprio PixCheckoutModal mostra a confirmação e redireciona pro
+		// /dashboard após o cooldown — aqui só invalida o cache pra essas
+		// páginas já carregarem os dados de plano atualizados.
 		queryClient.invalidateQueries({ queryKey: ["me"] });
 		queryClient.invalidateQueries({ queryKey: ["plan-status"] });
 		queryClient.invalidateQueries({ queryKey: ["payment-history"] });
-		setSuccessMessage(
-			planExpiresAt
-				? `Pagamento realizado com sucesso! Você está no plano PRO até o dia ${new Date(planExpiresAt).toLocaleDateString("pt-BR")}.`
-				: "Pagamento realizado com sucesso!",
-		);
 	}
 
 	return (
@@ -74,11 +70,6 @@ function CheckoutPage() {
 				<p className="mt-2 text-(--color-fg-muted)">Pagamento único via PIX, sem renovação automática.</p>
 
 				{error && <p className="mt-4 text-sm text-red-500">{error}</p>}
-				{successMessage && (
-					<p className="mt-4 rounded-lg bg-brand-500/10 px-4 py-3 text-sm text-brand-600" role="status">
-						{successMessage}
-					</p>
-				)}
 
 				<div className="mt-8 grid gap-6 sm:grid-cols-2">
 					{plans.map((plan) => (
@@ -107,10 +98,7 @@ function CheckoutPage() {
 				<PixCheckoutModal
 					charge={charge}
 					testModeEnabled={Boolean(config?.abacatepayPixTestMode)}
-					onClose={() => {
-						setCharge(null);
-						if (successMessage) navigate({ to: "/minha-conta" });
-					}}
+					onClose={() => setCharge(null)}
 					onPaid={handlePaid}
 				/>
 			)}

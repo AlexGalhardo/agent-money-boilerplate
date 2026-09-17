@@ -4,6 +4,6 @@
 }
 
 api.{$DOMAIN} {
-	reverse_proxy api:4000
+	reverse_proxy backend:4000
 	encode zstd gzip
 }

@@ -13,7 +13,7 @@ GET {{baseUrl}}/docs
 
 ### Signup
 # @name signup
-POST {{baseUrl}}/api/auth/sign-up/email
+POST {{baseUrl}}/auth/sign-up/email
 Content-Type: application/json
 Origin: {{origin}}
 
@@ -25,7 +25,7 @@ Origin: {{origin}}
 
 ### Login
 # @name login
-POST {{baseUrl}}/api/auth/sign-in/email
+POST {{baseUrl}}/auth/sign-in/email
 Content-Type: application/json
 Origin: {{origin}}
 
@@ -35,7 +35,7 @@ Origin: {{origin}}
 }
 
 ### Request password reset
-POST {{baseUrl}}/api/auth/request-password-reset
+POST {{baseUrl}}/auth/request-password-reset
 Content-Type: application/json
 Origin: {{origin}}
 
@@ -45,7 +45,7 @@ Origin: {{origin}}
 }
 
 ### Sign out
-POST {{baseUrl}}/api/auth/sign-out
+POST {{baseUrl}}/auth/sign-out
 Origin: {{origin}}
 Cookie: better-auth.session_token={{login.response.body.$.token}}
 

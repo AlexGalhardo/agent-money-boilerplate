@@ -1,4 +1,4 @@
-import { transactionService } from "@elysia-galhardo-finances/api/src/modules/transactions/transaction.service";
+import { transactionService } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.service";
 import type { Context } from "grammy";
 import { formatCurrencyCents, getCategoryLabel } from "../formatting/format";
 import { ensureUserReady } from "../lib/user-gate";

@@ -1,10 +1,10 @@
 services:
-  api:
+  backend:
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: backend/Dockerfile
     env_file:
-      - ./api/.env
+      - ./backend/.env
     environment:
       DATABASE_PROVIDER: sqlite
       DATABASE_URL: file:/data/dev.db
@@ -23,10 +23,17 @@ services:
       dockerfile: frontend/Dockerfile
       args:
         VITE_API_URL: http://localhost:4000
+    environment:
+      # Diferente do build arg acima (usado pelo navegador): esse é lido em
+      # runtime pelo proxy de /auth, /users, /transactions etc. embutido em
+      # frontend/server.ts (ver frontend/proxy-paths.ts) — dentro do container
+      # "localhost" seria o próprio frontend, não o backend, então precisa do
+      # hostname do serviço na rede do compose.
+      VITE_API_URL: http://backend:4000
     ports:
       - "4001:4001"
     depends_on:
-      - api
+      - backend
 
   bot:
     build:
@@ -40,7 +47,7 @@ services:
     volumes:
       - sqlite_data:/data
     depends_on:
-      - api
+      - backend
 
 volumes:
   sqlite_data:

@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { Modal } from "./modal";
@@ -5,6 +6,7 @@ import { Modal } from "./modal";
 const CLOSE_COOLDOWN_SECONDS = 60;
 const POLL_INTERVAL_MS = 3000;
 const TEST_MODE_PAYMENT_DELAY_MS = 10_000;
+const POST_PAYMENT_REDIRECT_SECONDS = 10;
 
 type Charge = { id: string; brCode: string; brCodeBase64: string; expiresAt: string };
 
@@ -19,7 +21,10 @@ export function PixCheckoutModal({
 	onClose: () => void;
 	onPaid: (planExpiresAt: string) => void;
 }) {
+	const navigate = useNavigate();
 	const [status, setStatus] = useState<"pending" | "paid" | "expired">("pending");
+	const [paidMonths, setPaidMonths] = useState(0);
+	const [redirectCooldown, setRedirectCooldown] = useState(POST_PAYMENT_REDIRECT_SECONDS);
 	const [closeCooldown, setCloseCooldown] = useState(CLOSE_COOLDOWN_SECONDS);
 	const [simulating, setSimulating] = useState(false);
 	const [simulateMessage, setSimulateMessage] = useState<string | null>(null);
@@ -50,6 +55,7 @@ export function PixCheckoutModal({
 
 			if (data.status === "paid" && !paidRef.current) {
 				paidRef.current = true;
+				setPaidMonths(data.months);
 				setStatus("paid");
 				onPaid(data.planExpiresAt ?? "");
 			} else if (data.status === "expired") {
@@ -59,6 +65,18 @@ export function PixCheckoutModal({
 
 		return () => clearInterval(interval);
 	}, [charge.id, status, onPaid]);
+
+	// Trava o fechamento do modal durante a contagem regressiva pro usuário
+	// obrigatoriamente ver a confirmação antes de ser levado ao dashboard.
+	useEffect(() => {
+		if (status !== "paid") return;
+		if (redirectCooldown <= 0) {
+			navigate({ to: "/dashboard" });
+			return;
+		}
+		const timer = setTimeout(() => setRedirectCooldown((current) => current - 1), 1000);
+		return () => clearTimeout(timer);
+	}, [status, redirectCooldown, navigate]);
 
 	async function handleSimulate(): Promise<void> {
 		setSimulating(true);
@@ -76,6 +94,7 @@ export function PixCheckoutModal({
 			const { data } = await api.payments.pix({ id: charge.id }).status.get();
 			if (data && "status" in data && data.status === "paid") {
 				paidRef.current = true;
+				setPaidMonths(data.months);
 				setStatus("paid");
 				onPaid(data.planExpiresAt ?? "");
 			}
@@ -89,6 +108,13 @@ export function PixCheckoutModal({
 		setTimeout(() => setCopied(false), 2000);
 	}
 
+	const canClose = status === "expired" || (status === "pending" && closeCooldown <= 0);
+
+	function handleClose(): void {
+		if (!canClose) return;
+		onClose();
+	}
+
 	const minutes = Math.floor(remainingSeconds / 60);
 	const seconds = remainingSeconds % 60;
 	const qrSrc = charge.brCodeBase64.startsWith("data:")
@@ -96,11 +122,18 @@ export function PixCheckoutModal({
 		: `data:image/png;base64,${charge.brCodeBase64}`;
 
 	return (
-		<Modal title="Pagamento via PIX" onClose={onClose}>
+		<Modal title="Pagamento via PIX" onClose={handleClose}>
 			{status === "paid" ? (
-				<p className="text-sm text-brand-600" role="status">
-					Pagamento realizado com sucesso! Você está no plano PRO.
-				</p>
+				<div className="flex flex-col items-center gap-2 text-center">
+					<p className="text-sm text-brand-600" role="status">
+						PIX pago com sucesso! Você assinou {paidMonths} {paidMonths === 1 ? "mês" : "meses"} do Plano
+						PRO!
+					</p>
+					<p className="text-xs text-(--color-fg-muted)">
+						Redirecionando para o dashboard em {redirectCooldown} segundo{redirectCooldown === 1 ? "" : "s"}
+						...
+					</p>
+				</div>
 			) : status === "expired" ? (
 				<p className="text-sm text-red-500" role="status">
 					Esse PIX expirou. Feche esta janela e gere um novo código.
@@ -154,13 +187,15 @@ export function PixCheckoutModal({
 
 			<button
 				type="button"
-				onClick={onClose}
-				disabled={closeCooldown > 0 && status === "pending"}
+				onClick={handleClose}
+				disabled={!canClose}
 				className="mt-6 w-full rounded-lg border border-(--color-border) px-4 py-2 text-sm font-semibold disabled:opacity-40"
 			>
 				{status === "pending" && closeCooldown > 0
 					? `Você pode fechar essa aba em ${closeCooldown} segundos...`
-					: "Fechar"}
+					: status === "paid"
+						? "Redirecionando..."
+						: "Fechar"}
 			</button>
 		</Modal>
 	);

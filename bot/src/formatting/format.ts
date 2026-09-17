@@ -1,7 +1,7 @@
 import type {
 	TransactionCategory,
 	TransactionType,
-} from "@elysia-galhardo-finances/api/src/modules/transactions/transaction.schema";
+} from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
 
 // Mesmos rótulos usados no dashboard web (frontend/src/lib/categories.ts) —
 // duplicado aqui de propósito: o bot não deve depender do workspace do
@@ -18,6 +18,7 @@ export const categoryLabels: Record<TransactionCategory, string> = {
 	investment: "Investimentos",
 	rental_income: "Aluguel",
 	extra_income: "Renda Extra",
+	freelancer: "Freelancer",
 	gifts: "Presentes",
 	prizes: "Prêmios",
 	transfers: "Transferências",

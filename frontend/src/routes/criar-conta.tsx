@@ -118,7 +118,7 @@ function SignupPage() {
 							type="text"
 							value={name}
 							onChange={(event) => setName(capitalizeFirstLetter(event.target.value))}
-							placeholder="Ex: Maria"
+							placeholder="Digite seu nome"
 							maxLength={16}
 							className={inputClassName}
 							aria-invalid={Boolean(errors.name)}

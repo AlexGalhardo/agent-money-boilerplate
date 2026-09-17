@@ -38,7 +38,7 @@ Changelog completo em [`CHANGELOG.md`](./CHANGELOG.md).
 ## Estrutura
 
 ```
-/api/           → ElysiaJS (REST API, auth, pagamentos, cron)
+/backend/       → ElysiaJS (REST API, auth, pagamentos, cron)
 /frontend/      → TanStack Start (SSR)
 /bot/           → bot do Telegram (reusa Prisma/criptografia/regras da API)
 /http-client/   → chamadas HTTP de referência (api.http)

@@ -10,6 +10,7 @@ export const categoryLabels = {
 	investment: "Investimentos",
 	rental_income: "Aluguel",
 	extra_income: "Renda Extra",
+	freelancer: "Freelancer",
 	gifts: "Presentes",
 	prizes: "Prêmios",
 	transfers: "Transferências",
@@ -31,6 +32,7 @@ export const incomeCategories: TransactionCategory[] = [
 	"investment",
 	"rental_income",
 	"extra_income",
+	"freelancer",
 	"gifts",
 	"prizes",
 ];
@@ -46,11 +48,34 @@ export function getCategoryLabel(category: string): string {
 type ThemedColor = { light: string; dark: string };
 
 // Paleta categórica validada (CVD-safe) para gráficos — ordem fixa, nunca
-// ciclada dentro de um mesmo gráfico. Despesa e receita são gráficos
-// separados, então reaproveitar slots entre eles não gera confusão.
+// ciclada dentro de um mesmo gráfico.
 function buildColorMap(order: TransactionCategory[]): Record<string, ThemedColor> {
-	const lightSlots = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
-	const darkSlots = ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"];
+	const lightSlots = [
+		"#2a78d6",
+		"#eb6834",
+		"#1baf7a",
+		"#eda100",
+		"#e87ba4",
+		"#008300",
+		"#4a3aa7",
+		"#e34948",
+		"#0e9594",
+		"#a1662f",
+		"#c026d3",
+	];
+	const darkSlots = [
+		"#3987e5",
+		"#d95926",
+		"#199e70",
+		"#c98500",
+		"#d55181",
+		"#008300",
+		"#9085e9",
+		"#e66767",
+		"#2dd4d2",
+		"#c98047",
+		"#e879f9",
+	];
 
 	const map: Record<string, ThemedColor> = {};
 	order.forEach((category, index) => {
@@ -61,18 +86,19 @@ function buildColorMap(order: TransactionCategory[]): Record<string, ThemedColor
 	return map;
 }
 
-export const expenseCategoryColor = buildColorMap([
-	"food",
-	"transport",
-	"housing",
-	"health",
-	"education",
-	"entertainment",
-	"shopping",
-	"other",
-]);
+// Cada categoria exibida em um card recebe uma cor fixa e única dentro
+// daquele card — despesa e receita são gráficos separados, então
+// reaproveitar tons entre eles não gera confusão.
+export const expenseCategoryColor = buildColorMap(expenseCategories);
 
 export const incomeCategoryColor = buildColorMap(incomeCategories);
+
+export function getCategoryColor(category: string, type: "income" | "expense", isDark: boolean): string {
+	const colors = type === "income" ? incomeCategoryColor : expenseCategoryColor;
+	const color = colors[category];
+	if (!color) return isDark ? "#a3a3a3" : "#525252";
+	return isDark ? color.dark : color.light;
+}
 
 export function formatCurrencyCents(cents: number): string {
 	return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

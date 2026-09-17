@@ -1,6 +1,6 @@
 # Setup no Windows 11 (WSL2) com PM2, sem Docker
 
-Roda os 3 workspaces (`api`, `frontend`, `bot`) como processos PM2 em modo
+Roda os 3 workspaces (`backend`, `frontend`, `bot`) como processos PM2 em modo
 watch, direto no WSL2 — sem containers para a aplicação. Para rodar via
 Docker Desktop em vez disso, veja
 [`setup-windows-using-docker.md`](./setup-windows-using-docker.md). No
@@ -43,7 +43,7 @@ Para pular a pergunta, passe o banco como argumento:
 
 O comportamento é idêntico ao `setup-unix-using-pm2.sh` (instala PM2 e
 dependências, cria os `.env`, aplica migrations, popula o banco e sobe
-`elysia-api` + `elysia-frontend` com PM2), só com mensagens de erro
+`elysia-backend` + `elysia-frontend` com PM2), só com mensagens de erro
 adaptadas para o Docker Desktop quando Postgres é escolhido.
 
 `ecosystem.local.config.js` (raiz do projeto) é a config de PM2 usada aqui —
@@ -74,7 +74,7 @@ UI opcional para inspecionar/editar dados direto no banco, iniciada sob
 demanda (não sobe junto com os outros serviços):
 
 ```bash
-cd api && bun run db:studio   # abre em http://localhost:5555
+cd backend && bun run db:studio   # abre em http://localhost:5555
 ```
 
 ## Problemas comuns no Windows
@@ -85,14 +85,14 @@ cd api && bun run db:studio   # abre em http://localhost:5555
   nativa — os dois ambientes têm PATHs separados.
 - **Escolheu Postgres e nada sobe**: o Docker Desktop precisa estar aberto
   antes de rodar o script; sem ele, configure `DATABASE_URL` manualmente em
-  `api/.env` e `bot/.env` apontando para um Postgres já disponível.
+  `backend/.env` e `bot/.env` apontando para um Postgres já disponível.
 
 ## Comandos úteis
 
 ```bash
 pm2 status
-pm2 logs                     # logs em tempo real dos 3 serviços (api, frontend, bot)
-pm2 logs elysia-api          # ou elysia-frontend / elysia-bot, para um serviço só
+pm2 logs                     # logs em tempo real dos 3 serviços (backend, frontend, bot)
+pm2 logs elysia-backend          # ou elysia-frontend / elysia-bot, para um serviço só
 pm2 restart ecosystem.local.config.js
 pm2 stop ecosystem.local.config.js
 pm2 delete ecosystem.local.config.js

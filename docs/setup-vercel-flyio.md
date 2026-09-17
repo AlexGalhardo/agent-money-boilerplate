@@ -1,7 +1,7 @@
 # Deploy em Vercel (frontend) + Fly.io (API)
 
 Alternativa a VPS: frontend na Vercel (TanStack Start tem suporte nativo) e
-API no Fly.io (roda o `api/Dockerfile` direto, sem servidor próprio para
+API no Fly.io (roda o `backend/Dockerfile` direto, sem servidor próprio para
 gerenciar).
 
 ## Frontend na Vercel
@@ -20,7 +20,7 @@ Não é necessário configurar nada além da variável `VITE_API_URL`.
 
 ```bash
 curl -L https://fly.io/install.sh | sh
-cd api
+cd backend
 fly launch --no-deploy --dockerfile Dockerfile
 ```
 
@@ -46,18 +46,18 @@ fly deploy --dockerfile Dockerfile
 
 O build a partir da raiz do monorepo é necessário porque o `Dockerfile` da
 API referencia `package.json`/`bun.lock` do workspace; rode `fly deploy` a
-partir da **raiz** do repositório, não de `api/`:
+partir da **raiz** do repositório, não de `backend/`:
 
 ```bash
 cd ..
-fly deploy --config api/fly.toml --dockerfile api/Dockerfile
+fly deploy --config backend/fly.toml --dockerfile backend/Dockerfile
 ```
 
 ## Cronjob de verificação de plano expirado
 
 Duas opções, dependendo de onde a API está:
 
-- **API na própria Vercel** (alternativa ao Fly.io): use `api/vercel.json`
+- **API na própria Vercel** (alternativa ao Fly.io): use `backend/vercel.json`
   (já configurado) — a Vercel chama `GET /cron/check-expired-plans`
   automaticamente todo dia às 3h, autenticando com
   `Authorization: Bearer $CRON_SECRET` (defina `CRON_SECRET` nas env vars do

@@ -1,10 +1,10 @@
-import { env as apiEnv } from "@elysia-galhardo-finances/api/src/config/env";
-import { hasActivePlan } from "@elysia-galhardo-finances/api/src/lib/plan";
-import { PLAN_DEFINITIONS, planIds } from "@elysia-galhardo-finances/api/src/modules/payments/payment.schema";
+import { env as apiEnv } from "@elysia-galhardo-finances/backend/src/config/env";
+import { hasActivePlan } from "@elysia-galhardo-finances/backend/src/lib/plan";
+import { PLAN_DEFINITIONS, planIds } from "@elysia-galhardo-finances/backend/src/modules/payments/payment.schema";
 import {
 	AbacatePayNotConfiguredError,
 	paymentService,
-} from "@elysia-galhardo-finances/api/src/modules/payments/payment.service";
+} from "@elysia-galhardo-finances/backend/src/modules/payments/payment.service";
 import type { Context } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { formatDate } from "../formatting/format";

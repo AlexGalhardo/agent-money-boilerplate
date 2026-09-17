@@ -13,8 +13,8 @@ dist
 build
 **/dist
 **/build
-api/server
-api/server.exe
+backend/server
+backend/server.exe
 **/.tanstack
 
 # prisma

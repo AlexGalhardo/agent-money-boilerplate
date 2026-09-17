@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import Fuse from "fuse.js";
-import { useMemo, useState } from "react";
+import { ArrowDownCircle, ArrowUpCircle, Pencil, Trash2, Upload } from "lucide-react";
+import { useState } from "react";
 import { AccordionCard } from "../../components/accordion-card";
 import { BalanceCard } from "../../components/balance-card";
 import { CategoryPieChart } from "../../components/category-pie-chart";
@@ -9,6 +9,7 @@ import { CategorySelect } from "../../components/category-select";
 import { ImportTransactionsModal } from "../../components/import-transactions-modal";
 import { Modal } from "../../components/modal";
 import { PageLayout } from "../../components/page-layout";
+import { useIsDarkTheme } from "../../components/theme-toggle";
 import type { TransactionFormInitial, TransactionFormSubmitValues } from "../../components/transaction-form";
 import { TransactionForm } from "../../components/transaction-form";
 import { UserMenu } from "../../components/user-menu";
@@ -18,13 +19,16 @@ import type { TransactionCategory } from "../../lib/categories";
 import {
 	categoryLabels,
 	categoryOptions,
+	expenseCategories,
 	expenseCategoryColor,
 	formatCurrencyCents,
+	getCategoryColor,
+	incomeCategories,
 	incomeCategoryColor,
 } from "../../lib/categories";
 import { CategoryIcon } from "../../lib/category-icons";
 import { exportTransactionsToCsv, exportTransactionsToXlsx } from "../../lib/export-transactions";
-import { FREE_TRANSACTION_LIMIT, hasActivePlan } from "../../lib/plan";
+import { FREE_TRANSACTION_LIMIT, hasActivePlan, planDaysRemaining } from "../../lib/plan";
 import { requireAuth } from "../../lib/require-auth";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -45,14 +49,30 @@ type Transaction = {
 };
 
 const PER_PAGE = 10;
-// Busca por nome é feita no cliente (fuse.js), então o servidor precisa devolver
-// o conjunto inteiro que já passou pelos filtros de categoria/data — não apenas
-// uma página — para a busca e a paginação no cliente funcionarem sobre tudo.
+// A partir desse tamanho a descrição some do input normal — usa textarea no
+// modal de edição e fonte menor na tabela para caber melhor (extratos
+// bancários importados costumam ter descrições bem mais longas que as
+// digitadas manualmente).
+const LONG_DESCRIPTION_LENGTH = 60;
+// Busca por nome é feita no cliente, então o servidor precisa devolver o
+// conjunto inteiro que já passou pelos filtros de categoria/data — não
+// apenas uma página — para a busca e a paginação no cliente funcionarem
+// sobre tudo.
 const FETCH_ALL_PER_PAGE = 1000;
+
+// Remove acentos e normaliza caixa para que a busca encontre um trecho em
+// qualquer posição da descrição (ex: descrições de extrato bancário, que
+// costumam ser bem longas e ter o termo buscado no meio do texto) — uma
+// busca fuzzy por posição (como a do fuse.js) falha nesses casos porque o
+// termo buscado fica longe do início da string.
+function normalizeSearchText(value: string): string {
+	return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
 
 function DashboardPage() {
 	const queryClient = useQueryClient();
 	const { data: session } = useSession();
+	const isDark = useIsDarkTheme();
 
 	const [search, setSearch] = useState("");
 	const [category, setCategory] = useState<TransactionCategory | "">("");
@@ -104,6 +124,7 @@ function DashboardPage() {
 	const freeLimitReached = Boolean(
 		meQuery.data && !hasActivePlan(meQuery.data) && meQuery.data.freeTransactionCount >= FREE_TRANSACTION_LIMIT,
 	);
+	const daysRemaining = meQuery.data ? planDaysRemaining(meQuery.data) : null;
 
 	function invalidateAll(): void {
 		queryClient.invalidateQueries({ queryKey: ["transactions"] });
@@ -152,10 +173,13 @@ function DashboardPage() {
 
 	const allTransactions = transactionsQuery.data ?? [];
 
-	const fuse = useMemo(() => new Fuse(allTransactions, { keys: ["description"], threshold: 0.3 }), [allTransactions]);
-
+	const trimmedSearch = search.trim();
 	const searched =
-		search.trim().length >= 3 ? fuse.search(search.trim()).map((result) => result.item) : allTransactions;
+		trimmedSearch.length >= 3
+			? allTransactions.filter((transaction) =>
+					normalizeSearchText(transaction.description).includes(normalizeSearchText(trimmedSearch)),
+				)
+			: allTransactions;
 
 	const searchedIncomeTotal = searched
 		.filter((transaction) => transaction.type === "income")
@@ -170,10 +194,10 @@ function DashboardPage() {
 	const transactions = searched.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
 	const expenseData = (statsQuery.data ?? [])
-		.filter((row) => row.type === "expense")
+		.filter((row) => row.type === "expense" && expenseCategories.includes(row.category as TransactionCategory))
 		.map((row) => ({ category: row.category, total: row.total, percentage: row.percentage }));
 	const incomeData = (statsQuery.data ?? [])
-		.filter((row) => row.type === "income")
+		.filter((row) => row.type === "income" && incomeCategories.includes(row.category as TransactionCategory))
 		.map((row) => ({ category: row.category, total: row.total, percentage: row.percentage }));
 	const incomeTotal = incomeData.reduce((sum, row) => sum + row.total, 0);
 	const expenseTotal = expenseData.reduce((sum, row) => sum + row.total, 0);
@@ -194,37 +218,53 @@ function DashboardPage() {
 
 	return (
 		<PageLayout
+			headerTitleBadge={
+				daysRemaining !== null && (
+					<span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-[0_0_12px_rgba(249,115,22,0.6)]">
+						PRO por mais {daysRemaining} dia{daysRemaining === 1 ? "" : "s"}
+					</span>
+				)
+			}
 			headerActions={
 				<>
 					<button
 						type="button"
 						disabled={freeLimitReached}
 						onClick={() => setImportOpen(true)}
-						className="rounded-lg bg-[#820AD1] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#9a1df0] disabled:opacity-40"
+						aria-label="Importar"
+						title="Importar"
+						className="flex items-center gap-2 rounded-lg bg-[#820AD1] p-2 text-sm font-semibold text-white hover:bg-[#9a1df0] disabled:opacity-40 sm:px-3 sm:py-1.5"
 					>
-						Importar
+						<Upload className="size-4 shrink-0" aria-hidden="true" />
+						<span className="hidden sm:inline">Importar</span>
 					</button>
 					<button
 						type="button"
 						disabled={freeLimitReached}
 						onClick={() => setAddType("income")}
-						className="rounded-lg bg-emerald-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-40"
+						aria-label="Adicionar Receita"
+						title="Adicionar Receita"
+						className="flex items-center gap-2 rounded-lg bg-emerald-500 p-2 text-sm font-semibold text-white hover:bg-emerald-400 disabled:opacity-40 sm:px-3 sm:py-1.5"
 					>
-						Adicionar Receita
+						<ArrowUpCircle className="size-4 shrink-0" aria-hidden="true" />
+						<span className="hidden sm:inline">Adicionar Receita</span>
 					</button>
 					<button
 						type="button"
 						disabled={freeLimitReached}
 						onClick={() => setAddType("expense")}
-						className="rounded-lg bg-red-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-40"
+						aria-label="Adicionar Despesa"
+						title="Adicionar Despesa"
+						className="flex items-center gap-2 rounded-lg bg-red-500 p-2 text-sm font-semibold text-white hover:bg-red-400 disabled:opacity-40 sm:px-3 sm:py-1.5"
 					>
-						Adicionar Despesa
+						<ArrowDownCircle className="size-4 shrink-0" aria-hidden="true" />
+						<span className="hidden sm:inline">Adicionar Despesa</span>
 					</button>
 					<UserMenu name={session?.user.name ?? "Conta"} />
 				</>
 			}
 		>
-			<section className="mx-auto max-w-6xl px-4 py-10">
+			<section className="mx-auto max-w-7xl px-4 py-10">
 				{freeLimitReached && (
 					<p className="text-sm text-red-500">
 						Limite de {FREE_TRANSACTION_LIMIT} transações do plano gratuito atingido —{" "}
@@ -294,10 +334,10 @@ function DashboardPage() {
 							/>
 						</div>
 
-						{search.trim().length >= 3 && (
+						{trimmedSearch.length >= 3 && (
 							<div className="mt-3 flex w-full items-center justify-between gap-4 rounded-lg border border-(--color-border) bg-(--color-bg-subtle) px-3 py-2 text-sm">
 								<span className="text-(--color-fg-muted)">
-									{searched.length} resultado{searched.length === 1 ? "" : "s"} para "{search.trim()}"
+									{searched.length} resultado{searched.length === 1 ? "" : "s"} para "{trimmedSearch}"
 								</span>
 								<span className="flex gap-4 tabular-nums">
 									<span className="text-emerald-600">
@@ -366,7 +406,6 @@ function DashboardPage() {
 								<thead className="border-b border-(--color-border) text-(--color-fg-muted)">
 									<tr>
 										<th className="px-4 py-3 font-medium">Descrição</th>
-										<th className="px-4 py-3 font-medium">Categoria</th>
 										<th className="px-4 py-3 font-medium">Data</th>
 										<th className="px-4 py-3 text-right font-medium">Valor</th>
 										<th className="px-4 py-3 text-right font-medium">Ações</th>
@@ -375,7 +414,7 @@ function DashboardPage() {
 								<tbody>
 									{transactionsQuery.isLoading && (
 										<tr>
-											<td colSpan={5} className="px-4 py-8 text-center text-(--color-fg-muted)">
+											<td colSpan={4} className="px-4 py-8 text-center text-(--color-fg-muted)">
 												Carregando...
 											</td>
 										</tr>
@@ -383,7 +422,7 @@ function DashboardPage() {
 
 									{!transactionsQuery.isLoading && transactions.length === 0 && (
 										<tr>
-											<td colSpan={5} className="px-4 py-8 text-center text-(--color-fg-muted)">
+											<td colSpan={4} className="px-4 py-8 text-center text-(--color-fg-muted)">
 												Nenhuma transação encontrada.
 											</td>
 										</tr>
@@ -394,17 +433,30 @@ function DashboardPage() {
 											key={transaction.id}
 											className="border-b border-(--color-border) last:border-0"
 										>
-											<td className="px-4 py-3">{transaction.description}</td>
 											<td className="px-4 py-3">
-												<span
-													title={categoryLabels[transaction.category] ?? transaction.category}
-												>
+												<span className="flex items-center gap-2">
 													<CategoryIcon
 														category={transaction.category}
-														className="size-5 text-(--color-fg-muted)"
+														className="size-4 shrink-0"
+														style={{
+															color: getCategoryColor(
+																transaction.category,
+																transaction.type,
+																isDark,
+															),
+														}}
 													/>
-													<span className="sr-only">
-														{categoryLabels[transaction.category] ?? transaction.category}
+													<span
+														title={
+															categoryLabels[transaction.category] ?? transaction.category
+														}
+														className={
+															transaction.description.length >= LONG_DESCRIPTION_LENGTH
+																? "text-xs"
+																: ""
+														}
+													>
+														{transaction.description}
 													</span>
 												</span>
 											</td>
@@ -424,16 +476,20 @@ function DashboardPage() {
 													<button
 														type="button"
 														onClick={() => setEditing(transaction)}
-														className="rounded-lg border border-(--color-border) px-2.5 py-1 text-xs font-medium hover:bg-brand-500/10"
+														aria-label="Editar"
+														title="Editar"
+														className="rounded-lg border border-orange-500/40 p-1.5 text-orange-600 hover:bg-orange-500/10"
 													>
-														Editar
+														<Pencil className="size-4" aria-hidden="true" />
 													</button>
 													<button
 														type="button"
 														onClick={() => setDeleting(transaction)}
-														className="rounded-lg border border-red-500/40 px-2.5 py-1 text-xs font-medium text-red-500 hover:bg-red-500/10"
+														aria-label="Excluir"
+														title="Excluir"
+														className="rounded-lg border border-red-500/40 p-1.5 text-red-500 hover:bg-red-500/10"
 													>
-														Excluir
+														<Trash2 className="size-4" aria-hidden="true" />
 													</button>
 												</div>
 											</td>

@@ -5,10 +5,18 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { PROXIED_API_PATHS } from "./proxy-paths";
+
+const BACKEND_URL = process.env.VITE_API_URL ?? "http://localhost:4000";
 
 const config = defineConfig({
 	resolve: { tsconfigPaths: true },
 	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+	server: {
+		// Espelha o proxy de produção (ver frontend/server.ts) pro dev server
+		// do Vite, pro cookie de sessão se comportar igual nos dois ambientes.
+		proxy: Object.fromEntries(PROXIED_API_PATHS.map((path) => [path, { target: BACKEND_URL, changeOrigin: true }])),
+	},
 	build: {
 		rollupOptions: {
 			output: {

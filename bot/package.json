@@ -13,7 +13,7 @@
 		"hash-password": "bun run scripts/hash-password.ts"
 	},
 	"dependencies": {
-		"@elysia-galhardo-finances/api": "workspace:*",
+		"@elysia-galhardo-finances/backend": "workspace:*",
 		"@grammyjs/conversations": "2.1.1",
 		"bcryptjs": "3.0.3",
 		"grammy": "1.46.0",

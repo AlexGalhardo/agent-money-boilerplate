@@ -1,11 +1,11 @@
 import { z } from "zod";
 
 // O bot importa `prisma`/`encrypt`/`decrypt` diretamente de
-// `@elysia-galhardo-finances/api` (mesmo banco, mesma criptografia — ver
+// `@elysia-galhardo-finances/backend` (mesmo banco, mesma criptografia — ver
 // docs/telegram-bot-plan.md). Isso significa que o processo do bot também
 // precisa satisfazer o schema de env da API (DATABASE_URL, BETTER_AUTH_SECRET,
 // ENCRYPTION_KEY, etc.) mesmo sem usar autenticação/e-mail/Stripe — por isso
-// `bot/.env.example` espelha `api/.env.example` e soma as variáveis abaixo.
+// `bot/.env.example` espelha `backend/.env.example` e soma as variáveis abaixo.
 const envSchema = z.object({
 	TELEGRAM_BOT_TOKEN: z.string().min(1, "TELEGRAM_BOT_TOKEN é obrigatório"),
 	// Guardado em base64: um hash bcrypt tem "$" literais (ex: "$2b$10$..."),

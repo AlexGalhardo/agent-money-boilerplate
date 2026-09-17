@@ -1,5 +1,6 @@
 import {
 	Banknote,
+	Briefcase,
 	Bus,
 	CreditCard,
 	Film,
@@ -17,7 +18,7 @@ import {
 	UtensilsCrossed,
 	Wallet,
 } from "lucide-react";
-import type { ComponentType, SVGProps } from "react";
+import type { ComponentType, CSSProperties, SVGProps } from "react";
 import type { TransactionCategory } from "./categories";
 
 const categoryIconComponents: Record<TransactionCategory, ComponentType<SVGProps<SVGSVGElement>>> = {
@@ -32,6 +33,7 @@ const categoryIconComponents: Record<TransactionCategory, ComponentType<SVGProps
 	investment: PiggyBank,
 	rental_income: Landmark,
 	extra_income: Banknote,
+	freelancer: Briefcase,
 	gifts: Gift,
 	prizes: Trophy,
 	transfers: Repeat,
@@ -40,8 +42,16 @@ const categoryIconComponents: Record<TransactionCategory, ComponentType<SVGProps
 	other: Sparkles,
 };
 
-export function CategoryIcon({ category, className }: { category: string; className?: string }) {
+export function CategoryIcon({
+	category,
+	className,
+	style,
+}: {
+	category: string;
+	className?: string;
+	style?: CSSProperties;
+}) {
 	const Icon =
 		category in categoryIconComponents ? categoryIconComponents[category as TransactionCategory] : Sparkles;
-	return <Icon className={className} aria-hidden="true" />;
+	return <Icon className={className} style={style} aria-hidden="true" />;
 }

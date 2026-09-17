@@ -1,4 +1,4 @@
-import { prisma } from "@elysia-galhardo-finances/api/src/config/prisma";
+import { prisma } from "@elysia-galhardo-finances/backend/src/config/prisma";
 
 export class ChatAlreadyLinkedError extends Error {
 	constructor() {

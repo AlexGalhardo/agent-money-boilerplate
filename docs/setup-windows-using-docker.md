@@ -1,6 +1,6 @@
 # Setup no Windows 11 (WSL2 + Docker Desktop) com Docker
 
-Builda e sobe os 3 serviços do monorepo (`api`, `frontend`, `bot`) como
+Builda e sobe os 3 serviços do monorepo (`backend`, `frontend`, `bot`) como
 containers via Docker Compose, no Windows 11 com WSL2 + Docker Desktop. Para
 rodar sem Docker (PM2 direto no host), veja
 [`setup-windows-using-pm2.md`](./setup-windows-using-pm2.md). No Linux/macOS,
@@ -45,7 +45,7 @@ O script confere se o Docker Desktop está rodando antes de continuar e
 avisa (em vez de travar sem explicação) se não estiver. Fora isso, o
 comportamento é idêntico ao `setup-unix-using-docker.sh`:
 
-1. Cria `api/.env` e `bot/.env` a partir dos `.env.example` (gerando
+1. Cria `backend/.env` e `bot/.env` a partir dos `.env.example` (gerando
    segredos na primeira vez).
 2. Builda e sobe os containers (`docker compose -f docker-compose.sqlite.yml up -d --build`
    para SQLite, ou `docker compose up -d --build` para Postgres).
@@ -83,14 +83,14 @@ demanda (não sobe junto com os outros serviços). Com Postgres, o banco já
 está exposto em `localhost:5432`, então rodar do host funciona direto:
 
 ```bash
-cd api && bun run db:studio   # abre em http://localhost:5555 (Postgres)
+cd backend && bun run db:studio   # abre em http://localhost:5555 (Postgres)
 ```
 
 Com SQLite, o banco vive num volume Docker nomeado (só visível de dentro do
 container) — rode o Studio lá dentro em vez do host:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml exec api bunx prisma studio --port 5555 --hostname 0.0.0.0
+docker compose -f docker-compose.sqlite.yml exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0
 # rode num terminal separado, depois abra http://localhost:5555
 ```
 
@@ -111,7 +111,7 @@ docker compose -f docker-compose.sqlite.yml exec api bunx prisma studio --port 5
 
 ```bash
 docker compose -f docker-compose.sqlite.yml logs -f      # logs em tempo real dos 3 serviços
-docker compose -f docker-compose.sqlite.yml logs -f api  # ou só um serviço
+docker compose -f docker-compose.sqlite.yml logs -f backend  # ou só um serviço
 docker compose -f docker-compose.sqlite.yml ps
 docker compose -f docker-compose.sqlite.yml down
 ```

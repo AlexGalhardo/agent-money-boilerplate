@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bootstrap local via Docker Desktop (Windows 11 + WSL2) — builda e sobe os
-# 3 serviços do monorepo (api, frontend, bot) em containers. Rode este
+# 3 serviços do monorepo (backend, frontend, bot) em containers. Rode este
 # arquivo de dentro do WSL2 (recomendado) ou do Git Bash — NÃO funciona no
 # PowerShell/cmd.exe. Sem Docker, veja ./setup-windows-using-pm2.sh.
 #
@@ -30,13 +30,13 @@ else
 	COMPOSE_ARGS=(-f docker-compose.sqlite.yml)
 	PROVIDER="sqlite"
 	API_DATABASE_URL="file:./dev.db"
-	BOT_DATABASE_URL="file:../api/dev.db"
+	BOT_DATABASE_URL="file:../backend/dev.db"
 fi
 
 # DATABASE_PROVIDER/DATABASE_URL dentro dos containers vêm do
 # `environment:` de cada docker-compose*.yml (sobrepõe o que estiver no
 # .env) — os valores gravados aqui são só para consistência de quem também
-# rodar `bun run api:dev`/`bun run bot:dev` fora do Docker depois.
+# rodar `bun run backend:dev`/`bun run bot:dev` fora do Docker depois.
 write_api_env "$PROVIDER" "$API_DATABASE_URL"
 write_bot_env "$PROVIDER" "$BOT_DATABASE_URL"
 
@@ -49,10 +49,10 @@ docker compose "${COMPOSE_ARGS[@]}" up -d --build
 echo "==> Aguardando a API terminar migrations + Prisma Client (entrypoint do container)"
 if wait_for_http "http://localhost:4000/docs" 30; then
 	echo "==> Populando banco de dados (admin@gmail.com / adminBR@123 + aleexgvieira@gmail.com / galhardyn)"
-	docker compose "${COMPOSE_ARGS[@]}" exec -T api bun run db:seed
+	docker compose "${COMPOSE_ARGS[@]}" exec -T backend bun run db:seed
 else
-	echo "A API não respondeu a tempo. Confira os logs (docker compose ${COMPOSE_ARGS[*]} logs api) e, se tudo estiver ok, rode manualmente:" >&2
-	echo "  docker compose ${COMPOSE_ARGS[*]} exec api bun run db:seed" >&2
+	echo "A API não respondeu a tempo. Confira os logs (docker compose ${COMPOSE_ARGS[*]} logs backend) e, se tudo estiver ok, rode manualmente:" >&2
+	echo "  docker compose ${COMPOSE_ARGS[*]} exec backend bun run db:seed" >&2
 fi
 
 echo ""
@@ -70,7 +70,7 @@ echo "O container do bot sobe junto, mas fica reiniciando até TELEGRAM_BOT_TOKE
 echo "(e as demais variáveis do bot) serem preenchidos em bot/.env — depois de"
 echo "editar, rode: docker compose ${COMPOSE_ARGS[*]} restart bot"
 echo ""
-echo "3 serviços no Docker: api, frontend, bot"
+echo "3 serviços no Docker: backend, frontend, bot"
 echo ""
 echo "Comandos úteis:"
 echo "  docker compose ${COMPOSE_ARGS[*]} logs -f      # logs em tempo real dos 3 serviços"

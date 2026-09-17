@@ -4,16 +4,16 @@ WORKDIR /repo
 
 FROM base AS install
 COPY package.json bun.lock ./
-COPY api/package.json ./api/package.json
+COPY backend/package.json ./backend/package.json
 COPY frontend/package.json ./frontend/package.json
 RUN bun install --frozen-lockfile
 
 FROM install AS build
-# api/src é necessário apenas para a resolução de tipos do Eden
-# (import type { App } from "@elysia-galhardo-finances/api/src/server")
+# backend/src é necessário apenas para a resolução de tipos do Eden
+# (import type { App } from "@elysia-galhardo-finances/backend/src/server")
 # durante o build — o runtime final não inclui o código da API.
-COPY api/src ./api/src
-COPY api/tsconfig.json ./api/tsconfig.json
+COPY backend/src ./backend/src
+COPY backend/tsconfig.json ./backend/tsconfig.json
 COPY frontend ./frontend
 WORKDIR /repo/frontend
 ARG VITE_API_URL=http://localhost:4000
@@ -29,6 +29,7 @@ COPY --from=install --chown=bun:bun /repo/frontend/node_modules ./frontend/node_
 COPY --from=build --chown=bun:bun /repo/frontend/dist ./frontend/dist
 COPY --chown=bun:bun frontend/package.json ./frontend/package.json
 COPY --chown=bun:bun frontend/server.ts ./frontend/server.ts
+COPY --chown=bun:bun frontend/proxy-paths.ts ./frontend/proxy-paths.ts
 WORKDIR /repo/frontend
 USER bun
 ENV PORT=4001

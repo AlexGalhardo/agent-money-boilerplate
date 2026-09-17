@@ -70,12 +70,6 @@ function ContactPage() {
 			<section className="mx-auto max-w-xl px-4 py-16">
 				<h1 className="text-3xl font-bold">Entre em Contato</h1>
 
-				{sent && (
-					<p role="status" className="mt-6 rounded-lg bg-brand-500/10 px-4 py-3 text-sm text-brand-600">
-						Mensagem enviada com sucesso. Responderemos em breve.
-					</p>
-				)}
-
 				<form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4" noValidate>
 					<div className="flex flex-col gap-1.5">
 						<label htmlFor="name" className="text-sm font-medium">
@@ -86,8 +80,8 @@ function ContactPage() {
 							name="name"
 							type="text"
 							defaultValue={session?.user.name ?? ""}
-							disabled={Boolean(session)}
-							className="rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2 outline-none focus:border-brand-500 disabled:opacity-60"
+							readOnly={Boolean(session)}
+							className={`rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2 outline-none focus:border-brand-500 ${session ? "opacity-60" : ""}`}
 							aria-invalid={Boolean(errors.name)}
 							aria-describedby={errors.name ? "name-error" : undefined}
 						/>
@@ -107,8 +101,8 @@ function ContactPage() {
 							name="email"
 							type="email"
 							defaultValue={session?.user.email ?? ""}
-							disabled={Boolean(session)}
-							className="rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2 outline-none focus:border-brand-500 disabled:opacity-60"
+							readOnly={Boolean(session)}
+							className={`rounded-lg border border-(--color-border) bg-(--color-surface) px-3 py-2 outline-none focus:border-brand-500 ${session ? "opacity-60" : ""}`}
 							aria-invalid={Boolean(errors.email)}
 							aria-describedby={errors.email ? "email-error" : undefined}
 						/>
@@ -179,6 +173,12 @@ function ContactPage() {
 					>
 						Enviar mensagem
 					</button>
+
+					{sent && (
+						<p role="status" className="rounded-lg bg-brand-500/10 px-4 py-3 text-sm text-brand-600">
+							Mensagem enviada com sucesso. Responderemos em breve.
+						</p>
+					)}
 				</form>
 			</section>
 		</PageLayout>

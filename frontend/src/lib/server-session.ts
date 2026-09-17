@@ -18,10 +18,27 @@ export const getServerSession = createServerFn({ method: "GET" }).handler(async 
 	const request = getRequest();
 	const cookie = request.headers.get("cookie");
 
-	const response = await fetch(`${API_URL}/api/auth/get-session`, {
+	const response = await fetch(`${API_URL}/auth/get-session`, {
 		headers: cookie ? { cookie } : {},
 	});
 
 	if (!response.ok) return null;
 	return (await response.json()) as ServerSession;
+});
+
+export type ServerPlan = { planStatus: string; planExpiresAt: string | null } | null;
+
+/** Mesma necessidade de repasse de cookie de `getServerSession`, mas pros
+ * campos de plano (não nativos do better-auth) expostos em `/users/me`. */
+export const getServerPlan = createServerFn({ method: "GET" }).handler(async (): Promise<ServerPlan> => {
+	const request = getRequest();
+	const cookie = request.headers.get("cookie");
+
+	const response = await fetch(`${API_URL}/users/me`, {
+		headers: cookie ? { cookie } : {},
+	});
+
+	if (!response.ok) return null;
+	const data = (await response.json()) as { user?: { planStatus: string; planExpiresAt: string | null } };
+	return data.user ? { planStatus: data.user.planStatus, planExpiresAt: data.user.planExpiresAt } : null;
 });

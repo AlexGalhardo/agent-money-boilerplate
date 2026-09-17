@@ -5,12 +5,18 @@ import { expenseCategories, incomeCategories } from "../lib/categories";
 import { FormField } from "./auth-card";
 import { CategorySelect } from "./category-select";
 
+// 280 caracteres para acompanhar o limite do backend (transaction.schema.ts)
+// — transações importadas de extrato bancário podem ter descrições bem mais
+// longas que as digitadas manualmente aqui.
+const DESCRIPTION_MAX_LENGTH = 280;
+const LONG_DESCRIPTION_LENGTH = 60;
+
 export const transactionFormSchema = z.object({
 	description: z
 		.string()
 		.trim()
 		.min(4, "A descrição precisa ter pelo menos 4 caracteres")
-		.max(32, "A descrição pode ter no máximo 32 caracteres"),
+		.max(DESCRIPTION_MAX_LENGTH, `A descrição pode ter no máximo ${DESCRIPTION_MAX_LENGTH} caracteres`),
 	amount: z.coerce.number().positive("Informe um valor maior que zero"),
 	category: z.enum([...incomeCategories, ...expenseCategories] as [TransactionCategory, ...TransactionCategory[]]),
 	type: z.enum(["income", "expense"]),
@@ -74,8 +80,14 @@ export function TransactionForm({
 	const categoryList = type === "income" ? incomeCategories : expenseCategories;
 	const [category, setCategory] = useState<TransactionCategory>(initial?.category ?? categoryList[0] ?? "food");
 	const [amountCents, setAmountCents] = useState(initial?.amount ?? 0);
+	const [description, setDescription] = useState(initial?.description ?? "");
 	const scheme = colorSchemes[type];
 	const inputClassName = `w-full rounded-lg border px-3 py-2 outline-none ${scheme.input}`;
+	const isLongDescription = description.length >= LONG_DESCRIPTION_LENGTH;
+
+	function handleDescriptionChange(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void {
+		setDescription(event.target.value.toUpperCase());
+	}
 
 	function handleAmountChange(event: React.ChangeEvent<HTMLInputElement>): void {
 		const digitsOnly = event.target.value.replace(/\D/g, "");
@@ -87,7 +99,7 @@ export function TransactionForm({
 
 		const formData = new FormData(event.currentTarget);
 		const result = transactionFormSchema.safeParse({
-			description: formData.get("description"),
+			description,
 			amount: amountCents / 100,
 			category,
 			type,
@@ -136,18 +148,29 @@ export function TransactionForm({
 			)}
 
 			<FormField label="Descrição" id="description" error={errors.description}>
-				<input
-					id="description"
-					name="description"
-					type="text"
-					minLength={4}
-					maxLength={32}
-					defaultValue={initial?.description}
-					onInput={(event) => {
-						event.currentTarget.value = event.currentTarget.value.toUpperCase();
-					}}
-					className={`${inputClassName} uppercase`}
-				/>
+				{isLongDescription ? (
+					<textarea
+						id="description"
+						name="description"
+						rows={3}
+						minLength={4}
+						maxLength={DESCRIPTION_MAX_LENGTH}
+						value={description}
+						onChange={handleDescriptionChange}
+						className={`${inputClassName} uppercase`}
+					/>
+				) : (
+					<input
+						id="description"
+						name="description"
+						type="text"
+						minLength={4}
+						maxLength={DESCRIPTION_MAX_LENGTH}
+						value={description}
+						onChange={handleDescriptionChange}
+						className={`${inputClassName} uppercase`}
+					/>
+				)}
 			</FormField>
 
 			<FormField label="Valor" id="amount" error={errors.amount}>

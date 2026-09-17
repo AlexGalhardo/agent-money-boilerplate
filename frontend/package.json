@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@better-auth/api-key": "1.7.5",
-		"@elysia-galhardo-finances/api": "workspace:*",
+		"@elysia-galhardo-finances/backend": "workspace:*",
 		"@elysiajs/eden": "1.4.9",
 		"@tailwindcss/vite": "4.3.3",
 		"@tanstack/react-devtools": "0.10.12",
@@ -27,7 +27,6 @@
 		"@tanstack/react-start": "1.168.52",
 		"better-auth": "1.7.4",
 		"clipboard": "2.0.11",
-		"fuse.js": "7.5.0",
 		"lucide-react": "1.46.0",
 		"qrcode": "1.5.4",
 		"react": "19.3.0",

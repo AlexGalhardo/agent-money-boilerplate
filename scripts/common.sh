@@ -79,7 +79,7 @@ prompt_database_choice() {
 	esac
 }
 
-# Cria api/.env a partir do .env.example na primeira vez (gerando
+# Cria backend/.env a partir do .env.example na primeira vez (gerando
 # BETTER_AUTH_SECRET/ENCRYPTION_KEY) e, se $2 (database_url) vier preenchido,
 # sobrescreve DATABASE_PROVIDER/DATABASE_URL sempre — mesmo em runs
 # seguintes — para permitir trocar de banco sem apagar o .env manualmente.
@@ -87,22 +87,22 @@ write_api_env() {
 	local provider="$1"
 	local database_url="$2"
 
-	if [ ! -f api/.env ]; then
-		echo "==> Criando api/.env a partir de api/.env.example"
-		cp api/.env.example api/.env
-		replace_in_file "s/^BETTER_AUTH_SECRET=.*/BETTER_AUTH_SECRET=$(generate_hex32)/" api/.env
-		replace_in_file "s/^ENCRYPTION_KEY=.*/ENCRYPTION_KEY=$(generate_hex32)/" api/.env
+	if [ ! -f backend/.env ]; then
+		echo "==> Criando backend/.env a partir de backend/.env.example"
+		cp backend/.env.example backend/.env
+		replace_in_file "s/^BETTER_AUTH_SECRET=.*/BETTER_AUTH_SECRET=$(generate_hex32)/" backend/.env
+		replace_in_file "s/^ENCRYPTION_KEY=.*/ENCRYPTION_KEY=$(generate_hex32)/" backend/.env
 	else
-		echo "==> api/.env já existe, mantendo segredos e demais variáveis como estão"
+		echo "==> backend/.env já existe, mantendo segredos e demais variáveis como estão"
 	fi
 
 	if [ -n "$database_url" ]; then
-		replace_in_file "s#^DATABASE_PROVIDER=.*#DATABASE_PROVIDER=$provider#" api/.env
-		replace_in_file "s#^DATABASE_URL=.*#DATABASE_URL=$database_url#" api/.env
+		replace_in_file "s#^DATABASE_PROVIDER=.*#DATABASE_PROVIDER=$provider#" backend/.env
+		replace_in_file "s#^DATABASE_URL=.*#DATABASE_URL=$database_url#" backend/.env
 	fi
 }
 
-# Espelha os segredos e a config de banco de api/.env em bot/.env (mesmo
+# Espelha os segredos e a config de banco de backend/.env em bot/.env (mesmo
 # banco, mesma chave de criptografia — ver CLAUDE.md). Variáveis específicas
 # do bot (TELEGRAM_*, BOT_PASSWORD_HASH_BASE64) ficam como estiverem — o
 # usuário preenche manualmente, o bot é opcional.
@@ -119,8 +119,8 @@ write_bot_env() {
 
 	local better_auth_secret
 	local encryption_key
-	better_auth_secret=$(grep "^BETTER_AUTH_SECRET=" api/.env | cut -d= -f2-)
-	encryption_key=$(grep "^ENCRYPTION_KEY=" api/.env | cut -d= -f2-)
+	better_auth_secret=$(grep "^BETTER_AUTH_SECRET=" backend/.env | cut -d= -f2-)
+	encryption_key=$(grep "^ENCRYPTION_KEY=" backend/.env | cut -d= -f2-)
 
 	replace_in_file "s#^BETTER_AUTH_SECRET=.*#BETTER_AUTH_SECRET=$better_auth_secret#" bot/.env
 	replace_in_file "s#^ENCRYPTION_KEY=.*#ENCRYPTION_KEY=$encryption_key#" bot/.env
@@ -148,7 +148,7 @@ prompt_test_mode_choice() {
 	esac
 }
 
-# Grava em api/.env as variáveis do AbacatePay conforme a escolha de
+# Grava em backend/.env as variáveis do AbacatePay conforme a escolha de
 # prompt_test_mode_choice. No modo "real", usa as chaves de desenvolvimento
 # combinadas com quem pediu este setup — permitem exercitar o fluxo de PIX
 # de verdade (sandbox da própria AbacatePay) em vez do botão de simulação.
@@ -156,15 +156,15 @@ write_abacatepay_env() {
 	local choice="$1"
 
 	if [ "$choice" = "real" ]; then
-		replace_in_file "s#^ENABLE_ABACATEPAY=.*#ENABLE_ABACATEPAY=true#" api/.env
-		replace_in_file "s#^ABACATEPAY_API_KEY=.*#ABACATEPAY_API_KEY=abc_dev_mwae6mwTjzuZD5R0ApWRAWmB#" api/.env
-		replace_in_file "s#^ABACATEPAY_WEBHOOK_SECRET=.*#ABACATEPAY_WEBHOOK_SECRET=CEF9B8447FF29F1E0B2C260406AF00B6#" api/.env
-		replace_in_file "s#^ABACATEPAY_PIX_TEST_MODE=.*#ABACATEPAY_PIX_TEST_MODE=false#" api/.env
+		replace_in_file "s#^ENABLE_ABACATEPAY=.*#ENABLE_ABACATEPAY=true#" backend/.env
+		replace_in_file "s#^ABACATEPAY_API_KEY=.*#ABACATEPAY_API_KEY=abc_dev_mwae6mwTjzuZD5R0ApWRAWmB#" backend/.env
+		replace_in_file "s#^ABACATEPAY_WEBHOOK_SECRET=.*#ABACATEPAY_WEBHOOK_SECRET=CEF9B8447FF29F1E0B2C260406AF00B6#" backend/.env
+		replace_in_file "s#^ABACATEPAY_PIX_TEST_MODE=.*#ABACATEPAY_PIX_TEST_MODE=false#" backend/.env
 		echo "==> AbacatePay configurado com chaves de desenvolvimento (fluxo de PIX real, não simulado)."
 		echo "    Webhook: \${APP_URL}/webhook/abacatepay?webhookSecret=CEF9B8447FF29F1E0B2C260406AF00B6"
 	else
-		replace_in_file "s#^ENABLE_ABACATEPAY=.*#ENABLE_ABACATEPAY=false#" api/.env
-		replace_in_file "s#^ABACATEPAY_PIX_TEST_MODE=.*#ABACATEPAY_PIX_TEST_MODE=true#" api/.env
+		replace_in_file "s#^ENABLE_ABACATEPAY=.*#ENABLE_ABACATEPAY=false#" backend/.env
+		replace_in_file "s#^ABACATEPAY_PIX_TEST_MODE=.*#ABACATEPAY_PIX_TEST_MODE=true#" backend/.env
 		echo "==> AbacatePay em modo teste (sem chaves reais)."
 	fi
 }
@@ -195,10 +195,10 @@ print_prisma_studio_hint() {
 	local compose_args="$2"
 
 	if [ "$mode" = "docker-sqlite" ]; then
-		echo "  Prisma Studio: docker compose ${compose_args} exec api bunx prisma studio --port 5555 --hostname 0.0.0.0"
+		echo "  Prisma Studio: docker compose ${compose_args} exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0"
 		echo "                 (rode num terminal separado, depois abra http://localhost:5555)"
 	else
-		echo "  Prisma Studio: cd api && bun run db:studio   (abre em http://localhost:5555)"
+		echo "  Prisma Studio: cd backend && bun run db:studio   (abre em http://localhost:5555)"
 	fi
 }
 

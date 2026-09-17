@@ -31,7 +31,7 @@ test("creates, edits and deletes a transaction end to end", async ({ page }) => 
 	await page.getByRole("button", { name: "Criar transação" }).click();
 
 	// Entre 500 transações seedadas, a nova pode não cair na página 1 por ordem
-	// de data — busca pelo nome (fuse.js) para achá-la independente da posição.
+	// de data — busca pelo nome para achá-la independente da posição.
 	await page.getByLabel("Buscar por nome").fill("Playwright");
 
 	const row = page.getByRole("row", { name: /COMPRA E2E PLAYWRIGHT/ });

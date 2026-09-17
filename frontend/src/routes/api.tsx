@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import ClipboardJS from "clipboard";
 import { useEffect, useRef, useState } from "react";
 import { PageLayout } from "../components/page-layout";
+import { Toast, useToast } from "../components/toast";
 import { authClient } from "../lib/auth-client";
 import { requireAuth } from "../lib/require-auth";
 
@@ -107,6 +108,7 @@ function ApiPage() {
 	const [createdKey, setCreatedKey] = useState<string | null>(null);
 	const [creating, setCreating] = useState(false);
 	const copyButtonsRef = useRef<HTMLDivElement>(null);
+	const { message: toastMessage, showToast } = useToast();
 
 	const keysQuery = useQuery({
 		queryKey: ["api-keys"],
@@ -121,8 +123,9 @@ function ApiPage() {
 		const clipboard = new ClipboardJS("[data-clipboard-target], [data-clipboard-text]", {
 			container: copyButtonsRef.current ?? undefined,
 		});
+		clipboard.on("success", () => showToast("Copiado!"));
 		return () => clipboard.destroy();
-	}, []);
+	}, [showToast]);
 
 	async function handleCreateKey(): Promise<void> {
 		setCreating(true);
@@ -234,19 +237,44 @@ function ApiPage() {
 									<code className="text-sm font-medium">{endpoint.path}</code>
 								</div>
 								<p className="mt-2 text-sm text-(--color-fg-muted)">{endpoint.description}</p>
+
 								{endpoint.query && (
-									<p className="mt-2 text-xs text-(--color-fg-muted)">
-										<strong>Query:</strong> {endpoint.query}
-									</p>
+									<div className="mt-3">
+										<p className="text-xs font-semibold uppercase tracking-wide text-(--color-fg-muted)">
+											Query
+										</p>
+										<ul className="mt-1.5 flex flex-col gap-1">
+											{endpoint.query.split(" · ").map((param) => (
+												<li
+													key={param}
+													className="overflow-x-auto rounded-lg bg-(--color-bg-subtle) px-3 py-1.5 font-mono text-xs"
+												>
+													{param}
+												</li>
+											))}
+										</ul>
+									</div>
 								)}
+
 								{endpoint.body && (
-									<p className="mt-2 text-xs text-(--color-fg-muted)">
-										<strong>Body:</strong> {endpoint.body}
-									</p>
+									<div className="mt-3">
+										<p className="text-xs font-semibold uppercase tracking-wide text-(--color-fg-muted)">
+											Body
+										</p>
+										<pre className="mt-1.5 overflow-x-auto rounded-lg bg-(--color-bg-subtle) p-3 font-mono text-xs">
+											{endpoint.body}
+										</pre>
+									</div>
 								)}
-								<p className="mt-2 text-xs text-(--color-fg-muted)">
-									<strong>Response:</strong> {endpoint.response}
-								</p>
+
+								<div className="mt-3">
+									<p className="text-xs font-semibold uppercase tracking-wide text-(--color-fg-muted)">
+										Response
+									</p>
+									<pre className="mt-1.5 overflow-x-auto rounded-lg bg-(--color-bg-subtle) p-3 font-mono text-xs">
+										{endpoint.response}
+									</pre>
+								</div>
 
 								<div className="mt-3 flex items-start justify-between gap-2 rounded-lg bg-(--color-bg-subtle) p-3">
 									<pre className="overflow-x-auto text-xs">{fetchExample}</pre>
@@ -272,23 +300,9 @@ function ApiPage() {
 						);
 					})}
 				</div>
-
-				<div className="mt-6 rounded-2xl border border-(--color-border) bg-(--color-surface) p-6">
-					<h2 className="text-lg font-semibold">Referência interativa completa</h2>
-					<p className="mt-2 text-sm text-(--color-fg-muted)">
-						Documentação OpenAPI gerada automaticamente a partir dos schemas da API (Scalar) — inclui todos
-						os endpoints, incluindo autenticação e pagamentos.
-					</p>
-					<a
-						href={`${API_URL}/docs`}
-						target="_blank"
-						rel="noreferrer"
-						className="mt-4 inline-block rounded-lg border border-(--color-border) px-4 py-2 text-sm font-medium hover:bg-brand-500/10"
-					>
-						Abrir referência interativa →
-					</a>
-				</div>
 			</section>
+
+			<Toast message={toastMessage} />
 		</PageLayout>
 	);
 }

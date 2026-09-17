@@ -1,6 +1,6 @@
 # Setup local com Docker (Linux/macOS)
 
-Builda e sobe os 3 serviços do monorepo (`api`, `frontend`, `bot`) como
+Builda e sobe os 3 serviços do monorepo (`backend`, `frontend`, `bot`) como
 containers via Docker Compose. Não precisa instalar Bun, Postgres nem nada
 além do Docker no host. Para rodar sem Docker, veja
 [`setup-unix-using-pm2.md`](./setup-unix-using-pm2.md). No Windows, veja
@@ -35,7 +35,7 @@ Para pular a pergunta (útil em automação), passe o banco como argumento:
 
 O script:
 
-1. Cria `api/.env` e `bot/.env` a partir dos respectivos `.env.example`,
+1. Cria `backend/.env` e `bot/.env` a partir dos respectivos `.env.example`,
    gerando `BETTER_AUTH_SECRET`/`ENCRYPTION_KEY` na primeira vez (arquivos
    já existentes são mantidos — só `DATABASE_PROVIDER`/`DATABASE_URL` são
    sincronizados com a escolha de banco a cada execução).
@@ -43,7 +43,7 @@ O script:
    (SQLite) ou `docker compose up -d --build` (Postgres, inclui um container
    `postgres` com healthcheck).
 3. Espera a API responder em `/docs` (o entrypoint do container aplica
-   migrations e gera o Prisma Client sozinho, ver `api/docker-entrypoint.sh`)
+   migrations e gera o Prisma Client sozinho, ver `backend/docker-entrypoint.sh`)
    e então popula o banco (`bun run db:seed`) dentro do container.
 
 ## Rodando
@@ -78,14 +78,14 @@ demanda (não sobe junto com os outros serviços). Com Postgres, o banco já
 está exposto em `localhost:5432`, então rodar do host funciona direto:
 
 ```bash
-cd api && bun run db:studio   # abre em http://localhost:5555 (Postgres)
+cd backend && bun run db:studio   # abre em http://localhost:5555 (Postgres)
 ```
 
 Com SQLite, o banco vive num volume Docker nomeado (só visível de dentro do
 container) — rode o Studio lá dentro em vez do host:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml exec api bunx prisma studio --port 5555 --hostname 0.0.0.0
+docker compose -f docker-compose.sqlite.yml exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0
 # rode num terminal separado, depois abra http://localhost:5555
 ```
 
@@ -96,7 +96,7 @@ usa o `docker-compose.yml` padrão, sem `-f`):
 
 ```bash
 docker compose -f docker-compose.sqlite.yml logs -f      # logs em tempo real dos 3 serviços
-docker compose -f docker-compose.sqlite.yml logs -f api  # ou só um serviço
+docker compose -f docker-compose.sqlite.yml logs -f backend  # ou só um serviço
 docker compose -f docker-compose.sqlite.yml ps
 docker compose -f docker-compose.sqlite.yml down     # para tudo, mantém o volume do banco
 ```

@@ -1,4 +1,4 @@
-import { transactionCategories } from "@elysia-galhardo-finances/api/src/modules/transactions/transaction.schema";
+import { transactionCategories } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { Bot, InlineKeyboard } from "grammy";
 import { env } from "./config/env";

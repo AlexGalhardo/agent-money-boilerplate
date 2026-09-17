@@ -14,12 +14,12 @@ services:
       retries: 10
     restart: unless-stopped
 
-  api:
+  backend:
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: backend/Dockerfile
     env_file:
-      - ./api/.env
+      - ./backend/.env
     environment:
       DATABASE_PROVIDER: postgresql
       DATABASE_URL: postgresql://elysia:${POSTGRES_PASSWORD}@postgres:5432/elysia_financas
@@ -34,8 +34,15 @@ services:
       dockerfile: frontend/Dockerfile
       args:
         VITE_API_URL: https://api.${DOMAIN}
+    environment:
+      # Diferente do build arg acima (usado pelo navegador): esse é lido em
+      # runtime pelo proxy de /auth, /users, /transactions etc. embutido em
+      # frontend/server.ts (ver frontend/proxy-paths.ts) — dentro do container
+      # o hostname do serviço na rede do compose evita um round-trip extra
+      # pela internet/Caddy pra falar com um container no mesmo host.
+      VITE_API_URL: http://backend:4000
     depends_on:
-      - api
+      - backend
     restart: unless-stopped
 
   caddy:
@@ -50,7 +57,7 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - api
+      - backend
       - frontend
     restart: unless-stopped
 

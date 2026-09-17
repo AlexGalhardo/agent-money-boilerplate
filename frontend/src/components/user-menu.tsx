@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "../lib/auth-client";
 import { ThemeToggle } from "./theme-toggle";
@@ -30,10 +31,14 @@ export function UserMenu({ name }: { name: string }) {
 				onClick={() => setOpen((current) => !current)}
 				aria-haspopup="menu"
 				aria-expanded={open}
-				className="flex items-center gap-2 rounded-lg border border-(--color-border) px-3 py-1.5 text-sm font-medium hover:bg-brand-500/10"
+				aria-label={name}
+				className="flex items-center gap-2 rounded-lg border border-(--color-border) p-2 text-sm font-medium hover:bg-brand-500/10 sm:px-3 sm:py-1.5"
 			>
-				{name}
-				<span aria-hidden="true">▾</span>
+				<User className="size-4 shrink-0 sm:hidden" aria-hidden="true" />
+				<span className="hidden sm:inline">{name}</span>
+				<span aria-hidden="true" className="hidden sm:inline">
+					▾
+				</span>
 			</button>
 
 			{open && (

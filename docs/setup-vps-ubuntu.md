@@ -23,7 +23,7 @@ automaticamente na primeira requisição.
 git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
 cd elysia-tanstack-finances
 cp .env.example .env
-cp api/.env.example api/.env
+cp backend/.env.example backend/.env
 ```
 
 Edite `.env` (raiz — variáveis do docker-compose):
@@ -33,7 +33,7 @@ DOMAIN=SEU_DOMINIO
 POSTGRES_PASSWORD=SENHA_FORTE_AQUI
 ```
 
-Edite `api/.env` (a API roda com `NODE_ENV=production`; `DATABASE_URL` e
+Edite `backend/.env` (a API roda com `NODE_ENV=production`; `DATABASE_URL` e
 `DATABASE_PROVIDER` são sobrescritos pelo `docker-compose.prod.yml`, não
 precisa repetir):
 
@@ -56,12 +56,12 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Isso builda as imagens da API e do frontend, sobe Postgres + Caddy, aplica
 as migrations e gera o Prisma Client automaticamente (ver
-`api/docker-entrypoint.sh`).
+`backend/docker-entrypoint.sh`).
 
 ## 4. Popular o banco (opcional, apenas na primeira vez)
 
 ```bash
-docker compose -f docker-compose.prod.yml exec api bun run db:seed
+docker compose -f docker-compose.prod.yml exec backend bun run db:seed
 ```
 
 ## 5. Cronjob de verificação de plano expirado
@@ -88,7 +88,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 ## Comandos úteis
 
 ```bash
-docker compose -f docker-compose.prod.yml logs -f api
+docker compose -f docker-compose.prod.yml logs -f backend
 docker compose -f docker-compose.prod.yml logs -f frontend
 docker compose -f docker-compose.prod.yml ps
 docker compose -f docker-compose.prod.yml down   # para tudo (mantém os volumes)

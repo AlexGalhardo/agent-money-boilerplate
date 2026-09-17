@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { MatrixRain } from "./matrix-rain";
 import { ThemeToggle } from "./theme-toggle";
 
 export function AuthCard({
@@ -16,8 +15,6 @@ export function AuthCard({
 }) {
 	return (
 		<div className="relative flex min-h-screen flex-col">
-			<MatrixRain className="pointer-events-none absolute inset-0 -z-10" />
-
 			<div className="flex items-center px-4 py-4">
 				<Link to="/" className="flex items-center gap-2 text-sm font-bold tracking-tight">
 					<img src="/favicon.svg" alt="" aria-hidden="true" className="size-4" />

@@ -56,7 +56,7 @@ test("pre-fills and disables name/email for a logged-in user", async ({ page }) 
 
 	await page.goto("/contato");
 	await expect(page.getByLabel("Nome")).toHaveValue("Admin");
-	await expect(page.getByLabel("Nome")).toBeDisabled();
+	await expect(page.getByLabel("Nome")).toHaveAttribute("readonly", "");
 	await expect(page.getByLabel("E-mail")).toHaveValue("admin@gmail.com");
-	await expect(page.getByLabel("E-mail")).toBeDisabled();
+	await expect(page.getByLabel("E-mail")).toHaveAttribute("readonly", "");
 });

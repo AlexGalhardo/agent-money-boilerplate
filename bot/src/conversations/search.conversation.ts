@@ -1,6 +1,6 @@
-import type { TransactionCategory } from "@elysia-galhardo-finances/api/src/modules/transactions/transaction.schema";
-import { transactionCategories } from "@elysia-galhardo-finances/api/src/modules/transactions/transaction.schema";
-import { transactionService } from "@elysia-galhardo-finances/api/src/modules/transactions/transaction.service";
+import type { TransactionCategory } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
+import { transactionCategories } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
+import { transactionService } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.service";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import {

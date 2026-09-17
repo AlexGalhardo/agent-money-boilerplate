@@ -8,8 +8,8 @@
 *.db-journal
 *.db-shm
 *.db-wal
-api/server
-api/server.exe
+backend/server
+backend/server.exe
 coverage
 playwright-report
 test-results
