@@ -1,0 +1,12 @@
+# O linker "isolated" (padrão do bun) usa uma estrutura de symlinks dentro
+# de node_modules/.bun que o Metro bundler (usado pelo Expo) não entende
+# direito — testado e reproduzido: tanto "Detected addition or modification
+# of file ..\mobile\node_modules\react, but it is tracked as a non-empty
+# directory" (crawler do Metro) quanto falhas de MODULE_NOT_FOUND ao
+# carregar plugins do Babel a partir de dentro do store isolado. "hoisted"
+# (o modelo clássico npm/yarn, uma árvore única de node_modules) é o que
+# Expo/React Native oficialmente recomendam pra monorepos — sem ele o app
+# mobile simplesmente não builda. Ver mobile/metro.config.js e CLAUDE.md
+# pro efeito colateral conhecido disso no typecheck do Eden.
+[install]
+linker = "hoisted"

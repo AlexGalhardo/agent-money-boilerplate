@@ -152,7 +152,7 @@ export function TransactionForm({
 					<textarea
 						id="description"
 						name="description"
-						rows={3}
+						rows={5}
 						minLength={4}
 						maxLength={DESCRIPTION_MAX_LENGTH}
 						value={description}

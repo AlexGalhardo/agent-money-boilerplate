@@ -1,0 +1,73 @@
+- generic [ref=f3e2]:
+  - banner [ref=f3e3]:
+    - generic [ref=f3e4]:
+      - link "Money" [ref=f3e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f3e8]:
+        - button "Importar" [ref=f3e9]
+        - button "Adicionar Receita" [ref=f3e14]
+        - button "Adicionar Despesa" [ref=f3e19]
+        - button "Conta" [ref=f3e25]:
+          - generic [aria-hidden] [ref=f3e27]: ▾
+  - main [ref=f3e28]:
+    - generic [ref=f3e30]:
+      - generic [ref=f3e31]:
+        - generic [ref=f3e32]:
+          - heading "Saldo atual" [level=2] [ref=f3e33]
+          - paragraph [ref=f3e34]: R$ 0,00
+          - generic [ref=f3e35]:
+            - paragraph [ref=f3e36]: "Receitas: R$ 0,00"
+            - paragraph [ref=f3e37]: "Despesas: R$ 0,00"
+        - group [ref=f3e38]:
+          - generic "Despesas por categoria" [ref=f3e39] [cursor=pointer]:
+            - text: Despesas por categoria
+            - generic [aria-hidden] [ref=f3e40]: ▾
+          - paragraph [ref=f3e42]: Nenhuma despesa registrada ainda.
+        - group [ref=f3e43]:
+          - generic "Receitas por categoria" [ref=f3e44] [cursor=pointer]:
+            - text: Receitas por categoria
+            - generic [aria-hidden] [ref=f3e45]: ▾
+          - paragraph [ref=f3e47]: Nenhuma receita registrada ainda.
+      - generic [ref=f3e48]:
+        - generic [ref=f3e49]:
+          - heading "Transações" [level=2] [ref=f3e50]
+          - generic [ref=f3e51]:
+            - button "Exportar .xlsx" [disabled] [ref=f3e52]
+            - button "Exportar .csv" [disabled] [ref=f3e53]
+        - generic [ref=f3e54]:
+          - generic [ref=f3e55]: Buscar por nome
+          - textbox "Buscar por nome" [ref=f3e56]:
+            - /placeholder: Digite pelo menos 3 caracteres...
+        - generic [ref=f3e57]:
+          - generic [ref=f3e58]:
+            - generic [ref=f3e59]: Categoria
+            - button "Categoria" [ref=f3e61]:
+              - generic [ref=f3e62]: Todas
+              - generic [aria-hidden] [ref=f3e63]: ▾
+          - generic [ref=f3e64]:
+            - generic [ref=f3e65]: De
+            - textbox "De" [ref=f3e66]
+          - generic [ref=f3e67]:
+            - generic [ref=f3e68]: Até
+            - textbox "Até" [ref=f3e69]
+        - table [ref=f3e71]:
+          - rowgroup [ref=f3e72]:
+            - row [ref=f3e73]:
+              - columnheader "Descrição" [ref=f3e74]
+              - columnheader "Data" [ref=f3e75]
+              - columnheader "Valor" [ref=f3e76]
+              - columnheader "Ações" [ref=f3e77]
+          - rowgroup [ref=f3e78]:
+            - row [ref=f3e79]:
+              - cell "Carregando..." [ref=f3e80]
+  - contentinfo [ref=f3e81]:
+    - generic [ref=f3e82]:
+      - paragraph [ref=f3e83]: © 2026 Money. Todos os direitos reservados.
+      - navigation [ref=f3e84]:
+        - link "Contato" [ref=f3e85] [cursor=pointer]:
+          - /url: /contato
+        - link "Termos de Uso" [ref=f3e86] [cursor=pointer]:
+          - /url: /termos-de-uso
+        - link "Política de Privacidade" [ref=f3e87] [cursor=pointer]:
+          - /url: /politica-de-privacidade
+        - button "Ativar tema claro" [ref=f3e88]: ☀️

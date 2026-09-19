@@ -38,8 +38,13 @@ export function evaluatePasswordAttempt(chatId: number, text: string): PasswordA
  * mensagem com a senha do chat por privacidade. Nunca lança — bloqueio ou
  * erro de digitação apenas encerram o fluxo (`false`), quem chama decide o
  * que fazer (normalmente, apenas retornar sem continuar a conversation).
+ *
+ * Todo esse fluxo é opcional: com TELEGRAM_BOT_USE_PASSWORD_TO_CONFIRM_ACTIONS=false
+ * (padrão), nem pede a senha, só confirma direto.
  */
 export async function requirePassword(conversation: BotConversation, ctx: Context): Promise<boolean> {
+	if (!env.TELEGRAM_BOT_USE_PASSWORD_TO_CONFIRM_ACTIONS) return true;
+
 	const chatId = ctx.chat?.id;
 	if (chatId === undefined) return false;
 

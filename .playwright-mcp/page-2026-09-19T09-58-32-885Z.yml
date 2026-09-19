@@ -1,0 +1,9 @@
+- generic [ref=f11e2]:
+  - link "Money" [ref=f11e4] [cursor=pointer]:
+    - /url: /
+  - generic [ref=f11e7]:
+    - heading "Vincular Telegram" [level=1] [ref=f11e8]
+    - paragraph [ref=f11e9]: Verificando sua sessão...
+    - paragraph [ref=f11e11]: Aguarde um instante.
+  - contentinfo [ref=f11e12]:
+    - button "Ativar tema claro" [ref=f11e13]: ☀️

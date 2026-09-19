@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowDownCircle, ArrowUpCircle, Pencil, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
+import { ArrowDownCircle, ArrowUpCircle, FileDown, Pencil, Trash2, Upload } from "lucide-react";
+import { useRef, useState } from "react";
 import { AccordionCard } from "../../components/accordion-card";
 import { BalanceCard } from "../../components/balance-card";
 import { CategoryPieChart } from "../../components/category-pie-chart";
@@ -27,6 +27,7 @@ import {
 	incomeCategoryColor,
 } from "../../lib/categories";
 import { CategoryIcon } from "../../lib/category-icons";
+import { exportSummaryToPdf } from "../../lib/export-summary-pdf";
 import { exportTransactionsToCsv, exportTransactionsToXlsx } from "../../lib/export-transactions";
 import { FREE_TRANSACTION_LIMIT, hasActivePlan, planDaysRemaining } from "../../lib/plan";
 import { requireAuth } from "../../lib/require-auth";
@@ -85,6 +86,8 @@ function DashboardPage() {
 	const [editing, setEditing] = useState<Transaction | null>(null);
 	const [deleting, setDeleting] = useState<Transaction | null>(null);
 	const [formError, setFormError] = useState<string | null>(null);
+	const [exportingPdf, setExportingPdf] = useState(false);
+	const summaryCardsRef = useRef<HTMLDivElement>(null);
 
 	const serverFilters = {
 		...(category ? { category } : {}),
@@ -216,11 +219,21 @@ function DashboardPage() {
 		setPage(1);
 	}
 
+	async function handleExportSummaryPdf(): Promise<void> {
+		if (!summaryCardsRef.current) return;
+		setExportingPdf(true);
+		try {
+			await exportSummaryToPdf(summaryCardsRef.current);
+		} finally {
+			setExportingPdf(false);
+		}
+	}
+
 	return (
 		<PageLayout
 			headerTitleBadge={
 				daysRemaining !== null && (
-					<span className="rounded-full bg-orange-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-[0_0_12px_rgba(249,115,22,0.6)]">
+					<span className="rounded-md bg-orange-700 px-2.5 py-0.5 text-xs font-bold text-white uppercase shadow-[0_0_8px_rgba(194,65,12,0.4)]">
 						PRO por mais {daysRemaining} dia{daysRemaining === 1 ? "" : "s"}
 					</span>
 				)
@@ -276,7 +289,7 @@ function DashboardPage() {
 				)}
 
 				<div className={`grid gap-6 lg:grid-cols-[320px_1fr] ${freeLimitReached ? "mt-3" : ""}`}>
-					<div className="flex flex-col gap-6">
+					<div ref={summaryCardsRef} className="flex flex-col gap-6">
 						<BalanceCard incomeTotal={incomeTotal} expenseTotal={expenseTotal} />
 						<AccordionCard title="Despesas por categoria" defaultOpen>
 							<CategoryPieChart
@@ -313,6 +326,15 @@ function DashboardPage() {
 									className="rounded-lg border border-(--color-border) px-3 py-1.5 text-xs font-medium hover:bg-brand-500/10 disabled:opacity-40"
 								>
 									Exportar .csv
+								</button>
+								<button
+									type="button"
+									disabled={exportingPdf}
+									onClick={handleExportSummaryPdf}
+									className="flex items-center gap-1.5 rounded-lg border border-(--color-border) px-3 py-1.5 text-xs font-medium hover:bg-brand-500/10 disabled:opacity-40"
+								>
+									<FileDown className="size-3.5 shrink-0" aria-hidden="true" />
+									{exportingPdf ? "Gerando..." : "Exportar .pdf"}
 								</button>
 							</div>
 						</div>
@@ -407,7 +429,7 @@ function DashboardPage() {
 									<tr>
 										<th className="px-4 py-3 font-medium">Descrição</th>
 										<th className="px-4 py-3 font-medium">Data</th>
-										<th className="px-4 py-3 text-right font-medium">Valor</th>
+										<th className="min-w-[110px] px-4 py-3 text-right font-medium">Valor</th>
 										<th className="px-4 py-3 text-right font-medium">Ações</th>
 									</tr>
 								</thead>
@@ -464,7 +486,7 @@ function DashboardPage() {
 												{new Date(transaction.date).toLocaleDateString("pt-BR")}
 											</td>
 											<td
-												className={`px-4 py-3 text-right tabular-nums ${
+												className={`whitespace-nowrap px-4 py-3 text-right tabular-nums ${
 													transaction.type === "income" ? "text-emerald-600" : "text-red-500"
 												}`}
 											>

@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+const boolFromString = z
+	.enum(["true", "false"])
+	.default("false")
+	.transform((value) => value === "true");
+
 // O bot importa `prisma`/`encrypt`/`decrypt` diretamente de
 // `@elysia-galhardo-finances/backend` (mesmo banco, mesma criptografia — ver
 // docs/telegram-bot-plan.md). Isso significa que o processo do bot também
@@ -18,6 +23,10 @@ const envSchema = z.object({
 		.min(1, "BOT_PASSWORD_HASH_BASE64 é obrigatório (gere com `bun run hash-password`)"),
 	BOT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
 	BOT_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
+	// Feature flag: pede a senha pessoal (ver verify-password-step.ts) antes de
+	// cada transação/consulta feita pelo bot. Padrão "false" — desligado até
+	// virar uma decisão consciente ligar de novo (ver requirePassword).
+	TELEGRAM_BOT_USE_PASSWORD_TO_CONFIRM_ACTIONS: boolFromString,
 });
 
 type RawBotEnv = z.infer<typeof envSchema>;

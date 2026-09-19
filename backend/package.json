@@ -28,6 +28,7 @@
 	},
 	"dependencies": {
 		"@better-auth/api-key": "1.7.5",
+		"@better-auth/expo": "1.7.4",
 		"@elysiajs/bearer": "1.4.4",
 		"@elysiajs/cors": "1.4.2",
 		"@elysiajs/eden": "1.4.9",

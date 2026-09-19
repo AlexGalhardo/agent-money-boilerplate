@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { apiKey } from "@better-auth/api-key";
+import { expo } from "@better-auth/expo";
 import { render } from "@react-email/render";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
@@ -24,7 +25,9 @@ export const auth = betterAuth({
 	baseURL: env.FRONTEND_URL,
 	basePath: "/auth",
 	secret: env.BETTER_AUTH_SECRET,
-	trustedOrigins: [env.FRONTEND_URL],
+	// "money://" é o scheme do app mobile (Expo) — precisa estar aqui pro
+	// redirect de volta ao app depois do login social (Google) ser aceito.
+	trustedOrigins: [env.FRONTEND_URL, "money://"],
 	advanced: {
 		// Railway já resolve o IP real do cliente e o expõe em `x-real-ip`
 		// (sempre um único valor, sobrescrito pelo edge — não repassado
@@ -93,6 +96,11 @@ export const auth = betterAuth({
 			: {}),
 	},
 	plugins: [
+		// Precisa ser o primeiro plugin da lista (exigência do @better-auth/expo):
+		// sobrescreve a origem das rotas /auth/* chamadas pelo app mobile (que não
+		// tem um Origin de navegador de verdade) e expõe o proxy de autorização
+		// usado pelo login social (Google) dentro do WebBrowser do Expo.
+		expo(),
 		apiKey({ enableSessionForAPIKeys: true }),
 		...(env.ENABLE_2FA
 			? [

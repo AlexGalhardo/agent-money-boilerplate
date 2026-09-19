@@ -202,6 +202,75 @@ print_prisma_studio_hint() {
 	fi
 }
 
+# Mata o(s) processo(s) escutando numa porta TCP — cobre tanto Unix/WSL2
+# (lsof, ou fuser como fallback) quanto Git Bash no Windows (netstat.exe +
+# taskkill.exe nativos, sem depender de nenhuma ferramenta extra instalada).
+# Sempre loga o que encontrou/matou, mesmo quando não há nada pra fazer.
+kill_process_on_port() {
+	local port="$1"
+	local pids=""
+
+	if command -v lsof >/dev/null 2>&1; then
+		pids=$(lsof -ti tcp:"$port" 2>/dev/null || true)
+	elif command -v fuser >/dev/null 2>&1; then
+		pids=$(fuser "${port}/tcp" 2>/dev/null || true)
+	elif command -v netstat >/dev/null 2>&1; then
+		# Saída do netstat.exe do Windows: "  TCP    0.0.0.0:4000     0.0.0.0:0    LISTENING    12345"
+		pids=$(netstat -ano -p tcp 2>/dev/null |
+			grep -i "LISTENING" |
+			awk -v p=":$port$" '$2 ~ p {print $NF}' |
+			sort -u)
+	fi
+
+	if [ -z "$pids" ]; then
+		echo "    Porta ${port}: livre"
+		return
+	fi
+
+	echo "    Porta ${port}: em uso pelo(s) PID $(echo "$pids" | tr '\n' ' ')— encerrando"
+	for pid in $pids; do
+		if command -v taskkill >/dev/null 2>&1; then
+			taskkill //F //PID "$pid" >/dev/null 2>&1 || true
+		else
+			kill -9 "$pid" 2>/dev/null || true
+		fi
+	done
+}
+
+# Garante que as portas usadas pelos serviços da aplicação (4000 API, 4001
+# frontend, e opcionalmente 5432 do Postgres) estejam livres antes de subir
+# tudo de novo — mata processos PM2 antigos com os mesmos nomes, para/remove
+# containers Docker (de qualquer stack) publicando essas portas, e por fim
+# qualquer processo solto (ex: um `bun run dev` que ficou pra trás) ainda
+# escutando nelas. Sempre explícito nos logs sobre o que foi encontrado e
+# encerrado, pra facilitar debug de "porta já em uso".
+free_app_ports() {
+	local ports=("$@")
+	echo "==> Garantindo que as portas ${ports[*]} estão livres"
+
+	if command -v pm2 >/dev/null 2>&1 && pm2 jlist 2>/dev/null | grep -q '"name":"elysia-'; then
+		echo "    Processos elysia-* antigos rodando no PM2 — removendo (pm2 delete)"
+		pm2 delete elysia-backend elysia-frontend elysia-bot >/dev/null 2>&1 || true
+	fi
+
+	if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+		for port in "${ports[@]}"; do
+			local containers
+			containers=$(docker ps -q --filter "publish=${port}" 2>/dev/null || true)
+			if [ -n "$containers" ]; then
+				local names
+				names=$(docker ps --filter "publish=${port}" --format '{{.Names}}' | tr '\n' ' ')
+				echo "    Porta ${port}: em uso por container(s) Docker ($names) — parando"
+				docker stop $containers >/dev/null
+			fi
+		done
+	fi
+
+	for port in "${ports[@]}"; do
+		kill_process_on_port "$port"
+	done
+}
+
 # Espera um endpoint HTTP responder antes de seguir (usado para aguardar o
 # container da API terminar migrations + Prisma generate no entrypoint antes
 # de rodar o seed). Sem curl disponível, desiste na hora — quem chamar trata

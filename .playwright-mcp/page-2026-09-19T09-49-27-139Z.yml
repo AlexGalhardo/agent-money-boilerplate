@@ -1,0 +1,94 @@
+- generic [ref=f4e1]:
+  - generic [ref=f4e2]:
+    - banner [ref=f4e3]:
+      - generic [ref=f4e4]:
+        - link "Money" [ref=f4e6] [cursor=pointer]:
+          - /url: /
+        - button "Admin" [ref=f4e10]:
+          - generic [aria-hidden] [ref=f4e12]: ▾
+    - main [ref=f4e13]:
+      - generic [ref=f4e14]:
+        - heading "Minha conta" [level=1] [ref=f4e15]
+        - generic [ref=f4e16]:
+          - heading "Dados da conta" [level=2] [ref=f4e17]
+          - generic [ref=f4e18]:
+            - generic [ref=f4e19]:
+              - generic [ref=f4e20]: Nome
+              - textbox "Nome" [ref=f4e21]: Admin
+            - generic [ref=f4e22]:
+              - generic [ref=f4e23]: E-mail
+              - textbox "E-mail" [disabled] [ref=f4e24]: admin@gmail.com
+            - button "Salvar" [ref=f4e25]
+        - generic [ref=f4e26]:
+          - heading "Alterar senha" [level=2] [ref=f4e27]
+          - generic [ref=f4e28]:
+            - generic [ref=f4e29]:
+              - generic [ref=f4e30]: Senha atual
+              - generic [ref=f4e31]:
+                - textbox "Senha atual" [ref=f4e32]: senhaErrada123!
+                - button "Mostrar senha" [ref=f4e33]
+              - paragraph [ref=f4e87]: Senha incorreta
+            - generic [ref=f4e37]:
+              - generic [ref=f4e38]: Nova senha
+              - generic [ref=f4e39]:
+                - generic [ref=f4e40]:
+                  - textbox "Nova senha" [ref=f4e41]:
+                    - /placeholder: Crie uma nova senha forte
+                    - text: NovaSenha123!
+                  - button "Mostrar senha" [ref=f4e42]
+                - list [ref=f4e88]:
+                  - listitem [ref=f4e89]:
+                    - generic [aria-hidden] [ref=f4e90]: ✓
+                    - text: Entre 8 e 32 caracteres
+                  - listitem [ref=f4e91]:
+                    - generic [aria-hidden] [ref=f4e92]: ✓
+                    - text: Uma letra minúscula (a-z)
+                  - listitem [ref=f4e93]:
+                    - generic [aria-hidden] [ref=f4e94]: ✓
+                    - text: Uma letra maiúscula (A-Z)
+                  - listitem [ref=f4e95]:
+                    - generic [aria-hidden] [ref=f4e96]: ✓
+                    - text: Um número (0-9)
+                  - listitem [ref=f4e97]:
+                    - generic [aria-hidden] [ref=f4e98]: ✓
+                    - text: "Um caractere especial (ex: !@#$%)"
+            - generic [ref=f4e46]:
+              - generic [ref=f4e47]: Confirmar nova senha
+              - generic [ref=f4e48]:
+                - textbox "Confirmar nova senha" [ref=f4e49]: NovaSenha123!
+                - button "Mostrar senha" [ref=f4e50]
+            - button "Alterar senha" [active] [ref=f4e54]
+        - generic [ref=f4e55]:
+          - heading "Plano" [level=2] [ref=f4e56]
+          - paragraph [ref=f4e57]:
+            - text: Plano
+            - strong [ref=f4e58]: PRO
+            - text: ativo até 30/12/2099.
+        - generic [ref=f4e59]:
+          - heading "Bot do Telegram" [level=2] [ref=f4e60]
+          - paragraph [ref=f4e61]: Abra o bot no Telegram e envie o ID da conta abaixo quando ele pedir — isso vincula as transações feitas pelo bot à sua conta. Você também pode informar o Chat ID manualmente aqui.
+          - generic [ref=f4e62]:
+            - paragraph [ref=f4e63]: ID da conta
+            - code [ref=f4e64]: HJ9CFXi6fQoMj1glpM21fWhDQtBiO1DU
+          - generic [ref=f4e65]:
+            - generic [ref=f4e66]:
+              - generic [ref=f4e67]: Chat ID do Telegram
+              - textbox "Chat ID do Telegram" [ref=f4e68]:
+                - /placeholder: "Ex: 123456789"
+            - button "Salvar" [ref=f4e69]
+        - generic [ref=f4e70]:
+          - heading "Excluir conta" [level=2] [ref=f4e71]
+          - paragraph [ref=f4e72]: Essa ação remove todos os seus dados. Não é possível excluir a conta com um plano ativo.
+          - button "Excluir minha conta" [ref=f4e73]
+    - contentinfo [ref=f4e74]:
+      - generic [ref=f4e75]:
+        - paragraph [ref=f4e76]: © 2026 Money. Todos os direitos reservados.
+        - navigation [ref=f4e77]:
+          - link "Contato" [ref=f4e78] [cursor=pointer]:
+            - /url: /contato
+          - link "Termos de Uso" [ref=f4e79] [cursor=pointer]:
+            - /url: /termos-de-uso
+          - link "Política de Privacidade" [ref=f4e80] [cursor=pointer]:
+            - /url: /politica-de-privacidade
+          - button "Ativar tema escuro" [ref=f4e81]: 🌙
+  - button "Open TanStack Devtools" [ref=f4e82] [cursor=pointer]

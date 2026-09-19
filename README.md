@@ -18,6 +18,7 @@
 | Processo (VPS) | [PM2](https://pm2.keymetrics.io) |
 | TLS (VPS) | [Caddy](https://caddyserver.com) |
 | Bot do Telegram | [grammY](https://grammy.dev) |
+| App mobile | [Expo](https://expo.dev) + React Native, mesma API (better-auth via [@better-auth/expo](https://www.better-auth.com/docs/integrations/expo)) |
 | Testes | `bun:test` (unitário/integração/smoke) + [Playwright](https://playwright.dev) (E2E) |
 
 Tipagem ponta-a-ponta entre API e frontend via [Eden](https://elysiajs.com/eden/overview.html).
@@ -32,6 +33,7 @@ Tipagem ponta-a-ponta entre API e frontend via [Eden](https://elysiajs.com/eden/
 - [Deploy em VPS Ubuntu — com Docker](./docs/setup-vps-ubuntu.md)
 - [Deploy em Vercel + Fly.io](./docs/setup-vercel-flyio.md)
 - [Bot do Telegram](./docs/telegram-bot.md) — controle financeiro pessoal pelo Telegram
+- [Deploy do app mobile (Android): APK avulso e Google Play](./docs/deploy-android.md)
 
 Changelog completo em [`CHANGELOG.md`](./CHANGELOG.md).
 
@@ -41,6 +43,7 @@ Changelog completo em [`CHANGELOG.md`](./CHANGELOG.md).
 /backend/       → ElysiaJS (REST API, auth, pagamentos, cron)
 /frontend/      → TanStack Start (SSR)
 /bot/           → bot do Telegram (reusa Prisma/criptografia/regras da API)
+/mobile/        → Expo + React Native (mesma API do frontend/bot, sem backend próprio)
 /http-client/   → chamadas HTTP de referência (api.http)
 /docs/          → guias de setup e deploy
 ```

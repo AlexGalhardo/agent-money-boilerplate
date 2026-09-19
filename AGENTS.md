@@ -9,19 +9,24 @@ Guia para o Claude Code (e outros agentes de IA) trabalhando neste repositório.
 ## O que é este projeto
 
 **Elysia Finanças** — controle de finanças pessoais (transações, categorias,
-relatórios visuais). Monorepo Bun com dois workspaces:
+relatórios visuais). Monorepo Bun com quatro workspaces (`backend`,
+`frontend`, `bot`, `mobile`) mais dois clientes que consomem a mesma API sem
+serem workspace próprio (`bot` e `mobile` importam `@elysia-galhardo-finances/backend`
+diretamente):
 
 ```
 /backend/       → ElysiaJS (REST API, auth, pagamentos, cron)
 /frontend/      → TanStack Start (SSR)
 /bot/           → bot do Telegram (reusa Prisma/criptografia/regras da API)
+/mobile/        → Expo + React Native (mesma API do frontend/bot, sem backend próprio)
 /http-client/   → chamadas HTTP de referência (api.http)
 /docs/          → guias de setup e deploy
 ```
 
 Tipagem ponta-a-ponta entre API e frontend via [Eden](https://elysiajs.com/eden/overview.html)
-(`frontend/src/lib/api.ts` importa o tipo `App` exportado por `backend/src/server.ts`) —
-qualquer rota nova na API já fica tipada no frontend sem gerar nada.
+(`frontend/src/lib/api.ts` e `mobile/src/lib/api.ts` importam o tipo `App`
+exportado por `backend/src/server.ts`) — qualquer rota nova na API já fica
+tipada nos dois sem gerar nada.
 
 ## Stack
 
@@ -32,6 +37,7 @@ qualquer rota nova na API já fica tipada no frontend sem gerar nada.
 | Validação     | Zod                                                                                              |
 | Autenticação  | better-auth (sessão via cookie, plugin de 2FA opcional)                                          |
 | Frontend      | TanStack Start + Tailwind CSS v4                                                                 |
+| Mobile        | Expo + React Native + NativeWind (sessão via @better-auth/expo, sem backend próprio)             |
 | Testes        | `bun:test` (unit/integration/smoke) + Playwright (E2E)                                           |
 | Lint/format   | Biome (tabs, largura de linha 120)                                                               |
 
@@ -43,10 +49,21 @@ Rodar a partir da raiz do monorepo:
 bun install                 # instala tudo (workspaces)
 bun run backend:dev         # API em http://localhost:4000
 bun run frontend:dev        # frontend em http://localhost:4001
+bun run mobile:dev          # Expo dev server (Metro) — escaneie o QR com o Expo Go
 bun run lint                # biome check
 bun run typecheck:backend   # tsc --noEmit da API
 bun run typecheck:frontend  # tsc --noEmit do frontend
+bun run typecheck:mobile    # tsc --noEmit do app mobile
 ```
+
+`bunfig.toml` fixa `install.linker = "hoisted"` (uma árvore única de
+`node_modules`, em vez do "isolated" padrão do bun) — sem isso, o mesmo
+pacote (ex: `elysia`) pode instalar como duas cópias fisicamente diferentes
+em workspaces com conjuntos de dependências muito distintos (ex:
+`backend/` vs `mobile/`, que traz todo o ecossistema Expo/React Native),
+fazendo o TypeScript enxergar tipos nominalmente incompatíveis ao importar
+`App` do backend via Eden em mais de um workspace. Não remova essa config
+sem entender essa implicação.
 
 Dentro de `backend/`:
 

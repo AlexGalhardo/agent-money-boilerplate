@@ -6,7 +6,8 @@
 	"workspaces": [
 		"backend",
 		"frontend",
-		"bot"
+		"bot",
+		"mobile"
 	],
 	"scripts": {
 		"backend:dev": "bun run --cwd backend dev",
@@ -16,12 +17,15 @@
 		"frontend:build": "bun run --cwd frontend build",
 		"bot:dev": "bun run --cwd bot dev",
 		"bot:test": "bun run --cwd bot test",
+		"mobile:dev": "bun run --cwd mobile start",
+		"mobile:test": "bun run --cwd mobile test",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write .",
 		"typecheck:backend": "bun run --cwd backend tsc --noEmit",
 		"typecheck:frontend": "bun run --cwd frontend tsc --noEmit",
 		"typecheck:bot": "bun run --cwd bot tsc --noEmit",
+		"typecheck:mobile": "bun run --cwd mobile tsc --noEmit",
 		"docker:sqlite:up": "docker compose -f docker-compose.sqlite.yml up -d --build",
 		"docker:sqlite:down": "docker compose -f docker-compose.sqlite.yml down",
 		"docker:postgres:up": "docker compose up -d --build",

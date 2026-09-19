@@ -30,11 +30,14 @@ bun install
 
 prompt_database_choice "$1"
 
+free_app_ports 4000 4001
+
 if [ "$DB_CHOICE" = "postgres" ]; then
 	PROVIDER="postgresql"
 	API_DATABASE_URL="postgresql://elysia:elysia@localhost:5432/elysia_financas"
 	BOT_DATABASE_URL="postgresql://elysia:elysia@localhost:5432/elysia_financas"
 	if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+		free_app_ports 5432
 		echo "==> Subindo Postgres via Docker Desktop (docker compose up -d postgres)"
 		docker compose up -d postgres
 	else
@@ -63,18 +66,14 @@ echo "==> Populando banco (admin@gmail.com / adminBR@123 + aleexgvieira@gmail.co
 
 write_bot_env "$PROVIDER" "$BOT_DATABASE_URL"
 
-echo "==> Subindo api + frontend com PM2 (ecosystem.local.config.js)"
-pm2 start ecosystem.local.config.js --only elysia-backend,elysia-frontend
-
+PM2_APPS="elysia-backend,elysia-frontend"
 if bot_is_configured; then
-	echo "==> bot/.env já configurado, subindo elysia-bot também"
-	pm2 start ecosystem.local.config.js --only elysia-bot
+	echo "==> bot/.env já configurado, elysia-bot também vai subir"
+	PM2_APPS="elysia-backend,elysia-frontend,elysia-bot"
 else
 	print_bot_hint
-	echo "Depois de configurar: pm2 start ecosystem.local.config.js --only elysia-bot"
+	echo "elysia-bot não vai subir agora — depois de configurar bot/.env, rode este script de novo."
 fi
-
-pm2 save >/dev/null
 
 echo ""
 echo "Setup concluído."
@@ -82,11 +81,8 @@ echo "  API:      http://localhost:4000 (docs em /docs)"
 echo "  Frontend: http://localhost:4001"
 print_prisma_studio_hint
 echo ""
-echo "3 serviços no PM2: elysia-backend, elysia-frontend, elysia-bot"
-echo "  (elysia-bot só sobe de fato depois de bot/.env configurado — ver acima)"
+echo "==> Subindo $PM2_APPS com pm2-runtime (primeiro plano — Ctrl+C encerra todos)"
+echo "    Logs dos serviços aparecem abaixo, prefixados pelo nome de cada um."
 echo ""
-echo "Comandos úteis:"
-echo "  pm2 status"
-echo "  pm2 logs                            # logs em tempo real dos 3 serviços"
-echo "  pm2 restart ecosystem.local.config.js"
-echo "  pm2 delete ecosystem.local.config.js"
+
+exec bunx pm2-runtime start ecosystem.local.config.js --only "$PM2_APPS"
