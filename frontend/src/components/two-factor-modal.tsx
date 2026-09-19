@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { translateAuthError } from "../lib/auth-errors";
 import { inputClassName } from "./auth-card";
 import { Modal } from "./modal";
 
@@ -24,7 +25,7 @@ export function TwoFactorModal({ methods, onVerified, onClose }: TwoFactorModalP
 		setLoading(false);
 
 		if (sendError) {
-			setError(sendError.message ?? "Não foi possível enviar o código por e-mail");
+			setError(translateAuthError(sendError, "Não foi possível enviar o código por e-mail"));
 			return;
 		}
 
@@ -48,7 +49,7 @@ export function TwoFactorModal({ methods, onVerified, onClose }: TwoFactorModalP
 		setLoading(false);
 
 		if (verifyError) {
-			setError(verifyError.message ?? "Código inválido");
+			setError(translateAuthError(verifyError, "Código inválido"));
 			return;
 		}
 

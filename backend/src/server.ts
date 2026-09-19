@@ -3,6 +3,7 @@ import { Elysia } from "elysia";
 import { env } from "./config/env";
 import { authPlugin } from "./lib/auth.plugin";
 import { cronRoutes, paymentRoutes, paymentWebhookRoutes } from "./modules/payments/payment.routes";
+import { telegramRoutes } from "./modules/telegram/telegram.routes";
 import { transactionRoutes } from "./modules/transactions/transaction.routes";
 import { transactionImportRoutes } from "./modules/transactions/transaction-import.routes";
 import { userRoutes } from "./modules/users/user.routes";
@@ -43,6 +44,7 @@ export const app = new Elysia()
 	.use(transactionRoutes)
 	.use(transactionImportRoutes)
 	.use(userRoutes)
+	.use(telegramRoutes)
 	.use(paymentRoutes)
 	.use(paymentWebhookRoutes)
 	.use(cronRoutes)

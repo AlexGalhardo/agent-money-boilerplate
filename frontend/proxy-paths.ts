@@ -6,4 +6,4 @@
 // frontend e API são domínios diferentes no Railway. `/webhook` e `/cron`
 // ficam de fora de propósito: são chamados direto na API por serviços
 // externos (AbacatePay, um cron externo), nunca pelo navegador.
-export const PROXIED_API_PATHS = ["/auth", "/users", "/transactions", "/payments", "/config"];
+export const PROXIED_API_PATHS = ["/auth", "/users", "/transactions", "/payments", "/config", "/telegram"];

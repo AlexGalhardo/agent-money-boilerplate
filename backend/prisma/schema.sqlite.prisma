@@ -204,3 +204,18 @@ model Apikey {
   @@index([key])
   @@map("api_key")
 }
+
+/// Token de uso unico para vincular um chat do Telegram a uma conta via
+/// login web (ex: Google) — o bot nao consegue fazer OAuth dentro do chat,
+/// entao gera esse token, manda um link pro navegador, e o backend resolve
+/// o vinculo quando o usuario completa o login autenticado nessa pagina.
+/// Sem relation com User: o vinculo (User.telegramChatId) so e decidido no
+/// momento em que o token e resgatado.
+model TelegramLinkToken {
+  token     String   @id
+  chatId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("telegram_link_token")
+}

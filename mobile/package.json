@@ -1,0 +1,16 @@
+{
+	"name": "op",
+	"version": "1.0.0",
+	"private": true,
+	"description": "App de finanças pessoais — backend Elysia + app Expo/React Native",
+	"scripts": {
+		"backend:dev": "cd backend && bun run dev",
+		"backend:test": "cd backend && bun test",
+		"backend:migrate": "cd backend && bun run db:migrate",
+		"mobile:start": "cd mobile && bun run start",
+		"mobile:test": "cd mobile && bun run test",
+		"typecheck": "cd shared && bunx tsc --noEmit && cd ../backend && bunx tsc --noEmit && cd ../mobile && bunx tsc --noEmit",
+		"test:all": "bun run scripts/test-all.mjs",
+		"e2e": "maestro test e2e/flow.yaml"
+	}
+}

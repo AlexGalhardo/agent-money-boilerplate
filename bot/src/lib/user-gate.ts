@@ -5,65 +5,26 @@ import {
 	AbacatePayNotConfiguredError,
 	paymentService,
 } from "@elysia-galhardo-finances/backend/src/modules/payments/payment.service";
+import { findUserById } from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
 import type { Context } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { formatDate } from "../formatting/format";
 import type { BotConversation } from "../types";
-import { ChatAlreadyLinkedError, findUserById, findUserIdByChatId, linkChatToUser } from "./current-user";
+import { ensureLinked } from "./auth-flows";
 
 /**
- * Garante que o chat está vinculado a uma conta (pedindo o ID da conta se
- * ainda não estiver) e que essa conta tem plano ativo (oferecendo o
- * checkout PIX no próprio chat se não tiver). Só retorna um userId quando
- * as duas condições são satisfeitas — do contrário, já respondeu ao usuário
- * explicando o motivo e quem chamou deve simplesmente parar (`return`).
+ * Garante que o chat está vinculado a uma conta (pelo menu de login/criar
+ * conta/Google/ID em `ensureLinked`, ver ./auth-flows.ts) e que essa conta
+ * tem plano ativo (oferecendo o checkout PIX no próprio chat se não tiver).
+ * Só retorna um userId quando as duas condições são satisfeitas — do
+ * contrário, já respondeu ao usuário explicando o motivo e quem chamou deve
+ * simplesmente parar (`return`).
  */
 export async function ensureUserReady(conversation: BotConversation, ctx: Context): Promise<string | null> {
 	const userId = await ensureLinked(conversation, ctx);
 	if (!userId) return null;
 
 	return ensureActivePlan(conversation, ctx, userId);
-}
-
-async function ensureLinked(conversation: BotConversation, ctx: Context): Promise<string | null> {
-	const chatId = ctx.chat?.id;
-	if (chatId === undefined) return null;
-
-	const linkedUserId = await conversation.external(() => findUserIdByChatId(chatId));
-	if (linkedUserId) return linkedUserId;
-
-	await ctx.reply(
-		"👋 Para começar, envie o *ID da sua conta* — você encontra em *Minha Conta* no site, na seção “Bot do Telegram”.",
-		{ parse_mode: "Markdown" },
-	);
-
-	for (;;) {
-		const replyCtx = await conversation.waitFor("message:text", {
-			otherwise: (otherCtx) => otherCtx.reply("Envie o ID da sua conta em texto:"),
-		});
-		const candidateId = replyCtx.message.text.trim();
-
-		const user = await conversation.external(() => findUserById(candidateId));
-		if (!user) {
-			await replyCtx.reply("ID não encontrado. Confira em Minha Conta e envie novamente:");
-			continue;
-		}
-
-		try {
-			await conversation.external(() => linkChatToUser(chatId, candidateId));
-		} catch (error) {
-			if (error instanceof ChatAlreadyLinkedError) {
-				await replyCtx.reply(
-					"Esse chat já está vinculado a outra conta. Desvincule pelo site (apague o Chat ID em Minha Conta e salve) antes de vincular esta.",
-				);
-				return null;
-			}
-			throw error;
-		}
-
-		await replyCtx.reply(`✅ Conta vinculada! Olá, ${user.name}.`);
-		return candidateId;
-	}
 }
 
 async function ensureActivePlan(conversation: BotConversation, ctx: Context, userId: string): Promise<string | null> {

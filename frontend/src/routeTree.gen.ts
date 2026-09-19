@@ -19,6 +19,7 @@ import { Route as EsqueciSenhaRouteImport } from './routes/esqueci-senha'
 import { Route as MinhaContaRouteImport } from './routes/minha-conta'
 import { Route as PoliticaDePrivacidadeRouteImport } from './routes/politica-de-privacidade'
 import { Route as ResetarSenhaRouteImport } from './routes/resetar-senha'
+import { Route as TelegramVincularRouteImport } from './routes/telegram-vincular'
 import { Route as TermosDeUsoRouteImport } from './routes/termos-de-uso'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 
@@ -72,6 +73,11 @@ const ResetarSenhaRoute = ResetarSenhaRouteImport.update({
   path: '/resetar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TelegramVincularRoute = TelegramVincularRouteImport.update({
+  id: '/telegram-vincular',
+  path: '/telegram-vincular',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosDeUsoRoute = TermosDeUsoRouteImport.update({
   id: '/termos-de-uso',
   path: '/termos-de-uso',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/minha-conta': typeof MinhaContaRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/resetar-senha': typeof ResetarSenhaRoute
+  '/telegram-vincular': typeof TelegramVincularRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/minha-conta': typeof MinhaContaRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/resetar-senha': typeof ResetarSenhaRoute
+  '/telegram-vincular': typeof TelegramVincularRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/minha-conta': typeof MinhaContaRoute
   '/politica-de-privacidade': typeof PoliticaDePrivacidadeRoute
   '/resetar-senha': typeof ResetarSenhaRoute
+  '/telegram-vincular': typeof TelegramVincularRoute
   '/termos-de-uso': typeof TermosDeUsoRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/minha-conta'
     | '/politica-de-privacidade'
     | '/resetar-senha'
+    | '/telegram-vincular'
     | '/termos-de-uso'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/minha-conta'
     | '/politica-de-privacidade'
     | '/resetar-senha'
+    | '/telegram-vincular'
     | '/termos-de-uso'
     | '/dashboard'
   id:
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/minha-conta'
     | '/politica-de-privacidade'
     | '/resetar-senha'
+    | '/telegram-vincular'
     | '/termos-de-uso'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   MinhaContaRoute: typeof MinhaContaRoute
   PoliticaDePrivacidadeRoute: typeof PoliticaDePrivacidadeRoute
   ResetarSenhaRoute: typeof ResetarSenhaRoute
+  TelegramVincularRoute: typeof TelegramVincularRoute
   TermosDeUsoRoute: typeof TermosDeUsoRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/telegram-vincular': {
+      id: '/telegram-vincular'
+      path: '/telegram-vincular'
+      fullPath: '/telegram-vincular'
+      preLoaderRoute: typeof TelegramVincularRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/termos-de-uso': {
       id: '/termos-de-uso'
       path: '/termos-de-uso'
@@ -286,6 +306,7 @@ const rootRouteChildren: RootRouteChildren = {
   MinhaContaRoute: MinhaContaRoute,
   PoliticaDePrivacidadeRoute: PoliticaDePrivacidadeRoute,
   ResetarSenhaRoute: ResetarSenhaRoute,
+  TelegramVincularRoute: TelegramVincularRoute,
   TermosDeUsoRoute: TermosDeUsoRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }

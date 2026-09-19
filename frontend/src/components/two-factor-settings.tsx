@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { authClient } from "../lib/auth-client";
+import { translateAuthError } from "../lib/auth-errors";
 import { FormField, inputClassName } from "./auth-card";
 
 type SetupData = { totpURI: string; backupCodes: string[]; qrDataUrl: string };
@@ -21,7 +22,7 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
 		setLoading(false);
 
 		if (enableError || !data || data.method !== "totp") {
-			setError(enableError?.message ?? "Não foi possível ativar o 2FA");
+			setError(translateAuthError(enableError, "Não foi possível ativar o 2FA"));
 			return;
 		}
 
@@ -45,7 +46,7 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
 		setLoading(false);
 
 		if (verifyError) {
-			setError(verifyError.message ?? "Código inválido");
+			setError(translateAuthError(verifyError, "Código inválido"));
 			return;
 		}
 
@@ -62,7 +63,7 @@ export function TwoFactorSettings({ enabled }: { enabled: boolean }) {
 		setLoading(false);
 
 		if (disableError) {
-			setError(disableError.message ?? "Não foi possível desativar o 2FA");
+			setError(translateAuthError(disableError, "Não foi possível desativar o 2FA"));
 			return;
 		}
 

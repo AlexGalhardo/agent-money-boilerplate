@@ -1,0 +1,33 @@
+# Auto-merged by `docker compose up` (NOT by `docker compose -f docker-compose.yml up`).
+# Local-development conveniences: backend hot reload, source bind-mounts,
+# an exposed database port, and dev logging.
+#
+# For a production-style run that ignores this file:
+#   docker compose -f docker-compose.yml up -d --build
+
+services:
+  db:
+    ports:
+      - "${DB_PORT:-5432}:5432"
+
+  backend:
+    build:
+      target: dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend:/app/backend
+      - ./shared:/app/shared
+      # keep container-installed deps (don't let the host shadow them)
+      - backend_node_modules:/app/backend/node_modules
+      - backend_shared_node_modules:/app/shared/node_modules
+
+  web:
+    # The web bundle is static and env is baked at build time. In dev, prefer
+    # the `native`/`metro` profile for live reload; otherwise rebuild:
+    #   docker compose build web
+    restart: "no"
+
+volumes:
+  backend_node_modules:
+  backend_shared_node_modules:

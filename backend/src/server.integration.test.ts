@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { prisma } from "./config/prisma";
+import { createLinkToken } from "./modules/telegram/telegram.service";
 import { app } from "./server";
 
 const ORIGIN = "http://localhost:4098";
@@ -222,5 +223,45 @@ describe("API integration", () => {
 			body: JSON.stringify({ event: "transparent.completed", data: { id: "ext-1" } }),
 		});
 		expect(response.status).toBe(503);
+	});
+
+	it("POST /telegram/link requires a session", async () => {
+		const response = await request("/telegram/link", { method: "POST", body: JSON.stringify({ token: "x" }) });
+		expect(response.status).toBe(401);
+	});
+
+	it("POST /telegram/link rejects an invalid or expired token", async () => {
+		const response = await request("/telegram/link", {
+			method: "POST",
+			cookie: authCookie,
+			body: JSON.stringify({ token: "not-a-real-token" }),
+		});
+		expect(response.status).toBe(400);
+	});
+
+	it("POST /telegram/link vincula o chat à conta autenticada e consome o token (login com Google via bot)", async () => {
+		const chatId = 555000111;
+		const { token } = await createLinkToken(chatId);
+
+		const response = await request("/telegram/link", {
+			method: "POST",
+			cookie: authCookie,
+			body: JSON.stringify({ token }),
+		});
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as { chatId: number };
+		expect(body.chatId).toBe(chatId);
+
+		const user = await prisma.user.findUnique({ where: { id: userId } });
+		expect(user?.telegramChatId).toBe(String(chatId));
+
+		const reuse = await request("/telegram/link", {
+			method: "POST",
+			cookie: authCookie,
+			body: JSON.stringify({ token }),
+		});
+		expect(reuse.status).toBe(400);
+
+		await prisma.user.update({ where: { id: userId }, data: { telegramChatId: null } });
 	});
 });

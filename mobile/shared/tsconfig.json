@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"lib": ["ESNext"],
+		"types": ["big.js"],
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"outDir": "dist",
+		"skipLibCheck": true,
+		"verbatimModuleSyntax": true
+	},
+	"include": ["src"]
+}

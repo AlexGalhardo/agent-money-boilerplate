@@ -1,7 +1,10 @@
+import {
+	findUserById,
+	findUserIdByChatId,
+} from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import type { BotConversation } from "../types";
-import { findUserById, findUserIdByChatId } from "./current-user";
 
 export const HELP_TEXT = [
 	"💬 *Money BOT*",

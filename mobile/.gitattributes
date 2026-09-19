@@ -1,0 +1,34 @@
+# Normalize line endings so the repo behaves identically on Windows and Unix.
+* text=auto eol=lf
+
+# Files that MUST stay LF (executed inside Linux containers / by /bin/sh)
+*.sh            text eol=lf
+Makefile        text eol=lf
+Dockerfile      text eol=lf
+*.Dockerfile    text eol=lf
+*.dockerfile    text eol=lf
+*.conf          text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+
+# PowerShell is happiest with CRLF
+*.ps1           text eol=crlf
+*.cmd           text eol=crlf
+*.bat           text eol=crlf
+
+# Binary assets — never touch
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.ttf  binary
+*.otf  binary
+*.woff binary
+*.woff2 binary
+*.p8   binary
+*.p12  binary
+*.jks  binary
+*.keystore binary
+bun.lock binary

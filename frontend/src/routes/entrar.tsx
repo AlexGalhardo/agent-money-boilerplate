@@ -6,6 +6,7 @@ import { GoogleButton } from "../components/google-button";
 import { PasswordInput } from "../components/password-input";
 import { TwoFactorModal } from "../components/two-factor-modal";
 import { authClient, signIn } from "../lib/auth-client";
+import { translateAuthError } from "../lib/auth-errors";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
 export const Route = createFileRoute("/entrar")({
@@ -59,7 +60,7 @@ function LoginPage() {
 				setUnverifiedEmail(result.data.email);
 				return;
 			}
-			setFormError(error.message ?? "E-mail e/ou senha incorretos");
+			setFormError(translateAuthError(error, "E-mail e/ou senha incorretos"));
 			return;
 		}
 

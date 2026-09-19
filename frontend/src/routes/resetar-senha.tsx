@@ -3,6 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { AuthCard, FormField, inputClassName } from "../components/auth-card";
 import { resetPassword } from "../lib/auth-client";
+import { translateAuthError } from "../lib/auth-errors";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
 const searchSchema = z.object({ token: z.string().optional() });
@@ -43,7 +44,7 @@ function ResetPasswordPage() {
 		setLoading(false);
 
 		if (resetError) {
-			setError(resetError.message ?? "Não foi possível redefinir sua senha");
+			setError(translateAuthError(resetError, "Não foi possível redefinir sua senha"));
 			return;
 		}
 

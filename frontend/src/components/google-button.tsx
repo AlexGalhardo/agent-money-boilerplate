@@ -1,8 +1,8 @@
 import { authClient } from "../lib/auth-client";
 
-export function GoogleButton({ label }: { label: string }) {
+export function GoogleButton({ label, callbackURL = "/dashboard" }: { label: string; callbackURL?: string }) {
 	async function handleClick(): Promise<void> {
-		await authClient.signIn.social({ provider: "google", callbackURL: "/dashboard" });
+		await authClient.signIn.social({ provider: "google", callbackURL });
 	}
 
 	return (

@@ -28,6 +28,7 @@ backend/server.exe
 coverage
 playwright-report
 test-results
+.playwright-mcp
 
 # logs
 *.log
@@ -47,3 +48,17 @@ pnpm-lock.yaml
 # editor
 .vscode/*
 !.vscode/settings.json
+
+# mobile/ (Expo/React Native)
+.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+.metro-health-check*
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+mobile/ios
+mobile/android
+mobile/google-play-service-account.json

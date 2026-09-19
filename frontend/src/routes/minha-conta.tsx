@@ -11,6 +11,7 @@ import { isStrongPassword, PasswordStrengthInput } from "../components/password-
 import { TwoFactorSettings } from "../components/two-factor-settings";
 import { api } from "../lib/api";
 import { authClient, signOut, useSession } from "../lib/auth-client";
+import { translateAuthError } from "../lib/auth-errors";
 import { FREE_TRANSACTION_LIMIT, hasActivePlan } from "../lib/plan";
 import { requireAuth } from "../lib/require-auth";
 import { useAppConfig } from "../lib/use-app-config";
@@ -107,7 +108,7 @@ function ProfilePage() {
 		const { error } = await authClient.updateUser({ name: result.data.name });
 
 		if (error) {
-			setNameError(error.message ?? "Não foi possível atualizar seu nome");
+			setNameError(translateAuthError(error, "Não foi possível atualizar seu nome"));
 			return;
 		}
 
@@ -162,7 +163,7 @@ function ProfilePage() {
 		});
 
 		if (error) {
-			setPasswordErrors({ currentPassword: error.message ?? "Não foi possível alterar sua senha" });
+			setPasswordErrors({ currentPassword: translateAuthError(error, "Não foi possível alterar sua senha") });
 			return;
 		}
 

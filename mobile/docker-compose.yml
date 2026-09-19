@@ -1,0 +1,134 @@
+# =============================================================================
+#  op — full stack (API + database + web app) in one command.
+#
+#    cp .env.example .env      # once
+#    docker compose up -d --build
+#
+#  → API   http://localhost:${BACKEND_PORT}   (health: /health)
+#  → App   http://localhost:${WEB_PORT}
+#
+#  Production (no dev overrides, restart policies, no exposed DB):
+#    docker compose -f docker-compose.yml up -d --build
+#
+#  Native device testing (Expo Go), instead of / alongside the web app:
+#    docker compose --profile native up -d --build
+#
+#  Same commands on Windows (PowerShell/CMD) and Unix. See `make help`
+#  / `scripts/stack.ps1` for shortcuts.
+# =============================================================================
+
+name: op
+
+services:
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-op}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-op}
+      POSTGRES_DB: ${POSTGRES_DB:-op}
+    volumes:
+      - op_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-op} -d ${POSTGRES_DB:-op}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: prod
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # `db` is the bundled Postgres. For a managed database, point DATABASE_URL
+      # at it in .env and start only `backend` + `web`.
+      DB_DRIVER: postgres
+      DATABASE_URL: ${DATABASE_URL:-postgres://op:op@db:5432/op}
+      PORT: "3333"
+    ports:
+      - "${BACKEND_PORT:-3333}:3333"
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
+
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: docker/mobile-web.Dockerfile
+      target: runtime
+      args:
+        EXPO_PUBLIC_DATA_MODE: ${EXPO_PUBLIC_DATA_MODE:-remote}
+        EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL:-http://localhost:8081/api}
+        EXPO_PUBLIC_API_VERSION: ${EXPO_PUBLIC_API_VERSION:-v1}
+        EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: ${EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID:-}
+    restart: unless-stopped
+    environment:
+      # Runtime-configurable proxy target (no rebuild to repoint).
+      BACKEND_ORIGIN: http://backend:3333
+    ports:
+      - "${WEB_PORT:-8081}:80"
+    depends_on:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # Expo dev server for running the NATIVE app in Expo Go on a physical device.
+  # Enable with:  docker compose --profile native up -d
+  metro:
+    profiles: ["native"]
+    build:
+      context: .
+      dockerfile: docker/mobile-web.Dockerfile
+      target: build
+    command: sh -c "cd /app/mobile && bunx expo start --host lan --port ${METRO_PORT:-8082}"
+    environment:
+      CI: "0"
+      EXPO_NO_TELEMETRY: "1"
+      # Bundle URLs handed to the phone must use the dev machine's LAN IP.
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${LAN_HOST:-host.docker.internal}
+      EXPO_PUBLIC_DATA_MODE: ${EXPO_PUBLIC_DATA_MODE:-remote}
+      # For the device, the API is reached at the machine's LAN IP, not localhost.
+      # Set EXPO_PUBLIC_API_URL_NATIVE=http://<LAN_HOST>:<BACKEND_PORT> in .env.
+      EXPO_PUBLIC_API_URL: ${EXPO_PUBLIC_API_URL_NATIVE:-http://localhost:3333}
+      EXPO_PUBLIC_API_VERSION: ${EXPO_PUBLIC_API_VERSION:-v1}
+    ports:
+      - "${METRO_PORT:-8082}:${METRO_PORT:-8082}"
+    volumes:
+      - ./mobile:/app/mobile
+      - ./shared:/app/shared
+      - metro_mobile_nm:/app/mobile/node_modules
+      - metro_shared_nm:/app/shared/node_modules
+    depends_on:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # One-shot: run migrations manually (they also run on backend boot).
+  #   docker compose --profile tools run --rm migrate
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      target: prod
+    env_file:
+      - .env
+    environment:
+      DB_DRIVER: postgres
+      DATABASE_URL: ${DATABASE_URL:-postgres://op:op@db:5432/op}
+    command: ["bun", "run", "db:migrate"]
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
+
+volumes:
+  op_pgdata:
+  metro_mobile_nm:
+  metro_shared_nm:

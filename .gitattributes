@@ -4,3 +4,21 @@
 Caddyfile* text eol=lf
 docker-entrypoint.sh text eol=lf
 .husky/* text eol=lf
+
+# mobile/ (Expo/React Native): binários nunca podem passar pela normalização
+# de line-ending acima, ou corrompem — keystores de assinatura do Android
+# (.jks/.p12/.keystore) em especial precisam ficar intactos byte a byte.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.p8 binary
+*.p12 binary
+*.jks binary
+*.keystore binary

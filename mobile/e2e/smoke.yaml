@@ -1,0 +1,48 @@
+# Smoke flow — offline/local mode, no backend required.
+# Run: maestro test e2e/smoke.yaml
+# Precondition: app built/served with EXPO_PUBLIC_DATA_MODE=local.
+appId: com.op.app
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Criar conta"
+
+# --- Sign up -------------------------------------------------------------------
+- tapOn: "Criar conta"
+- tapOn:
+    id: "field-E-mail"
+- inputText: "smoke${maestro.timestamp}@example.com"
+- tapOn:
+    id: "field-Senha"
+- inputText: "secret123"
+- tapOn:
+    id: "field-Confirmar senha"
+- inputText: "secret123"
+- tapOn: "Criar conta"
+
+# --- Dashboard ---------------------------------------------------------------
+- assertVisible: "Saldo do período"
+- tapOn: "Nova transação"
+
+# --- Create a transaction --------------------------------------------------
+- assertVisible: "Nova transação"
+- tapOn: "Receita"
+- tapOn:
+    id: "field-Valor"
+- inputText: "150000"          # R$ 1.500,00 (digits read as cents)
+- tapOn: "Salário"
+- tapOn:
+    id: "field-Descrição"
+- inputText: "Pagamento E2E"
+- tapOn: "Adicionar"
+
+# --- Verify it landed in the list and the balance updated ----------------
+- assertVisible: "Pagamento E2E"
+- assertVisible: "R$ 1.500,00"
+
+# --- Profile round-trip -------------------------------------------------------
+- tapOn: "Perfil"
+- assertVisible: "Nome de exibição"
+- tapOn: "Voltar"
+- tapOn: "Sair"
+- assertVisible: "Entrar"

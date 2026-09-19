@@ -5,6 +5,7 @@ import { AuthCard, FormField, inputClassName } from "../components/auth-card";
 import { GoogleButton } from "../components/google-button";
 import { isStrongPassword, PasswordStrengthInput } from "../components/password-strength-input";
 import { signUp } from "../lib/auth-client";
+import { translateAuthError } from "../lib/auth-errors";
 import { redirectIfAuthenticated } from "../lib/redirect-if-authenticated";
 
 export const Route = createFileRoute("/criar-conta")({
@@ -63,7 +64,7 @@ function SignupPage() {
 		setLoading(false);
 
 		if (error) {
-			setFormError(error.message ?? "Não foi possível criar sua conta");
+			setFormError(translateAuthError(error, "Não foi possível criar sua conta"));
 			return;
 		}
 

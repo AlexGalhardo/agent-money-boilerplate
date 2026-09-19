@@ -1,3 +1,7 @@
+import {
+	findUserIdByChatId,
+	unlinkChatFromUser,
+} from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
 import { transactionCategories } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { Bot, InlineKeyboard } from "grammy";
@@ -10,7 +14,6 @@ import { reportConversation } from "./conversations/report.conversation";
 import { searchConversation } from "./conversations/search.conversation";
 import { startConversation } from "./conversations/start.conversation";
 import { categoryLabels } from "./formatting/format";
-import { findUserIdByChatId, unlinkChatFromUser } from "./lib/current-user";
 import { buildMenuMessage, HELP_TEXT, mainMenuKeyboard, withMainMenu } from "./lib/menu";
 import type { BotContext } from "./types";
 

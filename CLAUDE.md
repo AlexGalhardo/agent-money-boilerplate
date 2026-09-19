@@ -91,6 +91,23 @@ Detalhes de cada um em `docs/setup-unix-using-docker.md`,
   Três arquivos, sincronia manual — o bot duplica os rótulos de propósito
   para não depender do workspace do frontend (React/TanStack) só por causa
   de um mapa de strings.
+- **Erros do better-auth nunca vão pra tela/chat em inglês.** `error.message`
+  do better-auth é sempre inglês e instável entre versões — use sempre
+  `error.code` traduzido por um mapa local: `frontend/src/lib/auth-errors.ts`
+  (`translateAuthError(error, fallback)`) e `bot/src/lib/auth-errors.ts`
+  (mesmo mapa, duplicado pelo mesmo motivo de `categoryLabels` acima). Regras
+  de senha (8-32 caracteres + complexidade) também duplicadas em
+  `frontend/src/components/password-strength-input.tsx` e
+  `bot/src/lib/password-rules.ts` — mantenha os três mapas em sincronia ao
+  adicionar/alterar um error code ou regra de senha.
+- **Login com Google dentro do bot do Telegram** não é possível sem sair do
+  chat (OAuth exige navegador). O fluxo é: `bot/src/lib/auth-flows.ts` gera
+  um token de uso único (`backend/src/modules/telegram/telegram.service.ts`,
+  model `TelegramLinkToken`, expira em 15min) e manda um link pra
+  `frontend/src/routes/telegram-vincular.tsx`; essa página, já autenticada,
+  chama `POST /telegram/link` (`backend/src/modules/telegram/telegram.routes.ts`)
+  pra vincular o chat à conta. O bot só volta a saber que deu certo quando o
+  usuário toca em "verificar vínculo" (poll manual, sem push do backend pro bot).
 
 ## Como rodar um teste específico
 
