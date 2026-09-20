@@ -7,7 +7,7 @@ test("a new user can sign up and lands on the dashboard", async ({ page }) => {
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("Nome").fill("E2E Test User");
 	await page.getByLabel("E-mail").fill(email);
-	await page.getByLabel("Senha").fill("SenhaForte@123");
+	await page.getByLabel("Senha", { exact: true }).fill("SenhaForte@123");
 	await page.getByRole("button", { name: "Criar conta", exact: true }).click();
 
 	await expect(page).toHaveURL(/\/dashboard/);
@@ -18,7 +18,7 @@ test("shows an error for invalid login credentials", async ({ page }) => {
 	await page.goto("/entrar");
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("E-mail").fill("nobody@example.com");
-	await page.getByLabel("Senha").fill("wrong-password");
+	await page.getByLabel("Senha", { exact: true }).fill("wrong-password");
 	await page.getByRole("button", { name: "Entrar", exact: true }).click();
 
 	await expect(page.getByRole("alert")).toBeVisible();
@@ -29,7 +29,7 @@ test("the seeded admin can log in and log out", async ({ page }) => {
 	await page.goto("/entrar");
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("E-mail").fill("admin@gmail.com");
-	await page.getByLabel("Senha").fill("adminBR@123");
+	await page.getByLabel("Senha", { exact: true }).fill("adminBR@123");
 	await page.getByRole("button", { name: "Entrar", exact: true }).click();
 
 	await expect(page).toHaveURL(/\/dashboard/);
@@ -53,7 +53,7 @@ test("public-only routes redirect an authenticated user to the dashboard", async
 	await page.goto("/entrar");
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("E-mail").fill("admin@gmail.com");
-	await page.getByLabel("Senha").fill("adminBR@123");
+	await page.getByLabel("Senha", { exact: true }).fill("adminBR@123");
 	await page.getByRole("button", { name: "Entrar", exact: true }).click();
 	await expect(page).toHaveURL(/\/dashboard/);
 

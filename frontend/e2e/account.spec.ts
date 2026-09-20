@@ -6,7 +6,7 @@ async function signUp(page: import("@playwright/test").Page): Promise<string> {
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("Nome").fill("Conta E2E");
 	await page.getByLabel("E-mail").fill(email);
-	await page.getByLabel("Senha").fill("SenhaForte@123");
+	await page.getByLabel("Senha", { exact: true }).fill("SenhaForte@123");
 	await page.getByRole("button", { name: "Criar conta", exact: true }).click();
 	await expect(page).toHaveURL(/\/dashboard/);
 	return email;

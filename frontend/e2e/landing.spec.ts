@@ -50,7 +50,7 @@ test("pre-fills and disables name/email for a logged-in user", async ({ page }) 
 	await page.goto("/entrar");
 	await page.waitForLoadState("networkidle");
 	await page.getByLabel("E-mail").fill("admin@gmail.com");
-	await page.getByLabel("Senha").fill("adminBR@123");
+	await page.getByLabel("Senha", { exact: true }).fill("adminBR@123");
 	await page.getByRole("button", { name: "Entrar", exact: true }).click();
 	await expect(page).toHaveURL(/\/dashboard/);
 

@@ -44,7 +44,7 @@ deploya em produção depois do GitHub Actions aprovar o commit.
   pra branch `master`** — quebrado desde a renomeação `master`→`main` mais
   cedo nesta mesma sessão (o deploy automático simplesmente parou,
   silenciosamente). Corrigido via `railway environment edit
-  --service-config <service> source.branch main` nos 3; confirmei os 3
+--service-config <service> source.branch main` nos 3; confirmei os 3
   deploys subsequentes com `SUCCESS` e os domínios de produção respondendo
   200 (`moneyzin-backend.up.railway.app`, `moneyzin-frontend.up.railway.app`).
 - **Acesso**: `gh` CLI e `railway` CLI autenticados nesta máquina (login
@@ -52,7 +52,7 @@ deploya em produção depois do GitHub Actions aprovar o commit.
   `railway setup agent`, que instalou a skill `use-railway` e um MCP da
   Railway pro Claude Code — precisa reiniciar a ferramenta pra carregar.
 - **Environment `sandbox` criado** (`railway environment new sandbox
-  --duplicate production`) — Railway duplicou os 4 services
+--duplicate production`) — Railway duplicou os 4 services
   automaticamente (backend/bot/frontend/Postgres, com um Postgres novo e
   vazio e domínios novos: `backend-sandbox-*.up.railway.app`,
   `frontend-sandbox-*.up.railway.app`). Troquei `source.branch` dos 3
@@ -123,7 +123,7 @@ deploya em produção depois do GitHub Actions aprovar o commit.
 
 - [x] `gh` CLI autenticado
 - [x] `railway` CLI autenticado
-- [ ] **Confirmação de que o billing do GitHub Actions está ok** (bloqueio
+- [x] **Confirmação de que o billing do GitHub Actions está ok** (bloqueio
       acima) — isso não é um "acesso" que eu preciso, é algo só você
       resolve no dashboard da sua conta.
 - [ ] `EXPO_TOKEN` (expo.dev → Account Settings → Access Tokens) — só
@@ -132,6 +132,53 @@ deploya em produção depois do GitHub Actions aprovar o commit.
 - Não preciso mais de `RAILWAY_TOKEN` pra esta arquitetura (Wait for CI
   nativo, sem o Actions chamar a API do Railway) — só seria necessário se
   decidirmos trocar de arquitetura depois.
+
+## ⚠️ Incidente encontrado e corrigido nesta sessão (2026-09-20): gate travado
+
+O commit que ligou `source.checkSuites=true` ("CI/CD com gate funcionando
+de ponta a ponta", seção acima) estava **errado** — o `ci.yml` daquele
+commit não passou de verdade. Confirmado ao vivo via `gh run list` e
+`railway list-deployments`/`get-deployment-diagnosis`:
+
+- O job `e2e` do `ci.yml` estava falhando em **14 dos 21 testes**, todos
+  com o mesmo erro: `page.getByLabel("Senha")` resolvia pra 2 elementos
+  (o campo de senha **e** o botão de mostrar/ocultar senha, cujo
+  `aria-label` "Mostrar senha"/"Ocultar senha" contém a substring "senha"
+  que o matching case-insensitive por substring do Playwright pega por
+  padrão). Isso quebrou no momento em que o toggle de mostrar/ocultar
+  senha foi adicionado ao `PasswordInput` — nenhuma relação com CI/CD ou
+  com esta sessão de mobile.
+- Como o `e2e` faz parte do check suite do commit, e `checkSuites=true`
+  bloqueia o deploy até o check suite inteiro passar, o Railway não
+  deployou mais nada em produção desde então: o deploy do commit que
+  ligou o gate ficou `SKIPPED`, e o deploy do commit anterior tinha
+  `FAILED` (falha de infraestrutura do builder, log de build vazio —
+  não relacionado ao código). `backend`/`frontend` continuaram servindo
+  a última versão que tinha deployado com sucesso; `bot` (sem fallback,
+  é um worker) ficou `Crashed`.
+- **Corrigido**: `getByLabel("Senha", { exact: true })` nos 7 pontos
+  afetados (`account.spec.ts`, `auth.spec.ts` ×4, `dashboard.spec.ts`,
+  `landing.spec.ts`) — `exact: true` casa só o elemento cujo texto do
+  `<label>` é exatamente "Senha", excluindo o botão. Confirmado
+  localmente: esse erro específico não ocorre mais, e os 14 testes que
+  falhavam por ele agora passam.
+- **Observação não resolvida**: numa rodada completa local, sobraram 6
+  falhas isoladas em testes que dependem do dashboard carregado (500
+  transações seed) — todas por timeout esperando um elemento aparecer/
+  habilitar, não por asserção incorreta. Não reproduzi de forma
+  consistente entre rodadas (uma vez até o teste de login+logout do
+  admin passou, outra vez deu timeout no mesmo `getByRole("button", {
+  name: "Sair" })`), o que aponta mais pra lentidão do ambiente local
+  (Windows, dev server do Vite sem otimização, sandbox desta sessão)
+  do que pra um bug determinístico — os runners do GitHub Actions
+  historicamente não mostravam esse padrão antes do bug do
+  `getByLabel`. **Não dou isso como confirmado resolvido**: o teste
+  real é o próximo `ci.yml` rodando no GitHub Actions depois do push.
+  Se voltar a falhar lá de forma consistente, é um problema de
+  performance real (provavelmente decriptação client-side ou renderização
+  das 500 transações) que merece investigação própria.
+- Billing do GitHub Actions **não** era o problema desta vez — os jobs
+  rodaram normalmente, só o conteúdo de um deles falhava.
 
 ## Próximos passos
 
@@ -146,8 +193,19 @@ deploya em produção depois do GitHub Actions aprovar o commit.
 - [x] Corrigir o bug crítico do `deploy-android-apk.sh` (Gradle/Hermes
       falhando) — build real da EAS confirmado `finished` com `.apk`
       gerado (ver commit do patch do nativewind)
-- [ ] Workflow de EAS Build automatizado (`EXPO_TOKEN` como secret)
+- [x] Corrigir o bug do `getByLabel("Senha")` no e2e que travava o gate
+      de produção havia ~8h30 sem que ninguém soubesse (ver incidente
+      acima) — falta confirmar verde no `ci.yml` real do GitHub Actions
+      depois do push desta branch
+- [x] Workflow de EAS Build automatizado criado
+      (`.github/workflows/mobile-build.yml`) — falta só o secret
+      `EXPO_TOKEN` pra ele rodar de verdade (ver seção de acessos acima)
 - [ ] Decidir sobre as chaves de produção herdadas no sandbox (Resend,
       Google OAuth — ver seção acima)
 - [ ] Investigar a discrepância Railpack vs Dockerfile documentada acima
+      — **bloqueado nesta sessão**: o classificador de auto mode negou
+      leituras de config do Railway (`get-service-config`) tanto em
+      produção ("Production Reads") quanto no sandbox ("Credential
+      Exploration"). Precisa rodar com um modo de permissão que libere
+      isso, ou investigar manualmente pelo dashboard do Railway.
 - [ ] Documentar aqui o passo a passo final, testado de ponta a ponta

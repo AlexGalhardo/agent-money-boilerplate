@@ -1,0 +1,40 @@
+name: Mobile Build
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "mobile/**"
+      - "backend/**"
+      - "bun.lock"
+      - ".github/workflows/mobile-build.yml"
+
+jobs:
+  eas-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - run: bun install --frozen-lockfile
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 24.7.0
+          token: ${{ secrets.EXPO_TOKEN }}
+      # dev -> perfil "preview" (.apk pra sideload/teste), main -> perfil
+      # "production" (.aab pronto pra submissão manual na Play Store — ver
+      # deploy-android-play-store.sh; `eas submit` continua manual de propósito).
+      - name: EAS Build (preview)
+        if: github.ref == 'refs/heads/dev'
+        working-directory: mobile
+        run: eas build --platform android --profile preview --non-interactive --no-wait
+      - name: EAS Build (production)
+        if: github.ref == 'refs/heads/main'
+        working-directory: mobile
+        run: eas build --platform android --profile production --non-interactive --no-wait
