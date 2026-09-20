@@ -32,15 +32,22 @@ export function mainMenuKeyboard(): InlineKeyboard {
 		.text("🔌 Trocar de conta", "menu:trocar-conta");
 }
 
-/**
- * Sempre mostra qual conta está conectada a este chat (nome, chat ID e ID
- * usado como "conta" em Minha Conta no site), quando houver uma vinculada —
- * pedido explícito para nunca deixar ambíguo qual conta está em uso.
- */
-export async function buildMenuMessage(chatId: number): Promise<string> {
-	const userId = await findUserIdByChatId(chatId);
-	const user = userId ? await findUserById(userId) : null;
+// Shown instead of mainMenuKeyboard() whenever the chat isn't linked to an
+// account yet. The single button re-enters the "start" conversation (via the
+// same "menu:" callback prefix bot.ts already dispatches through
+// ctx.conversation.enter), which is what actually runs the login/signup/
+// Google/link-by-ID flow — this keyboard itself has no conversation waiting
+// on it, so it must never offer any button beyond this one.
+export function loginPromptKeyboard(): InlineKeyboard {
+	return new InlineKeyboard().text("🔑 Entrar / Criar conta", "menu:entrar");
+}
 
+/**
+ * Always shows which account is connected to this chat (name, chat ID and
+ * the ID used as "account" in Minha Conta on the site), when one is linked —
+ * an explicit requirement to never leave which account is in use ambiguous.
+ */
+async function buildMenuMessage(chatId: number, user: { name: string; id: string } | null): Promise<string> {
 	if (!user) return HELP_TEXT;
 
 	const accountBlock = [
@@ -55,10 +62,30 @@ export async function buildMenuMessage(chatId: number): Promise<string> {
 }
 
 /**
- * Envolve uma conversation para que, não importa como ela termine —
- * sucesso, cancelamento, erro lançado, ou um `return` antecipado (conta não
- * vinculada, senha bloqueada) — o menu principal reapareça em seguida. Troca
- * o antigo padrão de pedir /cancelar por um loop de volta ao menu, sempre.
+ * The single source of truth for "what menu do we show this chat right
+ * now" — every place that renders a menu after some operation (not in the
+ * middle of a login/signup conversation) must go through this instead of
+ * reaching for mainMenuKeyboard() directly, otherwise a signed-out chat gets
+ * shown the full transaction menu (it used to, see docs/security-incidents.md
+ * equivalent bug report from 2026-09-20).
+ */
+export async function buildMenu(chatId: number | undefined): Promise<{ text: string; keyboard: InlineKeyboard }> {
+	if (chatId === undefined) return { text: HELP_TEXT, keyboard: loginPromptKeyboard() };
+
+	const userId = await findUserIdByChatId(chatId);
+	const user = userId ? await findUserById(userId) : null;
+
+	const text = await buildMenuMessage(chatId, user);
+	return { text, keyboard: user ? mainMenuKeyboard() : loginPromptKeyboard() };
+}
+
+/**
+ * Wraps a conversation so that no matter how it ends — success,
+ * cancellation, a thrown error, or an early `return` (account not linked,
+ * password locked out) — the appropriate menu reappears afterwards: the
+ * full transaction menu when the chat is linked to an account, or just the
+ * "log in" button otherwise. Replaces the old pattern of asking for
+ * /cancelar with a loop back to the menu, always.
  */
 export function withMainMenu(
 	fn: (conversation: BotConversation, ctx: Context) => Promise<void>,
@@ -69,8 +96,8 @@ export function withMainMenu(
 		} finally {
 			const chatId = ctx.chat?.id;
 			if (chatId !== undefined) {
-				const text = await conversation.external(() => buildMenuMessage(chatId));
-				await ctx.reply(text, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
+				const { text, keyboard } = await conversation.external(() => buildMenu(chatId));
+				await ctx.reply(text, { parse_mode: "Markdown", reply_markup: keyboard });
 			}
 		}
 	};

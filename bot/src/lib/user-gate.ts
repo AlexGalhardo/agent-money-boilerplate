@@ -73,22 +73,41 @@ async function runPaymentLoop(conversation: BotConversation, userId: string): Pr
 	}
 }
 
+type PixCheckoutResult =
+	| { ok: true; charge: Awaited<ReturnType<typeof paymentService.createPixCheckout>> }
+	| { ok: false };
+
+// The exception must be caught IN HERE (not in a try/catch after the
+// `await conversation.external(...)` call) because @grammyjs/conversations
+// clones the returned/thrown value with `structuredClone` to write it to the
+// replay log — and `structuredClone` on an Error instance drops its
+// prototype chain, `.name` and any custom property (only `message`/`stack`
+// survive). An `error instanceof AbacatePayNotConfiguredError` check done
+// after `external()` never matches; the correct fix is to return a plain
+// (serializable) value that survives the clone, same pattern as `callAuth`
+// in bot/src/lib/auth-flows.ts.
+async function tryCreatePixCheckout(userId: string, plan: (typeof planIds)[number]): Promise<PixCheckoutResult> {
+	try {
+		const charge = await paymentService.createPixCheckout(userId, plan);
+		return { ok: true, charge };
+	} catch (error) {
+		if (error instanceof AbacatePayNotConfiguredError) return { ok: false };
+		throw error;
+	}
+}
+
 async function offerPixCheckout(
 	conversation: BotConversation,
 	ctx: Context,
 	userId: string,
 	plan: (typeof planIds)[number],
 ): Promise<boolean> {
-	let charge: Awaited<ReturnType<typeof paymentService.createPixCheckout>>;
-	try {
-		charge = await conversation.external(() => paymentService.createPixCheckout(userId, plan));
-	} catch (error) {
-		if (error instanceof AbacatePayNotConfiguredError) {
-			await ctx.reply(`Pagamento pelo bot indisponível no momento — assine em ${apiEnv.FRONTEND_URL}/checkout.`);
-			return false;
-		}
-		throw error;
+	const result = await conversation.external(() => tryCreatePixCheckout(userId, plan));
+	if (!result.ok) {
+		await ctx.reply(`Pagamento pelo bot indisponível no momento — assine em ${apiEnv.FRONTEND_URL}/checkout.`);
+		return false;
 	}
+	const charge = result.charge;
 
 	const qrBuffer = await conversation.external(() => Buffer.from(charge.brCodeBase64, "base64"));
 	await ctx.replyWithPhoto(new InputFile(qrBuffer, "pix.png"), {
