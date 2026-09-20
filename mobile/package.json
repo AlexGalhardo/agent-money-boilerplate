@@ -1,12 +1,12 @@
 {
-	"name": "@elysia-galhardo-finances/mobile",
+	"name": "@agent-money-boilerplate/mobile",
 	"main": "expo-router/entry",
 	"version": "0.1.0",
 	"private": true,
 	"dependencies": {
 		"@better-auth/api-key": "1.7.5",
 		"@better-auth/expo": "1.7.4",
-		"@elysia-galhardo-finances/backend": "workspace:*",
+		"@agent-money-boilerplate/backend": "workspace:*",
 		"@elysiajs/eden": "1.4.9",
 		"@react-native-community/datetimepicker": "9.1.0",
 		"@shopify/react-native-skia": "^2.12.0",

@@ -105,7 +105,7 @@ export const auth = betterAuth({
 		...(env.ENABLE_2FA
 			? [
 					twoFactor({
-						issuer: "Elysia Finanças",
+						issuer: "Agent Money Boilerplate",
 						otpOptions: {
 							async sendOTP({ user, otp }) {
 								await sendEmail({

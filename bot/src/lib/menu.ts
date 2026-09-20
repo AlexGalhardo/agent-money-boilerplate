@@ -1,7 +1,7 @@
 import {
 	findUserById,
 	findUserIdByChatId,
-} from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
+} from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import type { BotConversation } from "../types";

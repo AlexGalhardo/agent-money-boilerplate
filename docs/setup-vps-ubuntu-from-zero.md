@@ -50,8 +50,8 @@ bun install -g pm2
 ## 6. Clonar e configurar o projeto
 
 ```bash
-git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
-cd elysia-tanstack-finances
+git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
+cd galhardo-money-bot
 bun install
 cp backend/.env.example backend/.env
 ```
@@ -88,10 +88,10 @@ serve `/assets/*`).
 
 ## 8. Subir com PM2
 
-Na raiz do projeto (o `ecosystem.config.js` já referencia os dois builds):
+Na raiz do projeto (`infra/ecosystem.config.js` já referencia os dois builds):
 
 ```bash
-pm2 start ecosystem.config.js
+pm2 start infra/ecosystem.config.js
 pm2 save
 pm2 startup   # siga a instrução impressa para o PM2 iniciar no boot
 ```
@@ -101,7 +101,7 @@ Comandos úteis: `pm2 status`, `pm2 logs elysia-backend`, `pm2 restart elysia-ba
 ## 9. Configurar o Caddy
 
 ```bash
-sudo cp Caddyfile.vps /etc/caddy/Caddyfile
+sudo cp infra/Caddyfile.vps /etc/caddy/Caddyfile
 sudo sed -i "s/{\$DOMAIN}/SEU_DOMINIO/" /etc/caddy/Caddyfile
 sudo systemctl reload caddy
 ```
@@ -119,16 +119,16 @@ crontab -e
 Adicione:
 
 ```cron
-0 3 * * * cd /home/deploy/elysia-tanstack-finances/api && bun run cron:check-expired-plans >> /home/deploy/cron.log 2>&1
+0 3 * * * cd /home/deploy/galhardo-money-bot/backend && bun run cron:check-expired-plans >> /home/deploy/cron.log 2>&1
 ```
 
 ## Deploy de atualizações
 
 ```bash
-cd elysia-tanstack-finances
+cd galhardo-money-bot
 git pull
 bun install
 (cd backend && bun run db:deploy:postgres && bun run build)
 (cd frontend && VITE_API_URL=https://api.SEU_DOMINIO bun run build)
-pm2 restart ecosystem.config.js
+pm2 restart infra/ecosystem.config.js
 ```

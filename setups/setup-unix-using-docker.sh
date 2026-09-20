@@ -17,13 +17,13 @@ check_docker
 prompt_database_choice "$1"
 
 if [ "$DB_CHOICE" = "postgres" ]; then
-	COMPOSE_ARGS=()
+	COMPOSE_ARGS=(-f infra/docker-compose.yml --project-directory .)
 	PROVIDER="postgresql"
 	API_DATABASE_URL="postgresql://elysia:elysia@localhost:5432/elysia_financas"
 	BOT_DATABASE_URL="postgresql://elysia:elysia@localhost:5432/elysia_financas"
 	free_app_ports 4000 4001 5432
 else
-	COMPOSE_ARGS=(-f docker-compose.sqlite.yml)
+	COMPOSE_ARGS=(-f infra/docker-compose.sqlite.yml --project-directory .)
 	PROVIDER="sqlite"
 	API_DATABASE_URL="file:./dev.db"
 	BOT_DATABASE_URL="file:../backend/dev.db"

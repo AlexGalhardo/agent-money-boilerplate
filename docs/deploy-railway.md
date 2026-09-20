@@ -1,6 +1,6 @@
 # Deploy no Railway (api + frontend + bot)
 
-Um único `Dockerfile` na raiz do monorepo como fonte da verdade, com os 3
+Um único `infra/Dockerfile` como fonte da verdade, com os 3
 serviços — `api`, `frontend` e `bot` — deployados como **3 Railway services
 separados** dentro do mesmo projeto, cada um com seus próprios logs,
 restarts, scaling e variáveis de ambiente.
@@ -59,8 +59,13 @@ Renomeie cada serviço (⋮ → **Rename**) para `backend`, `frontend` e `bot`
 respectivamente — os nomes importam, porque as variáveis de ambiente do
 Passo 3 referenciam esses nomes (`${{backend.RAILWAY_PUBLIC_DOMAIN}}` etc.).
 
-Railway detecta o `Dockerfile` na raiz do repo automaticamente — não precisa
-mexer em Root Directory, Dockerfile Path nem Builder para nenhum dos 3.
+Railway só builda com Dockerfile automaticamente quando ele está na raiz do
+repo — como o nosso vive em `infra/Dockerfile`, configure explicitamente em
+cada um dos 3 serviços: aba **Settings** → **Build** → **Dockerfile Path** →
+`infra/Dockerfile` (deixe **Root Directory** vazio/raiz; o `context: ..` dos
+`docker-compose*.yml` não se aplica aqui, é só o Dockerfile que muda de
+lugar). Sem isso, o Railway cai de volta pro builder Railpack automático, que
+não sabe nada sobre `RAILWAY_SERVICE_TARGET`.
 
 ## Passo 3 — Variáveis de ambiente por serviço
 
@@ -173,7 +178,7 @@ Verifique:
 
 ```bash
 curl https://SEU-BACKEND.up.railway.app/
-# {"success":true,"message":"Elysia Finanças API"}
+# {"success":true,"message":"Agent Money Boilerplate API"}
 
 curl -I https://SEU-FRONTEND.up.railway.app/
 # HTTP/2 200
@@ -233,7 +238,8 @@ docker run -p 4001:4001 -e RAILWAY_SERVICE_TARGET=frontend -e PORT=4001 elysia-f
 Para desenvolvimento local do dia a dia, prefira
 [`setup-unix-using-docker.md`](./setup-unix-using-docker.md) /
 [`setup-windows-using-docker.md`](./setup-windows-using-docker.md) — usam
-`docker-compose.yml`/`docker-compose.sqlite.yml`, que buildam cada serviço a
-partir do seu próprio `Dockerfile` (`backend/`, `frontend/`, `bot/`) e já sobem
-um banco junto. O `Dockerfile` (raiz) e `setups/railway-entrypoint.sh` existem
-especificamente para o desenho de deploy do Railway descrito aqui.
+`infra/docker-compose.yml`/`infra/docker-compose.sqlite.yml`, que buildam
+cada serviço a partir do seu próprio `Dockerfile` (`backend/`, `frontend/`,
+`bot/`) e já sobem um banco junto. `infra/Dockerfile` e
+`setups/railway-entrypoint.sh` existem especificamente para o desenho de
+deploy do Railway descrito aqui.

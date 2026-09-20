@@ -14,15 +14,18 @@
 # railway-entrypoint.sh. Isso ainda entrega os objetivos originais: um
 # único Dockerfile como fonte da verdade, e cada serviço no Railway com
 # deploy, logs, restart, scaling e variáveis de ambiente independentes.
-# Passo a passo completo: docs/deploy-railway.md.
+# Passo a passo completo: docs/deploy-railway.md. Fica em infra/ (não na
+# raiz) — o Railway não detecta isso automaticamente, então o "Dockerfile
+# Path" de cada um dos 3 serviços precisa apontar pra infra/Dockerfile
+# explicitamente (ver docs/deploy-railway.md).
 #
-# Uso local (fora do Railway):
-#   docker build -t elysia-finances .
-#   docker run -p 4000:4000 -e RAILWAY_SERVICE_TARGET=backend --env-file backend/.env elysia-finances
+# Uso local (fora do Railway, rode a partir da raiz do repo):
+#   docker build -f infra/Dockerfile -t agent-money-boilerplate .
+#   docker run -p 4000:4000 -e RAILWAY_SERVICE_TARGET=backend --env-file backend/.env agent-money-boilerplate
 #
-# Para desenvolvimento local com Docker, prefira docker-compose.yml /
-# docker-compose.sqlite.yml — builda cada serviço a partir do seu próprio
-# Dockerfile (backend/, frontend/, bot/) e já sobe um banco junto.
+# Para desenvolvimento local com Docker, prefira infra/docker-compose.yml /
+# infra/docker-compose.sqlite.yml — builda cada serviço a partir do seu
+# próprio Dockerfile (backend/, frontend/, bot/) e já sobe um banco junto.
 
 FROM oven/bun:1.4-alpine AS base
 WORKDIR /repo
@@ -32,6 +35,12 @@ COPY package.json bun.lock ./
 COPY backend/package.json ./backend/package.json
 COPY frontend/package.json ./frontend/package.json
 COPY bot/package.json ./bot/package.json
+# root package.json's patchedDependencies (nativewind, only actually used by
+# mobile/) applies to every `bun install` in this workspace regardless of
+# which workspaces are on disk - without the patch file present, install
+# fails with "Couldn't find patch file" even though mobile/ itself is never
+# copied into this image.
+COPY patches ./patches
 RUN bun install --frozen-lockfile
 
 # O bundle SSR do frontend é gerado aqui mesmo que o container final vá
@@ -40,7 +49,7 @@ RUN bun install --frozen-lockfile
 # (o Railway não permite variar isso por serviço, ver comentário acima).
 FROM install AS frontend-build
 # backend/src é necessário apenas para a resolução de tipos do Eden client
-# (import type { App } from "@elysia-galhardo-finances/backend/src/server")
+# (import type { App } from "@agent-money-boilerplate/backend/src/server")
 # durante o build — o runtime final não executa esse código do zero, só a
 # API "de verdade" (estágio runtime, mais abaixo) que roda quando
 # RAILWAY_SERVICE_TARGET=backend.

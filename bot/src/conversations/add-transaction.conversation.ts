@@ -1,9 +1,9 @@
 import type {
 	TransactionCategory,
 	TransactionType,
-} from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
-import { transactionCategories } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
-import { transactionService } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.service";
+} from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
+import { transactionCategories } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
+import { transactionService } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.service";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import { categoryLabels, formatCurrencyCents } from "../formatting/format";

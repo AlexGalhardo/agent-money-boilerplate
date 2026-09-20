@@ -1,8 +1,8 @@
 import {
 	findUserIdByChatId,
 	unlinkChatFromUser,
-} from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
-import { transactionCategories } from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
+} from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
+import { transactionCategories } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
 import { conversations, createConversation } from "@grammyjs/conversations";
 import { Bot, InlineKeyboard } from "grammy";
 import { env } from "./config/env";

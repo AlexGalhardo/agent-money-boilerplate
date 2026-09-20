@@ -29,7 +29,7 @@ one auth system and one set of business rules.
 **Agent Money Boilerplate** is a Bun monorepo with four workspaces —
 `backend`, `frontend`, `bot` and `mobile` — plus two clients that consume the
 same API without being a workspace of their own (`bot` and `mobile` import
-`@elysia-galhardo-finances/backend` directly):
+`@agent-money-boilerplate/backend` directly):
 
 ```text
 /backend/       → ElysiaJS (REST API, auth, payments, cron)
@@ -39,6 +39,7 @@ same API without being a workspace of their own (`bot` and `mobile` import
 /http-client/   → reference HTTP calls (api.http)
 /docs/          → setup and deploy guides
 /setups/        → executable setup/deploy shell scripts
+/infra/         → Dockerfile, docker-compose*.yml, Caddyfiles, PM2 ecosystem configs
 ```
 
 End-to-end typing between the API and the frontend is handled by

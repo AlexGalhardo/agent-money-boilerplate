@@ -86,4 +86,4 @@ Bun.serve({
 	},
 });
 
-console.log(`🦊 Elysia Finanças frontend rodando em http://localhost:${port}`);
+console.log(`🦊 Agent Money Boilerplate frontend rodando em http://localhost:${port}`);

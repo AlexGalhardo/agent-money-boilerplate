@@ -85,4 +85,4 @@ echo "==> Subindo $PM2_APPS com pm2-runtime (primeiro plano — Ctrl+C encerra t
 echo "    Logs dos serviços aparecem abaixo, prefixados pelo nome de cada um."
 echo ""
 
-exec bunx pm2-runtime start ecosystem.local.config.js --only "$PM2_APPS"
+exec bunx pm2-runtime start infra/ecosystem.local.config.js --only "$PM2_APPS"

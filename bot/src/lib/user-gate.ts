@@ -1,11 +1,11 @@
-import { env as apiEnv } from "@elysia-galhardo-finances/backend/src/config/env";
-import { hasActivePlan } from "@elysia-galhardo-finances/backend/src/lib/plan";
-import { PLAN_DEFINITIONS, planIds } from "@elysia-galhardo-finances/backend/src/modules/payments/payment.schema";
+import { env as apiEnv } from "@agent-money-boilerplate/backend/src/config/env";
+import { hasActivePlan } from "@agent-money-boilerplate/backend/src/lib/plan";
+import { PLAN_DEFINITIONS, planIds } from "@agent-money-boilerplate/backend/src/modules/payments/payment.schema";
 import {
 	AbacatePayNotConfiguredError,
 	paymentService,
-} from "@elysia-galhardo-finances/backend/src/modules/payments/payment.service";
-import { findUserById } from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
+} from "@agent-money-boilerplate/backend/src/modules/payments/payment.service";
+import { findUserById } from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
 import type { Context } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { formatDate } from "../formatting/format";

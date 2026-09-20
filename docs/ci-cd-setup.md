@@ -71,15 +71,15 @@ deploya em produção depois do GitHub Actions aprovar o commit.
 - **4 services**: `backend`, `bot`, `frontend` (todos `builder: RAILPACK`,
   branch `main`, sem `rootDirectory` — buildam a partir da raiz do
   monorepo) + `Postgres` (imagem gerenciada, não código).
-  ⚠️ **Discrepância com `docs/deploy-railway.md`**: esse doc descreve os 3
-  services buildando o `Dockerfile` da raiz via `RAILWAY_SERVICE_TARGET`
-  em runtime. O config real hoje mostra `builder: "RAILPACK"` (não
-  `DOCKERFILE`) pra todos — não investiguei a fundo se o Railpack ainda
-  está, por baixo dos panos, detectando e usando esse Dockerfile (os
-  deploys funcionam e os logs batem com o `docker-entrypoint.sh` de cada
-  serviço, então pode ser só um detalhe de como o Railway rotula o builder
-  por fora), ou se o `docs/deploy-railway.md` está desatualizado. Vale
-  confirmar antes de mexer em build config.
+  Resolvido: o `builder: "RAILPACK"` no config não significa que o Railpack
+  builda de verdade — a [doc oficial do Railway](https://docs.railway.com/config-as-code/reference#specify-the-builder)
+  confirma que "Railway will always build with a Dockerfile if it finds
+  one"; `RAILPACK` é só o valor default do campo quando nenhum builder foi
+  fixado explicitamente. Como `infra/Dockerfile` não fica mais na raiz
+  (movido em 2026-09-20), os 3 serviços agora precisam do **Dockerfile
+  Path** setado explicitamente pra `infra/Dockerfile` (Settings → Build) —
+  sem isso o Railway não acha o Dockerfile e cai pro Railpack de verdade,
+  que não sabe nada sobre `RAILWAY_SERVICE_TARGET`. Ver `docs/deploy-railway.md`.
 - URLs de produção: `https://moneyzin-backend.up.railway.app`,
   `https://moneyzin-frontend.up.railway.app`. `bot` não tem domínio
   (worker de long-polling, correto).

@@ -79,7 +79,7 @@ export const paymentService = {
 		// campo description — por isso o hífen normal aqui, não um em-dash.
 		const charge = await abacatepay.createPixCharge({
 			amount: definition.amount,
-			description: `Elysia Finanças - plano ${definition.label}`,
+			description: `Agent Money Boilerplate - plano ${definition.label}`,
 			expiresIn: PIX_EXPIRES_IN_SECONDS,
 			metadata: { userId, plan },
 		});
