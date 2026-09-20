@@ -1,11 +1,7 @@
-1 - Simplifique ao máximo agora o arquivo CLAUDE.md (ter no máximo umas 50 linhas apenas)
-a. crie subdocumentações dentro da pasta docs/ e deixe o claude.md focado apenas no essencial sobre esse projeto e qualquer informação aprofundada, vc linka para o arquivo .md dentro da pasta docs/
-b. Não se esqueça de deixar explicito no claude.md para usar as skills desse projeto, seguir as boas práticas open source, de programação, commits, etc
-c. o arquivo agends.md deve ser igual o claude.md final
+No bot telegram corrija:
 
-2 - Crie uma nova pasta na raiz do projeto chamado infra/
-a. Essa pasta vai ter todos os arquivos relacionados a infraestrutura do projeto como: docker, dockercompose e CaddyFile que são compartilhados com todas as 4 aplicações
-b. Não se esqueça de atualizar os setups e outras configurações necessárias para esses caminhos novos da pasta infra/
+1 - Quando eu escolho um dos 2 planos para pagar -> da erro, o qrcode e o código pix não são enviados para pagar, verifique e corrija;
 
-3 - Atualize em todos os pontos da aplicação de '@elysia-galhardo-finances' para -> '@agent-money-boilerplate'
-3.1 - Atualize em todos os pontos da aplicação de 'Elysia Finanças' para -> 'Agent Money Boilerplate'
+2 - Antes de mostrar o menu principal com todos os botões, sempre confirme antes de o usuário já esta logado no contexto do bot -> se não estiver logado -> mostre o menu dos botões de login primeiro (o menu de botões principais, só deve aparecer quando usuário estiver logado)
+
+3 - O login através do link google também dá um erro ' Ocorreu um erro inesperado. Toque em um botão abaixo para continuar:' no chat. Verifique e corrija
