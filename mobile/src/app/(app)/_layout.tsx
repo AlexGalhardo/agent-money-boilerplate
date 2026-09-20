@@ -11,6 +11,7 @@ export default function AppLayout() {
 	return (
 		<Stack screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="dashboard" />
+			<Stack.Screen name="search" options={{ presentation: "card" }} />
 			<Stack.Screen name="profile" options={{ presentation: "card" }} />
 			<Stack.Screen name="subscription" options={{ presentation: "card" }} />
 			<Stack.Screen name="two-factor" options={{ presentation: "card" }} />

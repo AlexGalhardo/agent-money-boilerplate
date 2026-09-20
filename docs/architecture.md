@@ -85,6 +85,24 @@ blocks the commit if a staged `bun.lock` has any `lockfileVersion` other
 than 1. This restriction can be dropped once Expo ships a build image
 with bun >= 1.4.
 
+## Mobile: light/dark theme
+
+`mobile/src/lib/theme.ts` wraps NativeWind's built-in `colorScheme`
+controller (`tailwind.config.js` sets `darkMode: "class"`, required for
+manual toggling — with the default `"media"` it only ever follows the OS
+setting) with persistence via `expo-secure-store`. `useApplyStoredTheme()`
+runs once at the root layout; every screen/component reads
+`useAppColorScheme()` for `{ colorScheme, isDark, setTheme }`.
+
+`dark:` Tailwind variants only affect `className`, but several shared UI
+atoms (`Button`, `Chip`, `TextField`, `DateField`) pass raw hex colors
+through `style={{ ... }}` props to third-party components (reacticx's
+`Button`, the `AnimatedInputBar` input) that don't accept `className`.
+Those components call `useAppColorScheme()` directly and branch the hex
+value in JS instead — keep that pattern for any new shared atom that also
+takes color via a `style` prop, rather than assuming `dark:` classes will
+reach it.
+
 ## Docker/Railway build note
 
 `bun.lock`'s `patchedDependencies` entry for `nativewind` (declared in the
