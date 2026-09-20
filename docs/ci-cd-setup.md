@@ -126,7 +126,7 @@ deploya em produção depois do GitHub Actions aprovar o commit.
 - [x] **Confirmação de que o billing do GitHub Actions está ok** (bloqueio
       acima) — isso não é um "acesso" que eu preciso, é algo só você
       resolve no dashboard da sua conta.
-- [ ] `EXPO_TOKEN` (expo.dev → Account Settings → Access Tokens) — só
+- [x] `EXPO_TOKEN` (expo.dev → Account Settings → Access Tokens) — só
       quando formos automatizar o EAS Build via CI. Vira GitHub secret
       (`gh secret set EXPO_TOKEN`), nunca precisa passar pela conversa.
 - Não preciso mais de `RAILWAY_TOKEN` pra esta arquitetura (Wait for CI

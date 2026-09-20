@@ -1,0 +1,23 @@
+set -e
+
+# Exige Conventional Commits (https://www.conventionalcommits.org/en/v1.0.0/)
+# em toda mensagem de commit, dev e main — ver docs/CONTRIBUTING.md. Mensagens
+# de merge automáticas do git ("Merge branch ...", "Merge pull request ...")
+# ficam de fora porque não são digitadas por quem commita.
+commit_msg_file="$1"
+first_line=$(head -n1 "$commit_msg_file")
+
+case "$first_line" in
+Merge\ *) exit 0 ;;
+esac
+
+pattern='^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert|merge)(\([a-z0-9./_-]+\))?!?: .{1,}'
+if ! echo "$first_line" | grep -qE "$pattern"; then
+	echo "Commit bloqueado: mensagem não segue Conventional Commits." >&2
+	echo "  Recebido: $first_line" >&2
+	echo "  Esperado: <tipo>(<escopo opcional>): <descrição>" >&2
+	echo "  Tipos válidos: feat fix docs style refactor perf test build ci chore revert merge" >&2
+	echo "  Exemplo: fix(e2e): corrige proxy do vite em modo e2e" >&2
+	echo "  Detalhes: https://www.conventionalcommits.org/en/v1.0.0/" >&2
+	exit 1
+fi

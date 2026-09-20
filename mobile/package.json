@@ -1,7 +1,7 @@
 {
 	"name": "@elysia-galhardo-finances/mobile",
 	"main": "expo-router/entry",
-	"version": "0.0.1-alpha",
+	"version": "0.1.0",
 	"private": true,
 	"dependencies": {
 		"@better-auth/api-key": "1.7.5",

@@ -173,6 +173,31 @@ O hook `pre-push` já roda isso automaticamente, mas para checar manualmente:
 
 Não use `--no-verify` para pular os hooks do Husky sem confirmar com quem pediu a tarefa.
 
+## Open source
+
+Este projeto segue padrão open source — `LICENSE` (MIT) e `CONTRIBUTING.md`
+na raiz têm os detalhes completos; aqui só o resumo operacional:
+
+- **Conventional Commits é obrigatório**, forçado pelo hook
+  `.husky/commit-msg` (regex simples, sem dependência nova — não usa
+  commitlint de propósito). Tipos aceitos: `feat fix docs style refactor
+  perf test build ci chore revert` mais `merge` (só para o commit de merge
+  `dev` → `main`). Mensagens `Merge ...` geradas automaticamente pelo git
+  passam direto.
+- **SemVer** (`MAJOR.MINOR.PATCH`) — versão atual em `package.json` (raiz e
+  os quatro workspaces, sempre sincronizados). Releases relevantes ganham
+  tag `vX.Y.Z` + GitHub Release. Ainda na série `0.x`: API entre
+  backend/frontend/bot/mobile pode quebrar em releases `MINOR`.
+- **Skills de terceiros** (`.agents/skills/<nome>/`, vendorizadas de
+  repositórios externos como `anthropics/skills`, `mattpocock/skills`,
+  `vercel-labs/agent-skills`) ficam fora do escopo do Biome
+  (`biome.json` → `files.includes: ["!.agents/skills/**"]`) — não têm por
+  que seguir a formatação deste projeto, são conteúdo importado como está.
+- Antes de todo `git push`, siga
+  `.agents/skills/open-source-guidelines-pre-push/SKILL.md` (segredos reais
+  em arquivo staged, Conventional Commits, LICENSE/CONTRIBUTING
+  consistentes, etc.) — não só o checklist de testes da seção anterior.
+
 ## Fluxo de branches
 
 `main` é a única branch de longa duração (renomeada de `master` em

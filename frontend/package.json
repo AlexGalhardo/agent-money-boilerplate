@@ -1,7 +1,7 @@
 {
 	"name": "@elysia-galhardo-finances/frontend",
 	"private": true,
-	"version": "0.0.1-alpha",
+	"version": "0.1.0",
 	"type": "module",
 	"imports": {
 		"#/*": "./src/*"
