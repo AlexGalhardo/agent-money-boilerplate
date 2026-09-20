@@ -5,7 +5,7 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { PROXIED_API_PATHS } from "./proxy-paths";
+import { PROXIED_API_PATHS } from "./proxy-paths.ts";
 
 const BACKEND_URL = process.env.VITE_API_URL ?? "http://localhost:4000";
 

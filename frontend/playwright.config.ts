@@ -16,7 +16,7 @@ export default defineConfig({
 	webServer: [
 		{
 			command: "bun run test:e2e:setup && bun run start:e2e",
-			cwd: "../api",
+			cwd: "../backend",
 			url: "http://localhost:4200/",
 			reuseExistingServer: !process.env.CI,
 			timeout: 60_000,

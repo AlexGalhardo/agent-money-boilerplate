@@ -36,14 +36,15 @@ if [ ! -f .env ]; then
 	exit 1
 fi
 
+# Versão fixa (não "@latest") — ver deploy-android-apk.sh para o motivo.
 echo "==> Verificando login na Expo (eas whoami)"
-if ! bunx eas-cli@latest whoami >/dev/null 2>&1; then
-	echo "Você não está logado na Expo. Rode 'bunx eas-cli@latest login' e tente de novo." >&2
+if ! bunx eas-cli@24.7.0 whoami >/dev/null 2>&1; then
+	echo "Você não está logado na Expo. Rode 'bunx eas-cli@24.7.0 login' e tente de novo." >&2
 	exit 1
 fi
 
 echo "==> Build de produção do .aab (perfil production, autoIncrement de versionCode ligado)"
-bunx eas-cli@latest build --platform android --profile production --non-interactive
+bunx eas-cli@24.7.0 build --platform android --profile production --non-interactive
 
 if [ "$1" = "--submit" ]; then
 	if [ ! -f google-play-service-account.json ]; then
@@ -52,7 +53,7 @@ if [ "$1" = "--submit" ]; then
 		exit 1
 	fi
 	echo "==> Submetendo o build mais recente pra faixa 'internal' da Play Store"
-	bunx eas-cli@latest submit --platform android --profile production --latest
+	bunx eas-cli@24.7.0 submit --platform android --profile production --latest
 	echo ""
 	echo "Enviado. Acompanhe o processamento em https://play.google.com/console — a faixa"
 	echo "'internal testing' costuma liberar em minutos; promover pra produção é manual."

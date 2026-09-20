@@ -1,0 +1,5 @@
+# git já ignora tudo isso via o .gitignore da raiz do monorepo (regras sem
+# barra no início casam em qualquer profundidade) — este arquivo existe só
+# porque `expo-doctor` roda um check local (não `git check-ignore`) que só
+# olha pra um .gitignore dentro de mobile/, sem saber do de cima.
+.expo/

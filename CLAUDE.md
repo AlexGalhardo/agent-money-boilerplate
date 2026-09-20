@@ -172,3 +172,25 @@ O hook `pre-push` já roda isso automaticamente, mas para checar manualmente:
 ```
 
 Não use `--no-verify` para pular os hooks do Husky sem confirmar com quem pediu a tarefa.
+
+## Fluxo de branches
+
+`main` é a única branch de longa duração (renomeada de `master` em
+2026-09-19, depois de um `git filter-repo` pra remover ~93MB de binário
+`.exe` commitado por engano do histórico — ver `.gitignore` e o guard em
+`.husky/pre-commit` contra `*.exe`). Toda tarefa nova segue este fluxo,
+sem exceção — Claude Code e qualquer outro agente de IA trabalhando neste
+repositório devem seguir isso por padrão, sem precisar que alguém peça
+(regras completas e o porquê de cada uma em
+`.agents/skills/git-branch-workflow/SKILL.md`):
+
+1. A partir de `main` atualizada, crie (ou reaproveite) uma branch `dev`.
+2. Faça as alterações da tarefa nessa `dev`.
+3. Rode localmente o que o hook `pre-push` roda (ver seção acima) — só
+   segue pro próximo passo se passar tudo.
+4. Suba `dev` pro repositório remoto (`git push -u origin dev`).
+5. Só depois de confirmar que `dev` está verde (testes, build, typecheck),
+   faça o merge de `dev` em `main` e suba `main`.
+
+Nunca commite direto em `main`, nunca dê `--force`/force-push em `main`, e
+nunca pule os passos 3–5 achando que "é rápido".

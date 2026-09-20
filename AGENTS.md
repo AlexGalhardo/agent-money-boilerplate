@@ -1,6 +1,7 @@
-# CLAUDE.md
+# AGENTS.md
 
 Guia para o Claude Code (e outros agentes de IA) trabalhando neste repositório.
+Espelha `CLAUDE.md` — mantenha os dois em sincronia ao editar qualquer um.
 
 ## IMPORTANTE
 
@@ -57,13 +58,33 @@ bun run typecheck:mobile    # tsc --noEmit do app mobile
 ```
 
 `bunfig.toml` fixa `install.linker = "hoisted"` (uma árvore única de
-`node_modules`, em vez do "isolated" padrão do bun) — sem isso, o mesmo
-pacote (ex: `elysia`) pode instalar como duas cópias fisicamente diferentes
-em workspaces com conjuntos de dependências muito distintos (ex:
-`backend/` vs `mobile/`, que traz todo o ecossistema Expo/React Native),
-fazendo o TypeScript enxergar tipos nominalmente incompatíveis ao importar
-`App` do backend via Eden em mais de um workspace. Não remova essa config
-sem entender essa implicação.
+`node_modules`, em vez do "isolated" padrão do bun) — **obrigatório pro
+Metro bundler (Expo) funcionar** neste monorepo: sob "isolated", o Metro
+não entende a estrutura de symlinks em `node_modules/.bun` (reproduzido:
+`"tracked as a non-empty directory"` no crawler de arquivos e
+`MODULE_NOT_FOUND` carregando plugins do Babel). Efeito colateral positivo
+do hoisted: resolve de graça uma duplicação de tipos do `elysia` entre
+`backend/` e `mobile/` que quebrava o typecheck do `treaty<App>()` do Eden
+sob "isolated". Efeito colateral negativo: o `nativewind` (só `mobile/`
+depende dele) também fica hoisted na raiz e passa a resolver o
+`tailwindcss` v4 do frontend em vez do v3 que ele exige — corrigido em
+`mobile/metro.config.js` (comentado lá, junto com por que
+`maxWorkers = 1` também é necessário). Não remova `bunfig.toml` sem
+entender essas implicações.
+
+`bun.lock` (raiz) precisa ficar em `"lockfileVersion": 1` — as imagens de
+build Android da EAS (usadas pelo `mobile/`) têm no máximo bun 1.3.14
+embarcado, que não entende o formato `"lockfileVersion": 2` que bun >= 1.4
+grava por padrão (erro reproduzido: `UnknownLockfileVersion` + `lockfile
+had changes, but lockfile is frozen` no build). Bun mais novo (1.4.x, usado
+no Dockerfile e localmente) lê o formato v1 de boa — só não pode ser quem
+*gera* o lockfile. Sempre que for adicionar/atualizar uma dependência,
+gere o lockfile com uma versão fixa em vez do bun global instalado:
+`npx bun@1.3.14 install` (não precisa instalar globalmente, o `npx`/`bunx`
+baixa o binário certo sob demanda). O hook `pre-commit` (`.husky/pre-commit`)
+barra o commit se `bun.lock` for staged com `lockfileVersion` diferente de 1.
+Assim que a Expo disponibilizar uma imagem de build com bun >= 1.4, essa
+trava pode ser removida.
 
 Dentro de `backend/`:
 
@@ -104,19 +125,22 @@ Detalhes de cada um em `docs/setup-unix-using-docker.md`,
   `backend/src/modules/transactions/transaction.schema.ts`), não uma tabela no
   banco. Adicionar categoria = editar essa lista **e** `categoryLabels` em
   `frontend/src/lib/categories.ts` **e** em `bot/src/formatting/format.ts`
-  (e revisar as paletas de cor do frontend — ver seção de dataviz abaixo).
-  Três arquivos, sincronia manual — o bot duplica os rótulos de propósito
-  para não depender do workspace do frontend (React/TanStack) só por causa
-  de um mapa de strings.
+  **e** em `mobile/src/lib/categories.ts` (e revisar as paletas de cor do
+  frontend — ver seção de dataviz abaixo). Quatro arquivos, sincronia
+  manual — bot e mobile duplicam os rótulos de propósito para não depender
+  do workspace do frontend (React/TanStack) só por causa de um mapa de
+  strings.
 - **Erros do better-auth nunca vão pra tela/chat em inglês.** `error.message`
   do better-auth é sempre inglês e instável entre versões — use sempre
   `error.code` traduzido por um mapa local: `frontend/src/lib/auth-errors.ts`
-  (`translateAuthError(error, fallback)`) e `bot/src/lib/auth-errors.ts`
-  (mesmo mapa, duplicado pelo mesmo motivo de `categoryLabels` acima). Regras
-  de senha (8-32 caracteres + complexidade) também duplicadas em
-  `frontend/src/components/password-strength-input.tsx` e
-  `bot/src/lib/password-rules.ts` — mantenha os três mapas em sincronia ao
-  adicionar/alterar um error code ou regra de senha.
+  (`translateAuthError(error, fallback)`), `bot/src/lib/auth-errors.ts` e
+  `mobile/src/lib/auth-errors.ts` (mesmo mapa, duplicado pelo mesmo motivo
+  de `categoryLabels` acima). Regras de senha (8-32 caracteres +
+  complexidade) também duplicadas em
+  `frontend/src/components/password-strength-input.tsx`,
+  `bot/src/lib/password-rules.ts` e `mobile/src/lib/password-rules.ts` —
+  mantenha os quatro mapas em sincronia ao adicionar/alterar um error code
+  ou regra de senha.
 - **Login com Google dentro do bot do Telegram** não é possível sem sair do
   chat (OAuth exige navegador). O fluxo é: `bot/src/lib/auth-flows.ts` gera
   um token de uso único (`backend/src/modules/telegram/telegram.service.ts`,
@@ -125,6 +149,12 @@ Detalhes de cada um em `docs/setup-unix-using-docker.md`,
   chama `POST /telegram/link` (`backend/src/modules/telegram/telegram.routes.ts`)
   pra vincular o chat à conta. O bot só volta a saber que deu certo quando o
   usuário toca em "verificar vínculo" (poll manual, sem push do backend pro bot).
+- **Senha de confirmação por transação no bot é opcional**, controlada pela env
+  `TELEGRAM_BOT_USE_PASSWORD_TO_CONFIRM_ACTIONS` (`bot/.env`, padrão `false`) —
+  quando `true`, `requirePassword` (`bot/src/lib/verify-password-step.ts`) pede
+  a senha pessoal (`BOT_PASSWORD_HASH_BASE64`) antes de despesa, receita,
+  resumo, buscar, apagar e relatório. "Trocar de conta" (menu principal) nunca
+  passa por esse fluxo — só mostra um Sim/Não de confirmação.
 
 ## Como rodar um teste específico
 
@@ -143,3 +173,25 @@ O hook `pre-push` já roda isso automaticamente, mas para checar manualmente:
 ```
 
 Não use `--no-verify` para pular os hooks do Husky sem confirmar com quem pediu a tarefa.
+
+## Fluxo de branches
+
+`main` é a única branch de longa duração (renomeada de `master` em
+2026-09-19, depois de um `git filter-repo` pra remover ~93MB de binário
+`.exe` commitado por engano do histórico — ver `.gitignore` e o guard em
+`.husky/pre-commit` contra `*.exe`). Toda tarefa nova segue este fluxo,
+sem exceção — Claude Code e qualquer outro agente de IA trabalhando neste
+repositório devem seguir isso por padrão, sem precisar que alguém peça
+(regras completas e o porquê de cada uma em
+`.agents/skills/git-branch-workflow/SKILL.md`):
+
+1. A partir de `main` atualizada, crie (ou reaproveite) uma branch `dev`.
+2. Faça as alterações da tarefa nessa `dev`.
+3. Rode localmente o que o hook `pre-push` roda (ver seção acima) — só
+   segue pro próximo passo se passar tudo.
+4. Suba `dev` pro repositório remoto (`git push -u origin dev`).
+5. Só depois de confirmar que `dev` está verde (testes, build, typecheck),
+   faça o merge de `dev` em `main` e suba `main`.
+
+Nunca commite direto em `main`, nunca dê `--force`/force-push em `main`, e
+nunca pule os passos 3–5 achando que "é rápido".

@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, dev]
   pull_request:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run lint
 
-  api:
+  backend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,25 +24,57 @@ jobs:
         with:
           bun-version: "1.4"
       - run: bun install --frozen-lockfile
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
       - name: Typecheck
-        working-directory: api
+        working-directory: backend
         run: bunx tsc --noEmit
       - name: Test
-        working-directory: api
+        working-directory: backend
         run: bun run test:setup && bun test
       - name: Build (binary)
-        working-directory: api
+        working-directory: backend
         run: bun run build
+        env:
+          DATABASE_URL: file:./ci.db
+
+  bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - run: bun install --frozen-lockfile
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
+      - name: Typecheck
+        working-directory: bot
+        run: bunx tsc --noEmit
+      - name: Test
+        working-directory: bot
+        run: bun run test:unit
 
   frontend:
     runs-on: ubuntu-latest
-    needs: api
+    needs: backend
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.4"
       - run: bun install --frozen-lockfile
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
       - name: Typecheck
         working-directory: frontend
         run: bunx tsc --noEmit
@@ -52,7 +84,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    needs: [api, frontend]
+    needs: [backend, frontend]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

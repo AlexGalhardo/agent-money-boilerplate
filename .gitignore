@@ -15,6 +15,10 @@ build
 **/build
 backend/server
 backend/server.exe
+# Segurança extra: `bun run build` do backend gera esse binário compilado
+# (~90MB) com `bun build --compile` — já aconteceu de ser commitado por
+# engano mais de uma vez (ver .husky/pre-commit), nunca deveria ir pro git.
+*.exe
 **/.tanstack
 
 # prisma

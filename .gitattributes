@@ -1,3 +1,12 @@
+# Todo arquivo de texto sempre LF, mesmo em checkout Windows — sem isso,
+# com core.autocrlf=true (comum no Windows), o Biome (que só escreve LF)
+# e o `git checkout` (que converte pra CRLF) ficam brigando: toda vez que
+# o hook de pre-commit roda `biome format --write .`, ele reescreve como
+# "modificado" um monte de arquivo que não tinha mudança de conteúdo
+# nenhuma, só de line ending. As regras `eol=lf` mais específicas abaixo
+# (scripts) ficam redundantes agora, mas não fazem mal.
+* text=auto eol=lf
+
 # Scripts precisam manter LF mesmo em checkouts Windows, senão o
 # shebang quebra ao rodar em containers Linux/VPS ("bad interpreter").
 *.sh text eol=lf

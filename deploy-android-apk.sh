@@ -31,18 +31,24 @@ if [ ! -f .env ]; then
 	exit 1
 fi
 
+# Versão fixa (não "@latest"): eas-cli não é devDependency do projeto (ver
+# mobile/eas.json "cli.version" e mobile/package.json) por recomendação da
+# própria Expo, mas "@latest" no bunx buscaria uma versão nova e não
+# verificada a cada execução — pino um valor exato aqui, igual a qualquer
+# outra dependência do projeto, e atualizo isso e o "cli.version" juntos
+# quando quiser subir de versão.
 echo "==> Verificando login na Expo (eas whoami)"
-if ! bunx eas-cli@latest whoami >/dev/null 2>&1; then
-	echo "Você não está logado na Expo. Rode 'bunx eas-cli@latest login' e tente de novo." >&2
+if ! bunx eas-cli@24.7.0 whoami >/dev/null 2>&1; then
+	echo "Você não está logado na Expo. Rode 'bunx eas-cli@24.7.0 login' e tente de novo." >&2
 	exit 1
 fi
 
 if [ "$1" = "--local" ]; then
 	echo "==> Build LOCAL do APK (perfil preview) — exige Android SDK + JDK instalados"
-	bunx eas-cli@latest build --platform android --profile preview --local
+	bunx eas-cli@24.7.0 build --platform android --profile preview --local
 else
 	echo "==> Build na nuvem do APK (perfil preview)"
-	bunx eas-cli@latest build --platform android --profile preview
+	bunx eas-cli@24.7.0 build --platform android --profile preview
 fi
 
 echo ""

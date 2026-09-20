@@ -1,5 +1,15 @@
 set -e
 
+# Já aconteceu mais de uma vez de um binário compilado (bun build --compile,
+# ~90MB) ser commitado por engano — bloqueia isso na raiz em vez de confiar
+# só no .gitignore.
+staged_exes=$(git diff --cached --name-only --diff-filter=ACM | grep -i '\.exe$' || true)
+if [ -n "$staged_exes" ]; then
+	echo "Commit bloqueado: arquivo(s) .exe staged — nunca deveriam ir pro git:" >&2
+	echo "$staged_exes" >&2
+	exit 1
+fi
+
 if git diff --cached --name-only | grep -qx "bun.lock"; then
 	lockfile_version=$(grep -m1 '"lockfileVersion"' bun.lock | grep -o '[0-9]\+')
 	if [ "$lockfile_version" != "1" ]; then

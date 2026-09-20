@@ -10,7 +10,7 @@ pela Play Store).
 ## Pré-requisitos
 
 - [Bun](https://bun.sh) >= 1.4
-- Conta na [Expo](https://expo.dev) (grátis) — `bunx eas-cli@latest login` dentro
+- Conta na [Expo](https://expo.dev) (grátis) — `bunx eas-cli@24.7.0 login` dentro
   de `mobile/` na primeira vez.
 - `mobile/.env` configurado (copie de `mobile/.env.example`) com
   `EXPO_PUBLIC_API_URL` apontando pra uma API **alcançável pelo
@@ -54,7 +54,7 @@ Passos únicos, feitos manualmente antes do primeiro deploy:
    "Release manager". Baixe a chave JSON dela e salve em
    `mobile/google-play-service-account.json` — **nunca commite esse
    arquivo** (já está no `.gitignore` da raiz).
-4. Rode `bunx eas-cli@latest login` dentro de `mobile/` se ainda não tiver feito.
+4. Rode `bunx eas-cli@24.7.0 login` dentro de `mobile/` se ainda não tiver feito.
 
 Depois disso, o deploy em si:
 
