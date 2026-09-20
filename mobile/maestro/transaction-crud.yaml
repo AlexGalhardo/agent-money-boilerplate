@@ -1,0 +1,65 @@
+appId: com.elysiagalhardofinances.money
+---
+# Logs in as the seeded demo account (see backend/prisma/seed.ts -
+# admin@gmail.com / adminBR@123, same credentials the web/bot E2E suites
+# use) and exercises the full create -> edit -> delete cycle for one
+# transaction, via the "+" button in BottomNav and the transaction form.
+- launchApp
+- assertVisible: "Entrar"
+- tapOn:
+    id: "field-E-mail"
+- inputText: "admin@gmail.com"
+- tapOn:
+    id: "field-Senha"
+- inputText: "adminBR@123"
+- tapOn: "Entrar"
+- assertVisible: "Olá,"
+
+# Create - the center "+" button in BottomNav opens /transaction/new.
+- tapOn:
+    id: "Nova transação"
+- assertVisible: "Nova transação"
+- tapOn: "DESPESA"
+- tapOn: "Compras"
+- tapOn:
+    id: "field-Descrição"
+- inputText: "Maestro E2E Compra"
+- tapOn:
+    id: "field-Valor"
+- inputText: "4321"
+- tapOn: "Adicionar"
+- assertVisible: "Olá,"
+
+# Find it via the search screen, since it may not land on dashboard's
+# first page among the seeded admin's other transactions.
+- tapOn:
+    id: "Buscar transações"
+- tapOn:
+    id: "search-input"
+- inputText: "Maestro E2E Compra"
+- assertVisible: "Maestro E2E Compra"
+
+# Edit - tapping the row opens /transaction/[id] pre-filled.
+- tapOn: "Maestro E2E Compra"
+- assertVisible: "Editar transação"
+- tapOn:
+    id: "field-Valor"
+- eraseText
+- inputText: "9999"
+- tapOn: "Salvar alterações"
+# Saving calls router.back() to the search screen we edited from - its
+# query/results state survives (Expo Router keeps the screen mounted), so
+# the row re-renders with the new amount once the update invalidates the
+# transactions query.
+- assertVisible: "R$ 99,99"
+
+# Delete - back into the same row, then the form's own delete button. The
+# confirmation Alert's title is also "Excluir transação" (see onDelete in
+# this screen), so match the button text exactly to avoid tapping the
+# title instead.
+- tapOn: "Maestro E2E Compra"
+- assertVisible: "Editar transação"
+- tapOn: "Excluir transação"
+- tapOn:
+    text: "^Excluir$"
+- assertNotVisible: "Maestro E2E Compra"

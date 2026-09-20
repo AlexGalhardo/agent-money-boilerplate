@@ -1,7 +1,17 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 
-export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+export function Modal({
+	title,
+	onClose,
+	children,
+	maxWidth = "max-w-md",
+}: {
+	title: string;
+	onClose: () => void;
+	children: ReactNode;
+	maxWidth?: string;
+}) {
 	const dialogRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
@@ -27,7 +37,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
 				aria-modal="true"
 				aria-labelledby="modal-title"
 				tabIndex={-1}
-				className="relative w-full max-w-md rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 outline-none"
+				className={`relative w-full ${maxWidth} rounded-2xl border border-(--color-border) bg-(--color-surface) p-6 outline-none`}
 			>
 				<div className="flex items-center justify-between">
 					<h2 id="modal-title" className="text-lg font-semibold">

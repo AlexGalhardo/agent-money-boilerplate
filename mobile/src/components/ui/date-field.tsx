@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Platform, Text, View } from "react-native";
 
 import { dateToISO, isoToBR, isoToDate } from "@/lib/format";
+import { useAppColorScheme } from "@/lib/theme";
 import { Pressable } from "@/shared/components/atoms/pressable";
 
 type Props = {
@@ -25,11 +26,12 @@ export function DateField({
 	maximumDate,
 }: Props) {
 	const [show, setShow] = useState(false);
+	const { isDark } = useAppColorScheme();
 	const current = value ? isoToDate(value) : new Date();
 
 	return (
 		<View className="gap-1.5">
-			<Text className="text-sm font-medium text-slate-700">{label}</Text>
+			<Text className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</Text>
 			<View className="flex-row items-center gap-2">
 				<Pressable
 					onPress={() => setShow((prev) => !prev)}
@@ -39,12 +41,14 @@ export function DateField({
 						justifyContent: "center",
 						borderRadius: 12,
 						borderWidth: 1,
-						borderColor: "#cbd5e1",
-						backgroundColor: "#ffffff",
+						borderColor: isDark ? "#475569" : "#cbd5e1",
+						backgroundColor: isDark ? "#1e293b" : "#ffffff",
 						paddingHorizontal: 16,
 					}}
 				>
-					<Text className={`text-base ${value ? "text-slate-900" : "text-slate-400"}`}>
+					<Text
+						className={`text-base ${value ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}
+					>
 						{value ? isoToBR(value) : placeholder}
 					</Text>
 				</Pressable>

@@ -1,0 +1,37 @@
+appId: com.elysiagalhardofinances.money
+---
+# Signs up a brand-new account (random email so the flow is repeatable),
+# confirms it landed on the dashboard, logs out from Minha Conta, then logs
+# back in with the same credentials to prove the round trip works.
+#
+# Field selectors use `id` matching TextField's default testID
+# (`field-<label>`, see src/components/ui/text-field.tsx) rather than
+# tapping on the visible label text, which isn't part of the input itself.
+- launchApp
+- assertVisible: "Entrar"
+
+- tapOn: "Criar conta"
+- tapOn:
+    id: "field-Nome"
+- inputText: "E2E Maestro"
+- tapOn:
+    id: "field-E-mail"
+- inputRandomEmail
+- tapOn:
+    id: "field-Senha"
+- inputText: "SenhaForte@123"
+- tapOn: "Criar conta"
+
+# Signup redirects straight to the dashboard once the account is created.
+- assertVisible: "Olá,"
+
+- tapOn:
+    id: "Minha conta"
+- assertVisible: "Minha Conta"
+- scrollUntilVisible:
+    element:
+      text: "Sair da conta"
+- tapOn: "Sair da conta"
+- tapOn:
+    text: "^Sair$"
+- assertVisible: "Entrar"

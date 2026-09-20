@@ -1,10 +1,12 @@
+import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { BottomNav } from "@/components/ui/bottom-nav";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { api } from "@/lib/api";
@@ -12,12 +14,23 @@ import { authClient, useSession } from "@/lib/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
 import { isStrongPassword } from "@/lib/password-rules";
 import { hasActivePlan } from "@/lib/plan";
+import { loadStoredThemePreference, type ThemePreference, useAppColorScheme } from "@/lib/theme";
 import { Pressable } from "@/shared/components/atoms/pressable";
 
 export default function ProfileScreen() {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const { data: session } = useSession();
+	const { isDark, setTheme } = useAppColorScheme();
+	const [themePreference, setThemePreference] = useState<ThemePreference | null>(null);
+	useEffect(() => {
+		loadStoredThemePreference().then(setThemePreference);
+	}, []);
+
+	function onSelectTheme(preference: ThemePreference): void {
+		setThemePreference(preference);
+		setTheme(preference);
+	}
 
 	const meQuery = useQuery({
 		queryKey: ["me"],
@@ -104,6 +117,20 @@ export default function ProfileScreen() {
 		await queryClient.invalidateQueries({ queryKey: ["me"] });
 	}
 
+	function onLogout(): void {
+		Alert.alert("Sair da conta", "Deseja realmente desconectar esta conta?", [
+			{ text: "Cancelar", style: "cancel" },
+			{
+				text: "Sair",
+				style: "destructive",
+				onPress: async () => {
+					await authClient.signOut();
+					router.replace("/login");
+				},
+			},
+		]);
+	}
+
 	function onDeleteAccount(): void {
 		if (meQuery.data && hasActivePlan(meQuery.data)) {
 			Alert.alert("Plano ativo", "Cancele ou aguarde o vencimento do plano antes de excluir sua conta.");
@@ -135,24 +162,77 @@ export default function ProfileScreen() {
 	}
 
 	return (
-		<SafeAreaView className="flex-1 bg-white">
-			<View className="flex-row items-center justify-between border-b border-slate-200 px-5 py-3">
+		<SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
+			<View className="flex-row items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-slate-800">
 				<Pressable onPress={() => router.back()} hitSlop={8}>
-					<Text className="text-base font-medium text-blue-600">Voltar</Text>
+					<Text className="text-base font-medium text-blue-600 dark:text-blue-400">Voltar</Text>
 				</Pressable>
-				<Text className="text-base font-semibold text-slate-900">Perfil</Text>
+				<Text className="text-base font-semibold text-slate-900 dark:text-white">Minha Conta</Text>
 				<View className="w-14" />
 			</View>
 
 			<KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
 				<Animated.ScrollView
 					entering={FadeInDown.duration(240)}
-					contentContainerClassName="p-6 gap-8"
+					contentContainerClassName="p-6 gap-8 pb-32"
 					keyboardShouldPersistTaps="handled"
 				>
 					<View className="gap-1">
-						<Text className="text-xs uppercase tracking-wide text-slate-400">E-mail</Text>
-						<Text className="text-base font-medium text-slate-800">{session?.user.email}</Text>
+						<Text className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500">
+							E-mail
+						</Text>
+						<Text className="text-base font-medium text-slate-800 dark:text-slate-100">
+							{session?.user.email}
+						</Text>
+					</View>
+
+					<View className="gap-3">
+						<Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tema</Text>
+						<View className="flex-row gap-2">
+							{(
+								[
+									{ value: "light", label: "Claro", icon: "sun" },
+									{ value: "dark", label: "Escuro", icon: "moon" },
+									{ value: "system", label: "Sistema", icon: "smartphone" },
+								] as const
+							).map((option) => {
+								const selected = themePreference === option.value;
+								return (
+									<Pressable
+										key={option.value}
+										accessibilityLabel={`Tema ${option.label}`}
+										onPress={() => onSelectTheme(option.value)}
+										style={{
+											flex: 1,
+											flexDirection: "row",
+											alignItems: "center",
+											justifyContent: "center",
+											gap: 6,
+											paddingVertical: 12,
+											borderRadius: 12,
+											borderWidth: 1,
+											borderColor: selected ? "#2563eb" : isDark ? "#334155" : "#e2e8f0",
+											backgroundColor: selected
+												? isDark
+													? "#1e3a8a33"
+													: "#eff6ff"
+												: "transparent",
+										}}
+									>
+										<Feather
+											name={option.icon}
+											size={16}
+											color={selected ? "#2563eb" : isDark ? "#94a3b8" : "#64748b"}
+										/>
+										<Text
+											className={`text-sm font-medium ${selected ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-slate-300"}`}
+										>
+											{option.label}
+										</Text>
+									</Pressable>
+								);
+							})}
+						</View>
 					</View>
 
 					<View className="gap-2">
@@ -164,12 +244,12 @@ export default function ProfileScreen() {
 								justifyContent: "space-between",
 								borderRadius: 12,
 								borderWidth: 1,
-								borderColor: "#e2e8f0",
+								borderColor: isDark ? "#334155" : "#e2e8f0",
 								padding: 16,
 							}}
 						>
-							<Text className="text-base font-medium text-slate-800">Assinatura</Text>
-							<Text className="text-sm text-blue-600">Gerenciar</Text>
+							<Text className="text-base font-medium text-slate-800 dark:text-slate-100">Assinatura</Text>
+							<Text className="text-sm text-blue-600 dark:text-blue-400">Gerenciar</Text>
 						</Pressable>
 						<Pressable
 							onPress={() => router.push("/two-factor")}
@@ -179,19 +259,23 @@ export default function ProfileScreen() {
 								justifyContent: "space-between",
 								borderRadius: 12,
 								borderWidth: 1,
-								borderColor: "#e2e8f0",
+								borderColor: isDark ? "#334155" : "#e2e8f0",
 								padding: 16,
 							}}
 						>
-							<Text className="text-base font-medium text-slate-800">Verificação em duas etapas</Text>
-							<Text className="text-sm text-blue-600">
+							<Text className="text-base font-medium text-slate-800 dark:text-slate-100">
+								Verificação em duas etapas
+							</Text>
+							<Text className="text-sm text-blue-600 dark:text-blue-400">
 								{meQuery.data?.twoFactorEnabled ? "Ativa" : "Configurar"}
 							</Text>
 						</Pressable>
 					</View>
 
 					<View className="gap-3">
-						<Text className="text-sm font-semibold text-slate-700">Nome de exibição</Text>
+						<Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+							Nome de exibição
+						</Text>
 						<TextField
 							label="Nome"
 							value={name}
@@ -200,12 +284,18 @@ export default function ProfileScreen() {
 							maxLength={16}
 						/>
 						{nameError ? (
-							<Animated.Text entering={FadeInUp.duration(160)} className="text-sm text-red-600">
+							<Animated.Text
+								entering={FadeInUp.duration(160)}
+								className="text-sm text-red-600 dark:text-red-400"
+							>
 								{nameError}
 							</Animated.Text>
 						) : null}
 						{nameStatus ? (
-							<Animated.Text entering={FadeInUp.duration(160)} className="text-sm text-emerald-600">
+							<Animated.Text
+								entering={FadeInUp.duration(160)}
+								className="text-sm text-emerald-600 dark:text-emerald-400"
+							>
 								{nameStatus}
 							</Animated.Text>
 						) : null}
@@ -213,7 +303,7 @@ export default function ProfileScreen() {
 					</View>
 
 					<View className="gap-3">
-						<Text className="text-sm font-semibold text-slate-700">Alterar senha</Text>
+						<Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">Alterar senha</Text>
 						<TextField
 							label="Senha atual"
 							value={currentPassword}
@@ -229,12 +319,18 @@ export default function ProfileScreen() {
 							secureTextEntry
 						/>
 						{passwordError ? (
-							<Animated.Text entering={FadeInUp.duration(160)} className="text-sm text-red-600">
+							<Animated.Text
+								entering={FadeInUp.duration(160)}
+								className="text-sm text-red-600 dark:text-red-400"
+							>
 								{passwordError}
 							</Animated.Text>
 						) : null}
 						{passwordStatus ? (
-							<Animated.Text entering={FadeInUp.duration(160)} className="text-sm text-emerald-600">
+							<Animated.Text
+								entering={FadeInUp.duration(160)}
+								className="text-sm text-emerald-600 dark:text-emerald-400"
+							>
 								{passwordStatus}
 							</Animated.Text>
 						) : null}
@@ -242,8 +338,10 @@ export default function ProfileScreen() {
 					</View>
 
 					<View className="gap-3">
-						<Text className="text-sm font-semibold text-slate-700">Bot do Telegram</Text>
-						<Text className="text-xs text-slate-500">
+						<Text className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+							Bot do Telegram
+						</Text>
+						<Text className="text-xs text-slate-500 dark:text-slate-400">
 							ID da conta: <Text className="font-mono">{meQuery.data?.id}</Text> — envie esse ID pro bot
 							quando ele pedir, ou informe o Chat ID manualmente aqui.
 						</Text>
@@ -255,12 +353,18 @@ export default function ProfileScreen() {
 							keyboardType="numbers-and-punctuation"
 						/>
 						{telegramError ? (
-							<Animated.Text entering={FadeInUp.duration(160)} className="text-sm text-red-600">
+							<Animated.Text
+								entering={FadeInUp.duration(160)}
+								className="text-sm text-red-600 dark:text-red-400"
+							>
 								{telegramError}
 							</Animated.Text>
 						) : null}
 						{telegramStatus ? (
-							<Animated.Text entering={FadeInUp.duration(160)} className="text-sm text-emerald-600">
+							<Animated.Text
+								entering={FadeInUp.duration(160)}
+								className="text-sm text-emerald-600 dark:text-emerald-400"
+							>
 								{telegramStatus}
 							</Animated.Text>
 						) : null}
@@ -272,9 +376,9 @@ export default function ProfileScreen() {
 						/>
 					</View>
 
-					<View className="gap-3 border-t border-red-200 pt-6">
-						<Text className="text-sm font-semibold text-red-600">Excluir conta</Text>
-						<Text className="text-xs text-slate-500">
+					<View className="gap-3 border-t border-red-200 pt-6 dark:border-red-900">
+						<Text className="text-sm font-semibold text-red-600 dark:text-red-400">Excluir conta</Text>
+						<Text className="text-xs text-slate-500 dark:text-slate-400">
 							Essa ação remove todos os seus dados. Não é possível excluir com um plano ativo.
 						</Text>
 						<Button
@@ -284,8 +388,14 @@ export default function ProfileScreen() {
 							variant="danger"
 						/>
 					</View>
+
+					<View className="gap-3 border-t border-slate-200 pt-6 dark:border-slate-800">
+						<Button label="Sair da conta" onPress={onLogout} variant="secondary" />
+					</View>
 				</Animated.ScrollView>
 			</KeyboardAvoidingView>
+
+			<BottomNav active="profile" />
 		</SafeAreaView>
 	);
 }

@@ -32,6 +32,17 @@ cd backend
 bun test src/modules/transactions/transaction.service.unit.test.ts
 ```
 
+## Mobile tests
+
+```bash
+cd mobile
+bun run test          # jest, src/**/*.test.ts
+bun run typecheck     # tsc --noEmit
+bun run test:e2e      # Maestro flows in mobile/maestro/ - needs a running
+                       # simulator/emulator and maestro installed, see
+                       # mobile/maestro/README.md
+```
+
 ## Before opening a PR / calling something done
 
 The `pre-push` hook runs this automatically; to check manually:

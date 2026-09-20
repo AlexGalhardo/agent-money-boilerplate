@@ -97,7 +97,7 @@ export function ImportTransactionsModal({ onClose, onImported }: { onClose: () =
 	const needsReviewRows = rows?.filter((row) => row.needsReview) ?? [];
 
 	return (
-		<Modal title="Importar transações do Nubank" onClose={onClose}>
+		<Modal title="Importar transações do Nubank" onClose={onClose} maxWidth="max-w-4xl">
 			<div className="flex flex-col gap-4">
 				{!rows && !result && (
 					<>
@@ -110,8 +110,18 @@ export function ImportTransactionsModal({ onClose, onImported }: { onClose: () =
 							type="file"
 							accept=".csv,text/csv"
 							onChange={handleFileChange}
-							className="text-sm"
+							className="sr-only"
 						/>
+						<button
+							type="button"
+							onClick={() => fileInputRef.current?.click()}
+							className="flex w-fit items-center gap-2 rounded-lg bg-[#820AD1] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#9a1df0]"
+						>
+							Importar Nubank CSV
+						</button>
+						{fileName && !previewMutation.isPending && !rows && (
+							<p className="text-sm text-(--color-fg-muted)">Arquivo selecionado: {fileName}</p>
+						)}
 						{fileName && previewMutation.isPending && (
 							<p className="text-sm text-(--color-fg-muted)">Lendo {fileName}...</p>
 						)}
