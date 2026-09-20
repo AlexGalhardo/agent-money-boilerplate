@@ -1,9 +1,9 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text } from "react-native";
-
+import { ActivityIndicator } from "react-native";
 import { authClient } from "@/lib/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
+import { SocialButton } from "@/shared/components/pieces/social-button";
 
 export function GoogleButton({ label, onError }: { label: string; onError: (message: string) => void }) {
 	const router = useRouter();
@@ -27,18 +27,22 @@ export function GoogleButton({ label, onError }: { label: string; onError: (mess
 	}
 
 	return (
-		<Pressable
-			accessibilityRole="button"
-			accessibilityLabel={label}
+		<SocialButton.Root
+			provider="google"
+			variant="outline"
+			fullWidth
 			onPress={handlePress}
 			disabled={loading}
-			className={`h-12 flex-row items-center justify-center rounded-xl border border-slate-300 bg-white ${loading ? "opacity-50" : "active:bg-slate-100"}`}
+			accessibilityLabel={label}
 		>
 			{loading ? (
 				<ActivityIndicator color="#0f172a" />
 			) : (
-				<Text className="text-base font-semibold text-slate-900">{label}</Text>
+				<>
+					<SocialButton.Icon />
+					<SocialButton.Label>{label}</SocialButton.Label>
+				</>
 			)}
-		</Pressable>
+		</SocialButton.Root>
 	);
 }

@@ -1,4 +1,6 @@
-import { Pressable, Text } from "react-native";
+import { Text } from "react-native";
+
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 type Props = {
 	label: string;
@@ -10,9 +12,15 @@ export function Chip({ label, selected, onPress }: Props) {
 	return (
 		<Pressable
 			onPress={onPress}
-			className={`rounded-full border px-3 py-2 ${
-				selected ? "border-blue-600 bg-blue-600" : "border-slate-300 bg-white active:bg-slate-100"
-			}`}
+			accessibilityRole="button"
+			style={{
+				borderRadius: 999,
+				borderWidth: 1,
+				paddingHorizontal: 12,
+				paddingVertical: 8,
+				borderColor: selected ? "#2563eb" : "#cbd5e1",
+				backgroundColor: selected ? "#2563eb" : "#ffffff",
+			}}
 		>
 			<Text className={`text-sm font-medium ${selected ? "text-white" : "text-slate-700"}`}>{label}</Text>
 		</Pressable>

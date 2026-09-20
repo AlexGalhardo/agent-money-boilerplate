@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -16,6 +16,7 @@ import {
 	useTransactionQuery,
 	useUpdateTransaction,
 } from "@/query/transactions";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 type TxType = "income" | "expense";
 
@@ -140,9 +141,16 @@ export default function TransactionFormScreen() {
 						<View className="flex-row gap-3">
 							<Pressable
 								onPress={() => onChangeType("expense")}
-								className={`h-12 flex-1 items-center justify-center rounded-xl border ${
-									type === "expense" ? "border-red-500 bg-red-50" : "border-slate-300 bg-white"
-								}`}
+								style={{
+									flex: 1,
+									height: 48,
+									alignItems: "center",
+									justifyContent: "center",
+									borderRadius: 12,
+									borderWidth: 1,
+									borderColor: type === "expense" ? "#ef4444" : "#cbd5e1",
+									backgroundColor: type === "expense" ? "#fef2f2" : "#ffffff",
+								}}
 							>
 								<Text
 									className={`text-base font-semibold ${type === "expense" ? "text-red-600" : "text-slate-500"}`}
@@ -152,9 +160,16 @@ export default function TransactionFormScreen() {
 							</Pressable>
 							<Pressable
 								onPress={() => onChangeType("income")}
-								className={`h-12 flex-1 items-center justify-center rounded-xl border ${
-									type === "income" ? "border-emerald-500 bg-emerald-50" : "border-slate-300 bg-white"
-								}`}
+								style={{
+									flex: 1,
+									height: 48,
+									alignItems: "center",
+									justifyContent: "center",
+									borderRadius: 12,
+									borderWidth: 1,
+									borderColor: type === "income" ? "#10b981" : "#cbd5e1",
+									backgroundColor: type === "income" ? "#ecfdf5" : "#ffffff",
+								}}
 							>
 								<Text
 									className={`text-base font-semibold ${type === "income" ? "text-emerald-600" : "text-slate-500"}`}

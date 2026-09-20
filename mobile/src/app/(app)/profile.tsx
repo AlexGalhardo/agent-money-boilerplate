@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -12,6 +12,7 @@ import { authClient, useSession } from "@/lib/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
 import { isStrongPassword } from "@/lib/password-rules";
 import { hasActivePlan } from "@/lib/plan";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 export default function ProfileScreen() {
 	const router = useRouter();
@@ -157,14 +158,30 @@ export default function ProfileScreen() {
 					<View className="gap-2">
 						<Pressable
 							onPress={() => router.push("/subscription")}
-							className="flex-row items-center justify-between rounded-xl border border-slate-200 p-4 active:bg-slate-50"
+							style={{
+								flexDirection: "row",
+								alignItems: "center",
+								justifyContent: "space-between",
+								borderRadius: 12,
+								borderWidth: 1,
+								borderColor: "#e2e8f0",
+								padding: 16,
+							}}
 						>
 							<Text className="text-base font-medium text-slate-800">Assinatura</Text>
 							<Text className="text-sm text-blue-600">Gerenciar</Text>
 						</Pressable>
 						<Pressable
 							onPress={() => router.push("/two-factor")}
-							className="flex-row items-center justify-between rounded-xl border border-slate-200 p-4 active:bg-slate-50"
+							style={{
+								flexDirection: "row",
+								alignItems: "center",
+								justifyContent: "space-between",
+								borderRadius: 12,
+								borderWidth: 1,
+								borderColor: "#e2e8f0",
+								padding: 16,
+							}}
 						>
 							<Text className="text-base font-medium text-slate-800">Verificação em duas etapas</Text>
 							<Text className="text-sm text-blue-600">

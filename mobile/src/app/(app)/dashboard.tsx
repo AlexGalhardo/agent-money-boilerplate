@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, ScrollView, Text, View } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeOut, LinearTransition } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -27,9 +27,12 @@ import {
 	useTransactionStatistics,
 	useTransactionsQuery,
 } from "@/query/transactions";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 const ALL_CATEGORIES = "all" as const;
 const PER_PAGE = 10;
+
+const navButtonStyle = { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 8 };
 
 function normalizeSearchText(value: string): string {
 	return value.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -120,22 +123,16 @@ export default function DashboardScreen() {
 						{session?.user.name ?? session?.user.email}
 					</Text>
 				</View>
-				<Pressable
-					onPress={() => router.push("/import-nubank")}
-					className="rounded-lg px-2 py-2 active:bg-slate-200"
-				>
+				<Pressable onPress={() => router.push("/import-nubank")} style={navButtonStyle}>
 					<Text className="text-sm font-semibold text-blue-600">Importar</Text>
 				</Pressable>
-				<Pressable
-					onPress={() => router.push("/subscription")}
-					className="rounded-lg px-2 py-2 active:bg-slate-200"
-				>
+				<Pressable onPress={() => router.push("/subscription")} style={navButtonStyle}>
 					<Text className="text-sm font-semibold text-blue-600">Plano</Text>
 				</Pressable>
-				<Pressable onPress={() => router.push("/profile")} className="rounded-lg px-2 py-2 active:bg-slate-200">
+				<Pressable onPress={() => router.push("/profile")} style={navButtonStyle}>
 					<Text className="text-sm font-semibold text-blue-600">Perfil</Text>
 				</Pressable>
-				<Pressable onPress={() => signOut()} className="rounded-lg px-2 py-2 active:bg-slate-200">
+				<Pressable onPress={() => signOut()} style={navButtonStyle}>
 					<Text className="text-sm font-semibold text-blue-600">Sair</Text>
 				</Pressable>
 			</View>
@@ -147,6 +144,7 @@ export default function DashboardScreen() {
 				ListHeaderComponent={
 					<View className="pb-2">
 						<Animated.View
+							entering={FadeInDown.duration(240)}
 							layout={LinearTransition.duration(200)}
 							className="mt-2 rounded-2xl bg-slate-900 p-5"
 						>
@@ -174,7 +172,18 @@ export default function DashboardScreen() {
 
 						<Pressable
 							onPress={() => setShowCharts((current) => !current)}
-							className="mt-4 flex-row items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
+							style={{
+								marginTop: 16,
+								flexDirection: "row",
+								alignItems: "center",
+								justifyContent: "space-between",
+								borderRadius: 12,
+								borderWidth: 1,
+								borderColor: "#e2e8f0",
+								backgroundColor: "#ffffff",
+								paddingHorizontal: 16,
+								paddingVertical: 12,
+							}}
 						>
 							<Text className="text-sm font-semibold text-slate-700">Gráficos por categoria</Text>
 							<Text className="text-sm text-slate-400">{showCharts ? "Ocultar ▲" : "Mostrar ▼"}</Text>
@@ -276,7 +285,16 @@ export default function DashboardScreen() {
 						<Pressable
 							onPress={() => router.push(`/transaction/${item.id}`)}
 							onLongPress={() => confirmDelete(item)}
-							className="mb-2 flex-row items-center rounded-xl border border-slate-200 bg-white p-4 active:bg-slate-100"
+							style={{
+								marginBottom: 8,
+								flexDirection: "row",
+								alignItems: "center",
+								borderRadius: 12,
+								borderWidth: 1,
+								borderColor: "#e2e8f0",
+								backgroundColor: "#ffffff",
+								padding: 16,
+							}}
 						>
 							<View className="flex-1 pr-3">
 								<Text className="text-base font-medium text-slate-900" numberOfLines={1}>

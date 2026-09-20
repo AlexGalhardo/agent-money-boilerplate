@@ -1,6 +1,7 @@
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/button";
@@ -66,7 +67,8 @@ export default function LoginScreen() {
 	return (
 		<SafeAreaView className="flex-1 bg-white">
 			<KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
-				<ScrollView
+				<Animated.ScrollView
+					entering={FadeInDown.duration(240)}
 					contentContainerClassName="grow justify-center px-6 py-10"
 					keyboardShouldPersistTaps="handled"
 				>
@@ -150,7 +152,7 @@ export default function LoginScreen() {
 							</Link>
 						</View>
 					) : null}
-				</ScrollView>
+				</Animated.ScrollView>
 			</KeyboardAvoidingView>
 		</SafeAreaView>
 	);

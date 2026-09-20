@@ -1,8 +1,9 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 
 import { dateToISO, isoToBR, isoToDate } from "@/lib/format";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 type Props = {
 	label: string;
@@ -32,7 +33,16 @@ export function DateField({
 			<View className="flex-row items-center gap-2">
 				<Pressable
 					onPress={() => setShow((prev) => !prev)}
-					className="h-12 flex-1 justify-center rounded-xl border border-slate-300 bg-white px-4 active:bg-slate-100"
+					style={{
+						flex: 1,
+						height: 48,
+						justifyContent: "center",
+						borderRadius: 12,
+						borderWidth: 1,
+						borderColor: "#cbd5e1",
+						backgroundColor: "#ffffff",
+						paddingHorizontal: 16,
+					}}
 				>
 					<Text className={`text-base ${value ? "text-slate-900" : "text-slate-400"}`}>
 						{value ? isoToBR(value) : placeholder}
@@ -45,7 +55,7 @@ export function DateField({
 							onClear();
 						}}
 						hitSlop={8}
-						className="rounded-lg px-3 py-2 active:bg-slate-200"
+						style={{ borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
 					>
 						<Text className="text-sm font-medium text-blue-600">Limpar</Text>
 					</Pressable>
@@ -69,7 +79,13 @@ export function DateField({
 					{Platform.OS === "ios" ? (
 						<Pressable
 							onPress={() => setShow(false)}
-							className="mt-1 self-end rounded-lg px-3 py-2 active:bg-slate-200"
+							style={{
+								marginTop: 4,
+								alignSelf: "flex-end",
+								borderRadius: 8,
+								paddingHorizontal: 12,
+								paddingVertical: 8,
+							}}
 						>
 							<Text className="text-sm font-semibold text-blue-600">Concluir</Text>
 						</Pressable>

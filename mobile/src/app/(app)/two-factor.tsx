@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -10,6 +10,7 @@ import { TextField } from "@/components/ui/text-field";
 import { api } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 /**
  * 2FA do mobile é sempre por código enviado por e-mail (`method: "otp"`,

@@ -1,26 +1,35 @@
-import { forwardRef } from "react";
-import { Text, TextInput, type TextInputProps, View } from "react-native";
+import { Text, type TextInputProps, View } from "react-native";
+
+import AnimatedInputBar from "@/shared/components/base/animated-input-bar";
 
 type Props = TextInputProps & {
 	label: string;
 	error?: string | null;
 };
 
-export const TextField = forwardRef<TextInput, Props>(function TextField({ label, error, ...props }, ref) {
+export function TextField({ label, error, placeholder, ...props }: Props) {
 	return (
 		<View className="gap-1.5">
 			<Text className="text-sm font-medium text-slate-700">{label}</Text>
-			<TextInput
-				ref={ref}
+			<AnimatedInputBar
+				placeholders={[placeholder ?? ""]}
 				accessibilityLabel={label}
 				testID={props.testID ?? `field-${label}`}
-				className={`h-12 rounded-xl border bg-white px-4 text-base text-slate-900 ${
-					error ? "border-red-400" : "border-slate-300"
-				}`}
-				placeholderTextColor="#94a3b8"
+				containerStyle={{ marginVertical: 0 }}
+				inputWrapperStyle={{
+					minHeight: 48,
+					paddingHorizontal: 16,
+					paddingVertical: 0,
+					borderRadius: 12,
+					borderWidth: 1,
+					borderColor: error ? "#f87171" : "#cbd5e1",
+					backgroundColor: "#ffffff",
+				}}
+				inputStyle={{ fontSize: 16, color: "#0f172a" }}
+				placeholderStyle={{ color: "#94a3b8" }}
 				{...props}
 			/>
 			{error ? <Text className="text-xs text-red-600">{error}</Text> : null}
 		</View>
 	);
-});
+}

@@ -2,13 +2,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { hasActivePlan, planDaysRemaining } from "@/lib/plan";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 type PlanId = "monthly" | "annual";
 type Charge = { id: string; brCode: string; brCodeBase64: string; expiresAt: string };
@@ -103,7 +104,7 @@ export default function SubscriptionScreen() {
 				<View className="w-14" />
 			</View>
 
-			<ScrollView contentContainerClassName="p-6 gap-4">
+			<Animated.ScrollView entering={FadeInDown.duration(240)} contentContainerClassName="p-6 gap-4">
 				{activePlan ? (
 					<Animated.View
 						entering={FadeInDown.duration(200)}
@@ -149,7 +150,16 @@ export default function SubscriptionScreen() {
 							>
 								{charge.brCode}
 							</Text>
-							<Pressable onPress={handleCopy} className="rounded-lg border border-slate-200 px-3 py-2">
+							<Pressable
+								onPress={handleCopy}
+								style={{
+									borderRadius: 8,
+									borderWidth: 1,
+									borderColor: "#e2e8f0",
+									paddingHorizontal: 12,
+									paddingVertical: 8,
+								}}
+							>
 								<Text className="text-xs font-medium text-blue-600">
 									{copied ? "Copiado!" : "Copiar"}
 								</Text>
@@ -178,7 +188,7 @@ export default function SubscriptionScreen() {
 						))}
 					</View>
 				) : null}
-			</ScrollView>
+			</Animated.ScrollView>
 		</SafeAreaView>
 	);
 }

@@ -3,13 +3,15 @@ import * as DocumentPicker from "expo-document-picker";
 import { File } from "expo-file-system";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { categoryLabels, type TransactionCategory } from "@/lib/categories";
 import { formatBRL } from "@/lib/format";
+import { Pressable } from "@/shared/components/atoms/pressable";
 
 type PreviewRow = {
 	rowNumber: number;
@@ -106,7 +108,7 @@ export default function ImportNubankScreen() {
 				<View className="w-14" />
 			</View>
 
-			<ScrollView contentContainerClassName="p-6 gap-4">
+			<Animated.ScrollView entering={FadeInDown.duration(240)} contentContainerClassName="p-6 gap-4">
 				{!rows && !result ? (
 					<>
 						<Text className="text-sm text-slate-500">
@@ -201,7 +203,7 @@ export default function ImportNubankScreen() {
 						<ActivityIndicator />
 					</View>
 				) : null}
-			</ScrollView>
+			</Animated.ScrollView>
 		</SafeAreaView>
 	);
 }

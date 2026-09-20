@@ -1,20 +1,10 @@
 import { Text, View } from "react-native";
-import Svg, { Circle, G } from "react-native-svg";
 
 import { formatBRL } from "@/lib/format";
+import { PieChart } from "@/shared/components/charts/pie-chart";
 
 type Slice = { category: string; label: string; total: number; color: string };
 
-const SIZE = 160;
-const STROKE = 22;
-const RADIUS = (SIZE - STROKE) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-/**
- * Donut chart simples com react-native-svg (cada categoria é um arco de
- * círculo via dasharray) — sem lib de gráficos externa, só o essencial pra
- * "despesas/receitas por categoria" pedido na tarefa 4d.
- */
 export function CategoryPieChart({ slices, emptyLabel }: { slices: Slice[]; emptyLabel: string }) {
 	const total = slices.reduce((sum, slice) => sum + slice.total, 0);
 
@@ -26,33 +16,13 @@ export function CategoryPieChart({ slices, emptyLabel }: { slices: Slice[]; empt
 		);
 	}
 
-	let offset = 0;
+	const points = slices.map((slice) => ({ label: slice.label, value: slice.total, color: slice.color }));
 
 	return (
 		<View className="flex-row items-center gap-4">
-			<Svg width={SIZE} height={SIZE}>
-				<G rotation={-90} origin={`${SIZE / 2}, ${SIZE / 2}`}>
-					{slices.map((slice) => {
-						const fraction = slice.total / total;
-						const dash = fraction * CIRCUMFERENCE;
-						const circle = (
-							<Circle
-								key={slice.category}
-								cx={SIZE / 2}
-								cy={SIZE / 2}
-								r={RADIUS}
-								stroke={slice.color}
-								strokeWidth={STROKE}
-								strokeDasharray={`${dash} ${CIRCUMFERENCE - dash}`}
-								strokeDashoffset={-offset}
-								fill="transparent"
-							/>
-						);
-						offset += dash;
-						return circle;
-					})}
-				</G>
-			</Svg>
+			<PieChart.Root data={points} radius={70} innerRadius={0.65} style={{ width: 160, height: 160 }}>
+				<PieChart.Slices />
+			</PieChart.Root>
 
 			<View className="flex-1 gap-1.5">
 				{slices.map((slice) => (
