@@ -108,16 +108,26 @@ async function handleIdLink(conversation: BotConversation, ctx: Context, chatId:
 		return null;
 	}
 
-	try {
-		await conversation.external(() => linkChatToUser(chatId, candidateId));
-	} catch (error) {
-		if (error instanceof ChatAlreadyLinkedError) {
-			await ctx.reply(
-				"Esse chat já está vinculado a outra conta. Desvincule pelo site (apague o Chat ID em Minha Conta e salve) antes de vincular esta.",
-			);
-			return null;
+	// See the same-shaped comment on tryCreatePixCheckout in
+	// bot/src/lib/user-gate.ts: catching ChatAlreadyLinkedError in a
+	// try/catch placed after `await conversation.external(...)` never
+	// matches, because structuredClone (used internally to log the result
+	// for replay) strips a thrown Error's subclass identity. Catch it inside
+	// the wrapped callback and return a plain value instead.
+	const linked = await conversation.external(async () => {
+		try {
+			await linkChatToUser(chatId, candidateId);
+			return { ok: true as const };
+		} catch (error) {
+			if (error instanceof ChatAlreadyLinkedError) return { ok: false as const };
+			throw error;
 		}
-		throw error;
+	});
+	if (!linked.ok) {
+		await ctx.reply(
+			"Esse chat já está vinculado a outra conta. Desvincule pelo site (apague o Chat ID em Minha Conta e salve) antes de vincular esta.",
+		);
+		return null;
 	}
 
 	await ctx.reply(`✅ Conta vinculada! Olá, ${user.name}.`);

@@ -134,6 +134,7 @@ BETTER_AUTH_SECRET=<gere-com-openssl-rand-hex-32>
 ENCRYPTION_KEY=<gere-com-openssl-rand-hex-32>
 TELEGRAM_BOT_TOKEN=<token-do-botfather>
 BOT_PASSWORD_HASH_BASE64=<hash-bcrypt-em-base64>
+FRONTEND_URL=https://${{frontend.RAILWAY_PUBLIC_DOMAIN}}
 BOT_MAX_ATTEMPTS=5
 BOT_LOCKOUT_MINUTES=15
 ENABLE_ABACATEPAY=false

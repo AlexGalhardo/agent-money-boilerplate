@@ -14,14 +14,21 @@ import { reportConversation } from "./conversations/report.conversation";
 import { searchConversation } from "./conversations/search.conversation";
 import { startConversation } from "./conversations/start.conversation";
 import { categoryLabels } from "./formatting/format";
-import { buildMenuMessage, HELP_TEXT, mainMenuKeyboard, withMainMenu } from "./lib/menu";
+import { buildMenu, withMainMenu } from "./lib/menu";
 import type { BotContext } from "./types";
 
 function confirmLogoutKeyboard(): InlineKeyboard {
 	return new InlineKeyboard().text("✅ Sim, desconectar", "logout:confirm").text("❌ Cancelar", "logout:cancel");
 }
 
+// "entrar" isn't a real conversation of its own - it just re-enters "start",
+// which is what actually runs the login/signup/Google/link-by-ID flow (see
+// bot/src/conversations/start.conversation.ts). Routing it through the same
+// MENU_ACTIONS table as every other button keeps loginPromptKeyboard()'s
+// "menu:entrar" button working through the existing ^menu: callback handler
+// below, with no separate handler needed.
 const MENU_ACTIONS: Record<string, string> = {
+	entrar: "start",
 	despesa: "add-expense",
 	receita: "add-income",
 	transacoes: "list-transactions",
@@ -51,9 +58,8 @@ export function createBot(): Bot<BotContext> {
 	// já que sai de TODAS antes de qualquer outro middleware processar o update.
 	bot.command("cancelar", async (ctx) => {
 		await ctx.conversation.exitAll();
-		const chatId = ctx.chat?.id;
-		const text = chatId === undefined ? HELP_TEXT : await buildMenuMessage(chatId);
-		await ctx.reply(text, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
+		const { text, keyboard } = await buildMenu(ctx.chat?.id);
+		await ctx.reply(text, { parse_mode: "Markdown", reply_markup: keyboard });
 	});
 
 	bot.command("start", async (ctx) => {
@@ -71,9 +77,8 @@ export function createBot(): Bot<BotContext> {
 		}
 
 		if (action === "ajuda") {
-			const chatId = ctx.chat?.id;
-			const text = chatId === undefined ? HELP_TEXT : await buildMenuMessage(chatId);
-			await ctx.reply(text, { parse_mode: "Markdown", reply_markup: mainMenuKeyboard() });
+			const { text, keyboard } = await buildMenu(ctx.chat?.id);
+			await ctx.reply(text, { parse_mode: "Markdown", reply_markup: keyboard });
 			return;
 		}
 
@@ -118,14 +123,19 @@ export function createBot(): Bot<BotContext> {
 	// esteja sendo consumido por uma conversation em andamento cai aqui —
 	// evita o bot ficar em silêncio (e o usuário achando que travou).
 	bot.on("message", async (ctx) => {
-		await ctx.reply("Não entendi. Use os botões abaixo:", { reply_markup: mainMenuKeyboard() });
+		const { keyboard } = await buildMenu(ctx.chat?.id);
+		await ctx.reply("Não entendi. Use os botões abaixo:", { reply_markup: keyboard });
 	});
 
 	bot.catch(({ error, ctx }) => {
 		console.error(`Erro não tratado para update ${ctx.update.update_id}:`, error);
-		ctx.reply("⚠️ Ocorreu um erro inesperado. Toque em um botão abaixo para continuar:", {
-			reply_markup: mainMenuKeyboard(),
-		}).catch(() => undefined);
+		buildMenu(ctx.chat?.id)
+			.then(({ keyboard }) =>
+				ctx.reply("⚠️ Ocorreu um erro inesperado. Toque em um botão abaixo para continuar:", {
+					reply_markup: keyboard,
+				}),
+			)
+			.catch(() => undefined);
 	});
 
 	return bot;
