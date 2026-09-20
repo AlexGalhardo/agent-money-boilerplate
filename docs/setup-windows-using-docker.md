@@ -27,7 +27,7 @@ distro equivalente) ou do **Git Bash**. Ele não roda no PowerShell nem no
 # dentro do WSL2 (ou Git Bash)
 git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
 cd elysia-tanstack-finances
-./setup-windows-using-docker.sh
+./setups/setup-windows-using-docker.sh
 ```
 
 O script pergunta qual banco usar:
@@ -39,11 +39,11 @@ Qual banco de dados você quer usar?
 ```
 
 Para pular a pergunta, passe o banco como argumento:
-`./setup-windows-using-docker.sh sqlite` ou `./setup-windows-using-docker.sh postgres`.
+`./setups/setup-windows-using-docker.sh sqlite` ou `./setups/setup-windows-using-docker.sh postgres`.
 
 O script confere se o Docker Desktop está rodando antes de continuar e
 avisa (em vez de travar sem explicação) se não estiver. Fora isso, o
-comportamento é idêntico ao `setup-unix-using-docker.sh`:
+comportamento é idêntico ao `setups/setup-unix-using-docker.sh`:
 
 1. Cria `backend/.env` e `bot/.env` a partir dos `.env.example` (gerando
    segredos na primeira vez).

@@ -17,11 +17,11 @@
 #   4. mobile/.env com EXPO_PUBLIC_API_URL apontando pra API de produção.
 #
 # Uso:
-#   ./deploy-android-play-store.sh              # só builda o .aab
-#   ./deploy-android-play-store.sh --submit      # builda e já submete (faixa "internal", ver mobile/eas.json)
+#   ./setups/deploy-android-play-store.sh              # só builda o .aab
+#   ./setups/deploy-android-play-store.sh --submit      # builda e já submete (faixa "internal", ver mobile/eas.json)
 
 set -e
-cd "$(dirname "$0")/mobile"
+cd "$(dirname "$0")/../mobile"
 
 if ! command -v bun >/dev/null 2>&1; then
 	echo "Bun não encontrado. Instale em https://bun.sh antes de continuar." >&2
@@ -60,6 +60,6 @@ if [ "$1" = "--submit" ]; then
 else
 	echo ""
 	echo "Build do .aab concluído (link acima, ou em https://expo.dev). Pra publicar:"
-	echo "  ./deploy-android-play-store.sh --submit"
+	echo "  ./setups/deploy-android-play-store.sh --submit"
 	echo "ou suba o .aab manualmente em https://play.google.com/console."
 fi

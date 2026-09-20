@@ -5,6 +5,15 @@ Guia para o Claude Code (e outros agentes de IA) trabalhando neste repositório.
 ## IMPORTANTE
 
 - Não crie nem edite nenhum arquivo changelod.md
+- Nunca commite extratos bancários reais (ex: export .csv do Nubank via
+  `/minha-conta`) — `.gitignore` bloqueia `*.csv` desde o incidente do
+  `paa.csv` (extrato real com nomes e CPF parcial de terceiros, purgado do
+  histórico em 2026-09-20).
+- `.claude/settings.json` é config compartilhada do projeto e fica
+  rastreado — não sugira adicioná-lo ao `.gitignore`. Só
+  `.claude/worktrees/` (estado de runtime do `EnterWorktree`) é ignorado.
+- `.playwright-mcp/` (saída do MCP de automação de browser) é só scratch de
+  debug — sempre gitignored, nunca deveria ter arquivo rastreado nela.
 
 ## O que é este projeto
 
@@ -21,7 +30,13 @@ diretamente):
 /mobile/        → Expo + React Native (mesma API do frontend/bot, sem backend próprio)
 /http-client/   → chamadas HTTP de referência (api.http)
 /docs/          → guias de setup e deploy
+/setups/        → scripts .sh executáveis de setup/deploy (ver docs/*)
 ```
+
+README.md chama o projeto de "Agent Money Boilerplate" (posicionamento como
+boilerplate open source) — isso é só a identidade pública do repositório;
+o app em si (branding na UI, `@elysia-galhardo-finances/*` como escopo dos
+pacotes) continua "Money"/"Elysia Finanças" e não foi renomeado.
 
 Tipagem ponta-a-ponta entre API e frontend via [Eden](https://elysiajs.com/eden/overview.html)
 (`frontend/src/lib/api.ts` e `mobile/src/lib/api.ts` importam o tipo `App`
@@ -96,12 +111,12 @@ bun run db:deploy && bun run db:generate   # aplica migrations + gera o Prisma C
 
 Setup completo do zero, 4 variantes conforme SO e uso ou não de Docker (todas
 perguntam interativamente SQLite ou Postgres, ou aceitam o banco como
-argumento para pular a pergunta — ex: `./setup-unix-using-docker.sh postgres`):
+argumento para pular a pergunta — ex: `./setups/setup-unix-using-docker.sh postgres`):
 
-- `./setup-unix-using-docker.sh` — Linux/macOS, sobe backend+frontend+bot via Docker Compose
-- `./setup-unix-using-pm2.sh` — Linux/macOS, sobe os 3 com PM2, sem Docker
-- `./setup-windows-using-docker.sh` — Windows 11 + WSL2, via Docker Desktop
-- `./setup-windows-using-pm2.sh` — Windows 11 + WSL2, com PM2, sem Docker
+- `./setups/setup-unix-using-docker.sh` — Linux/macOS, sobe backend+frontend+bot via Docker Compose
+- `./setups/setup-unix-using-pm2.sh` — Linux/macOS, sobe os 3 com PM2, sem Docker
+- `./setups/setup-windows-using-docker.sh` — Windows 11 + WSL2, via Docker Desktop
+- `./setups/setup-windows-using-pm2.sh` — Windows 11 + WSL2, com PM2, sem Docker
 
 Detalhes de cada um em `docs/setup-unix-using-docker.md`,
 `docs/setup-unix-using-pm2.md`, `docs/setup-windows-using-docker.md` e

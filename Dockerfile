@@ -57,7 +57,7 @@ COPY --chown=bun:bun backend ./backend
 COPY --chown=bun:bun bot ./bot
 COPY --chown=bun:bun frontend/package.json frontend/server.ts frontend/proxy-paths.ts ./frontend/
 COPY --from=frontend-build --chown=bun:bun /repo/frontend/dist ./frontend/dist
-COPY --chown=bun:bun railway-entrypoint.sh ./railway-entrypoint.sh
+COPY --chown=bun:bun setups/railway-entrypoint.sh ./railway-entrypoint.sh
 RUN chmod +x railway-entrypoint.sh \
 	&& mkdir -p /data && chown bun:bun /data
 USER bun

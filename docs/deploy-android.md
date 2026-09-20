@@ -22,7 +22,7 @@ Uso mais comum: testar o app no seu próprio aparelho (ex: Galaxy S20 FE)
 sem passar pela Play Store.
 
 ```bash
-./deploy-android-apk.sh
+./setups/deploy-android-apk.sh
 ```
 
 O script builda na nuvem da Expo (perfil `preview` — `buildType: "apk"`,
@@ -37,7 +37,7 @@ Pra buildar localmente em vez de usar a nuvem da Expo (exige Android SDK +
 JDK instalados):
 
 ```bash
-./deploy-android-apk.sh --local
+./setups/deploy-android-apk.sh --local
 ```
 
 ## Publicar na Google Play (deploy "profissional")
@@ -59,8 +59,8 @@ Passos únicos, feitos manualmente antes do primeiro deploy:
 Depois disso, o deploy em si:
 
 ```bash
-./deploy-android-play-store.sh            # builda o .aab de produção
-./deploy-android-play-store.sh --submit   # builda e já envia pra faixa "internal testing"
+./setups/deploy-android-play-store.sh            # builda o .aab de produção
+./setups/deploy-android-play-store.sh --submit   # builda e já envia pra faixa "internal testing"
 ```
 
 O perfil `production` do `mobile/eas.json` builda um `.aab` (formato

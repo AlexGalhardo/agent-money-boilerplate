@@ -19,7 +19,7 @@ veja [`setup-windows-using-pm2.md`](./setup-windows-using-pm2.md).
 ```bash
 git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
 cd elysia-tanstack-finances
-./setup-unix-using-pm2.sh
+./setups/setup-unix-using-pm2.sh
 ```
 
 O script pergunta qual banco usar:
@@ -31,7 +31,7 @@ Qual banco de dados você quer usar?
 ```
 
 Para pular a pergunta, passe o banco como argumento:
-`./setup-unix-using-pm2.sh sqlite` ou `./setup-unix-using-pm2.sh postgres`.
+`./setups/setup-unix-using-pm2.sh sqlite` ou `./setups/setup-unix-using-pm2.sh postgres`.
 
 O script:
 

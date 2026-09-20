@@ -23,7 +23,7 @@ dentro da mesma imagem. Cada Railway service aponta para esse mesmo
 `Dockerfile`/repo e escolhe, em **runtime** (não em build time), qual
 processo esse container roda — através da variável de ambiente
 `RAILWAY_SERVICE_TARGET` (`backend` | `frontend` | `bot`), lida por
-`railway-entrypoint.sh`. Isso ainda entrega tudo que a ideia original
+`setups/railway-entrypoint.sh`. Isso ainda entrega tudo que a ideia original
 buscava: um Dockerfile só, e três serviços com deploy/logs/restart/scaling/env
 vars independentes — só que a escolha de "qual serviço é esse container"
 acontece na hora de rodar, não na hora de buildar.
@@ -165,7 +165,7 @@ Cada `git push` na branch conectada dispara os 3 deploys automaticamente
 primeiro deploy manual, use **Deploy** no topo de cada serviço.
 
 O `backend` roda `prisma migrate deploy` sozinho a cada start (ver
-`railway-entrypoint.sh`) — não precisa rodar migrations manualmente depois
+`setups/railway-entrypoint.sh`) — não precisa rodar migrations manualmente depois
 do deploy, nem para o primeiro (que cria as tabelas do zero a partir de
 `backend/prisma/migrations-postgresql/`).
 
@@ -209,7 +209,7 @@ curl -fsS -H "Authorization: Bearer $CRON_SECRET" https://SEU-BACKEND.up.railway
   time, não runtime — ver Passo 3).
 - **Backend reinicia em loop logo após subir** — confira
   `RAILWAY_SERVICE_TARGET` (typo comum: `backend` vs `Backend`, o `case` do
-  `railway-entrypoint.sh` é sensível a maiúsculas) e se `DATABASE_URL`
+  `setups/railway-entrypoint.sh` é sensível a maiúsculas) e se `DATABASE_URL`
   aponta pro serviço `Postgres` certo (`${{Postgres.DATABASE_URL}}`).
 - **Bot reinicia com erro 401/Unauthorized do Telegram** —
   `TELEGRAM_BOT_TOKEN` inválido ou não definido.
@@ -235,5 +235,5 @@ Para desenvolvimento local do dia a dia, prefira
 [`setup-windows-using-docker.md`](./setup-windows-using-docker.md) — usam
 `docker-compose.yml`/`docker-compose.sqlite.yml`, que buildam cada serviço a
 partir do seu próprio `Dockerfile` (`backend/`, `frontend/`, `bot/`) e já sobem
-um banco junto. O `Dockerfile`/`railway-entrypoint.sh` da raiz existem
+um banco junto. O `Dockerfile` (raiz) e `setups/railway-entrypoint.sh` existem
 especificamente para o desenho de deploy do Railway descrito aqui.
