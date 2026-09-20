@@ -17,8 +17,8 @@ veja [`setup-windows-using-pm2.md`](./setup-windows-using-pm2.md).
 ## Passo a passo
 
 ```bash
-git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
-cd elysia-tanstack-finances
+git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
+cd galhardo-money-bot
 ./setups/setup-unix-using-pm2.sh
 ```
 
@@ -43,12 +43,12 @@ O script:
 3. Aplica migrations, gera o Prisma Client e popula o banco
    (`db:seed` — `admin@gmail.com` / `adminBR@123` + `aleexgvieira@gmail.com` / `galhardyn`).
 4. Sobe `elysia-backend` e `elysia-frontend` com
-   `pm2 start ecosystem.local.config.js --only elysia-backend,elysia-frontend`.
+   `pm2 start infra/ecosystem.local.config.js --only elysia-backend,elysia-frontend`.
    `elysia-bot` só é iniciado automaticamente se `bot/.env` já tiver
    `TELEGRAM_BOT_TOKEN` preenchido (ver abaixo).
 
-`ecosystem.local.config.js` (raiz do projeto) é a config de PM2 usada aqui —
-diferente de `ecosystem.config.js`, que é para deploy em VPS com os builds
+`infra/ecosystem.local.config.js` é a config de PM2 usada aqui —
+diferente de `infra/ecosystem.config.js`, que é para deploy em VPS com os builds
 já compilados (ver [`setup-vps-ubuntu-from-zero.md`](./setup-vps-ubuntu-from-zero.md)).
 
 ## Rodando
@@ -62,7 +62,7 @@ Edite `bot/.env` com `TELEGRAM_BOT_TOKEN` e `BOT_PASSWORD_HASH_BASE64` (gere
 com `cd bot && bun run hash-password "sua-senha"`), depois suba o processo:
 
 ```bash
-pm2 start ecosystem.local.config.js --only elysia-bot
+pm2 start infra/ecosystem.local.config.js --only elysia-bot
 ```
 
 Veja [`telegram-bot.md`](./telegram-bot.md) para o passo a passo completo — o
@@ -84,9 +84,9 @@ cd backend && bun run db:studio   # abre em http://localhost:5555
 pm2 status
 pm2 logs                     # logs em tempo real dos 3 serviços (backend, frontend, bot)
 pm2 logs elysia-backend          # ou elysia-frontend / elysia-bot, para um serviço só
-pm2 restart ecosystem.local.config.js
-pm2 stop ecosystem.local.config.js
-pm2 delete ecosystem.local.config.js
+pm2 restart infra/ecosystem.local.config.js
+pm2 stop infra/ecosystem.local.config.js
+pm2 delete infra/ecosystem.local.config.js
 ```
 
 Também disponíveis como scripts do `package.json` da raiz: `bun run pm2:start`,

@@ -13,8 +13,8 @@ além do Docker no host. Para rodar sem Docker, veja
 ## Passo a passo
 
 ```bash
-git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
-cd elysia-tanstack-finances
+git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
+cd galhardo-money-bot
 ./setups/setup-unix-using-docker.sh
 ```
 
@@ -39,8 +39,8 @@ O script:
    gerando `BETTER_AUTH_SECRET`/`ENCRYPTION_KEY` na primeira vez (arquivos
    já existentes são mantidos — só `DATABASE_PROVIDER`/`DATABASE_URL` são
    sincronizados com a escolha de banco a cada execução).
-2. Builda e sobe os containers com `docker compose -f docker-compose.sqlite.yml up -d --build`
-   (SQLite) ou `docker compose up -d --build` (Postgres, inclui um container
+2. Builda e sobe os containers com `docker compose -f infra/docker-compose.sqlite.yml --project-directory . up -d --build`
+   (SQLite) ou `docker compose -f infra/docker-compose.yml --project-directory . up -d --build` (Postgres, inclui um container
    `postgres` com healthcheck).
 3. Espera a API responder em `/docs` (o entrypoint do container aplica
    migrations e gera o Prisma Client sozinho, ver `backend/docker-entrypoint.sh`)
@@ -63,8 +63,8 @@ até `TELEGRAM_BOT_TOKEN` e `BOT_PASSWORD_HASH_BASE64` serem preenchidos em
 Depois de editar:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml restart bot   # SQLite
-docker compose restart bot                                # Postgres
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . restart bot   # SQLite
+docker compose -f infra/docker-compose.yml --project-directory . restart bot                                # Postgres
 ```
 
 Veja [`telegram-bot.md`](./telegram-bot.md) para o passo a passo completo — o
@@ -85,20 +85,20 @@ Com SQLite, o banco vive num volume Docker nomeado (só visível de dentro do
 container) — rode o Studio lá dentro em vez do host:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0
 # rode num terminal separado, depois abra http://localhost:5555
 ```
 
 ## Comandos úteis
 
-Troque `-f docker-compose.sqlite.yml` conforme o banco escolhido (Postgres
-usa o `docker-compose.yml` padrão, sem `-f`):
+Troque `-f infra/docker-compose.sqlite.yml` por `-f infra/docker-compose.yml`
+se você escolheu Postgres:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml logs -f      # logs em tempo real dos 3 serviços
-docker compose -f docker-compose.sqlite.yml logs -f backend  # ou só um serviço
-docker compose -f docker-compose.sqlite.yml ps
-docker compose -f docker-compose.sqlite.yml down     # para tudo, mantém o volume do banco
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . logs -f      # logs em tempo real dos 3 serviços
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . logs -f backend  # ou só um serviço
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . ps
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . down     # para tudo, mantém o volume do banco
 ```
 
 Também disponíveis como scripts do `package.json` da raiz:

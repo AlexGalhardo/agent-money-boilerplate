@@ -14,14 +14,14 @@ sudo usermod -aG docker $USER
 ```
 
 Aponte os registros DNS (tipo A) de `SEU_DOMINIO` e `api.SEU_DOMINIO` para o
-IP do servidor — o Caddy do `docker-compose.prod.yml` emite o certificado TLS
+IP do servidor — o Caddy do `infra/docker-compose.prod.yml` emite o certificado TLS
 automaticamente na primeira requisição.
 
 ## 2. Clonar e configurar
 
 ```bash
-git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
-cd elysia-tanstack-finances
+git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
+cd galhardo-money-bot
 cp .env.example .env
 cp backend/.env.example backend/.env
 ```
@@ -34,7 +34,7 @@ POSTGRES_PASSWORD=SENHA_FORTE_AQUI
 ```
 
 Edite `backend/.env` (a API roda com `NODE_ENV=production`; `DATABASE_URL` e
-`DATABASE_PROVIDER` são sobrescritos pelo `docker-compose.prod.yml`, não
+`DATABASE_PROVIDER` são sobrescritos pelo `infra/docker-compose.prod.yml`, não
 precisa repetir):
 
 ```env
@@ -51,7 +51,7 @@ conforme as feature flags que for ativar.
 ## 3. Subir
 
 ```bash
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f infra/docker-compose.prod.yml --project-directory . up -d --build
 ```
 
 Isso builda as imagens da API e do frontend, sobe Postgres + Caddy, aplica
@@ -61,7 +61,7 @@ as migrations e gera o Prisma Client automaticamente (ver
 ## 4. Popular o banco (opcional, apenas na primeira vez)
 
 ```bash
-docker compose -f docker-compose.prod.yml exec backend bun run db:seed
+docker compose -f infra/docker-compose.prod.yml --project-directory . exec backend bun run db:seed
 ```
 
 ## 5. Cronjob de verificação de plano expirado
@@ -80,16 +80,16 @@ crontab -e
 ## Deploy de atualizações
 
 ```bash
-cd elysia-tanstack-finances
+cd galhardo-money-bot
 git pull
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f infra/docker-compose.prod.yml --project-directory . up -d --build
 ```
 
 ## Comandos úteis
 
 ```bash
-docker compose -f docker-compose.prod.yml logs -f backend
-docker compose -f docker-compose.prod.yml logs -f frontend
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml down   # para tudo (mantém os volumes)
+docker compose -f infra/docker-compose.prod.yml --project-directory . logs -f backend
+docker compose -f infra/docker-compose.prod.yml --project-directory . logs -f frontend
+docker compose -f infra/docker-compose.prod.yml --project-directory . ps
+docker compose -f infra/docker-compose.prod.yml --project-directory . down   # para tudo (mantém os volumes)
 ```

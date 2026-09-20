@@ -25,8 +25,8 @@ distro equivalente) ou do **Git Bash**. Ele não roda no PowerShell nem no
 
 ```bash
 # dentro do WSL2 (ou Git Bash)
-git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
-cd elysia-tanstack-finances
+git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
+cd galhardo-money-bot
 ./setups/setup-windows-using-docker.sh
 ```
 
@@ -47,7 +47,7 @@ comportamento é idêntico ao `setups/setup-unix-using-docker.sh`:
 
 1. Cria `backend/.env` e `bot/.env` a partir dos `.env.example` (gerando
    segredos na primeira vez).
-2. Builda e sobe os containers (`docker compose -f docker-compose.sqlite.yml up -d --build`
+2. Builda e sobe os containers (`docker compose -f infra/docker-compose.sqlite.yml --project-directory . up -d --build`
    para SQLite, ou `docker compose up -d --build` para Postgres).
 3. Espera a API responder em `/docs` e popula o banco (`bun run db:seed`)
    dentro do container.
@@ -68,8 +68,8 @@ Igual ao fluxo Docker no Linux/macOS — edite `bot/.env` com
 `cd bot && bun run hash-password "sua-senha"`) e reinicie o container:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml restart bot   # SQLite
-docker compose restart bot                                # Postgres
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . restart bot   # SQLite
+docker compose -f infra/docker-compose.yml --project-directory . restart bot                                # Postgres
 ```
 
 Veja [`telegram-bot.md`](./telegram-bot.md) para o passo a passo completo — o
@@ -90,7 +90,7 @@ Com SQLite, o banco vive num volume Docker nomeado (só visível de dentro do
 container) — rode o Studio lá dentro em vez do host:
 
 ```bash
-docker compose -f docker-compose.sqlite.yml exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0
 # rode num terminal separado, depois abra http://localhost:5555
 ```
 
@@ -110,8 +110,8 @@ docker compose -f docker-compose.sqlite.yml exec backend bunx prisma studio --po
 ## Comandos úteis
 
 ```bash
-docker compose -f docker-compose.sqlite.yml logs -f      # logs em tempo real dos 3 serviços
-docker compose -f docker-compose.sqlite.yml logs -f backend  # ou só um serviço
-docker compose -f docker-compose.sqlite.yml ps
-docker compose -f docker-compose.sqlite.yml down
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . logs -f      # logs em tempo real dos 3 serviços
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . logs -f backend  # ou só um serviço
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . ps
+docker compose -f infra/docker-compose.sqlite.yml --project-directory . down
 ```

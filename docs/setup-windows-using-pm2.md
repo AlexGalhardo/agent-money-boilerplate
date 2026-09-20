@@ -25,8 +25,8 @@ distro equivalente) ou do **Git Bash**. Ele não roda no PowerShell nem no
 
 ```bash
 # dentro do WSL2 (ou Git Bash)
-git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
-cd elysia-tanstack-finances
+git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
+cd galhardo-money-bot
 ./setups/setup-windows-using-pm2.sh
 ```
 
@@ -46,8 +46,8 @@ dependências, cria os `.env`, aplica migrations, popula o banco e sobe
 `elysia-backend` + `elysia-frontend` com PM2), só com mensagens de erro
 adaptadas para o Docker Desktop quando Postgres é escolhido.
 
-`ecosystem.local.config.js` (raiz do projeto) é a config de PM2 usada aqui —
-diferente de `ecosystem.config.js`, que é para deploy em VPS Linux com os
+`infra/ecosystem.local.config.js` é a config de PM2 usada aqui —
+diferente de `infra/ecosystem.config.js`, que é para deploy em VPS Linux com os
 builds já compilados.
 
 ## Rodando
@@ -61,7 +61,7 @@ Edite `bot/.env` com `TELEGRAM_BOT_TOKEN` e `BOT_PASSWORD_HASH_BASE64` (gere
 com `cd bot && bun run hash-password "sua-senha"`), depois suba o processo:
 
 ```bash
-pm2 start ecosystem.local.config.js --only elysia-bot
+pm2 start infra/ecosystem.local.config.js --only elysia-bot
 ```
 
 Veja [`telegram-bot.md`](./telegram-bot.md) para o passo a passo completo — o
@@ -93,9 +93,9 @@ cd backend && bun run db:studio   # abre em http://localhost:5555
 pm2 status
 pm2 logs                     # logs em tempo real dos 3 serviços (backend, frontend, bot)
 pm2 logs elysia-backend          # ou elysia-frontend / elysia-bot, para um serviço só
-pm2 restart ecosystem.local.config.js
-pm2 stop ecosystem.local.config.js
-pm2 delete ecosystem.local.config.js
+pm2 restart infra/ecosystem.local.config.js
+pm2 stop infra/ecosystem.local.config.js
+pm2 delete infra/ecosystem.local.config.js
 ```
 
 Também disponíveis como scripts do `package.json` da raiz: `bun run pm2:start`,
