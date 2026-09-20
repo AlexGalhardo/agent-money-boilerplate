@@ -15,7 +15,7 @@ além do Docker no host. Para rodar sem Docker, veja
 ```bash
 git clone git@github.com:AlexGalhardo/elysia-tanstack-finances.git
 cd elysia-tanstack-finances
-./setup-unix-using-docker.sh
+./setups/setup-unix-using-docker.sh
 ```
 
 O script pergunta qual banco usar:
@@ -29,8 +29,8 @@ Qual banco de dados você quer usar?
 Para pular a pergunta (útil em automação), passe o banco como argumento:
 
 ```bash
-./setup-unix-using-docker.sh sqlite     # equivalente a responder "a"
-./setup-unix-using-docker.sh postgres   # equivalente a responder "b"
+./setups/setup-unix-using-docker.sh sqlite     # equivalente a responder "a"
+./setups/setup-unix-using-docker.sh postgres   # equivalente a responder "b"
 ```
 
 O script:

@@ -7,9 +7,9 @@ de qualquer mudança neste repositório — humano ou agente de IA.
 
 1. Leia o [`CLAUDE.md`](./CLAUDE.md) — ele descreve a arquitetura do
    monorepo, a stack e as convenções de código que este projeto segue à risca.
-2. Rode um dos scripts de setup (`./setup-unix-using-docker.sh`,
-   `./setup-unix-using-pm2.sh`, `./setup-windows-using-docker.sh` ou
-   `./setup-windows-using-pm2.sh`) para levantar o ambiente localmente. Cada
+2. Rode um dos scripts de setup (`./setups/setup-unix-using-docker.sh`,
+   `./setups/setup-unix-using-pm2.sh`, `./setups/setup-windows-using-docker.sh` ou
+   `./setups/setup-windows-using-pm2.sh`) para levantar o ambiente localmente. Cada
    um está documentado em `docs/`.
 3. Abra uma [issue](../../issues) antes de começar qualquer mudança grande
    (nova feature, refatoração de arquitetura) para alinhar a abordagem antes

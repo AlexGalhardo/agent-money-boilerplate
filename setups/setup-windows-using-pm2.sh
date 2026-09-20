@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
-# Bootstrap local via PM2 (Linux/macOS), sem Docker para os processos da
-# aplicação — api, frontend e bot rodam como processos PM2 em modo watch
-# (bun run dev). Se Postgres for escolhido, o único uso de Docker aqui é
-# opcional e só para o banco (docker compose up -d postgres); sem Docker
-# disponível, aponte DATABASE_URL para um Postgres já rodando em outro
-# lugar. Para SQLite não é preciso nada além de Bun + PM2.
+# Bootstrap local via PM2 (Windows 11 + WSL2), sem Docker para os processos
+# da aplicação — api, frontend e bot rodam como processos PM2 em modo watch
+# (bun run dev). Rode este arquivo de dentro do WSL2 (recomendado) ou do Git
+# Bash — NÃO funciona no PowerShell/cmd.exe.
+#
+# Se Postgres for escolhido, o único uso de Docker aqui é opcional e só
+# para o banco (docker compose up -d postgres, via Docker Desktop); sem
+# Docker Desktop aberto, aponte DATABASE_URL para um Postgres já rodando em
+# outro lugar. Para SQLite não é preciso Docker nenhum.
 #
 # Uso:
-#   ./setup-unix-using-pm2.sh            # pergunta o banco (padrão SQLite)
-#   ./setup-unix-using-pm2.sh sqlite     # sem perguntar
-#   ./setup-unix-using-pm2.sh postgres   # sem perguntar
+#   ./setups/setup-windows-using-pm2.sh            # pergunta o banco (padrão SQLite)
+#   ./setups/setup-windows-using-pm2.sh sqlite     # sem perguntar
+#   ./setups/setup-windows-using-pm2.sh postgres   # sem perguntar
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 source scripts/common.sh
 
 require_bun
@@ -35,10 +38,10 @@ if [ "$DB_CHOICE" = "postgres" ]; then
 	BOT_DATABASE_URL="postgresql://elysia:elysia@localhost:5432/elysia_financas"
 	if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
 		free_app_ports 5432
-		echo "==> Subindo Postgres via Docker Compose (docker compose up -d postgres)"
+		echo "==> Subindo Postgres via Docker Desktop (docker compose up -d postgres)"
 		docker compose up -d postgres
 	else
-		echo "Docker não disponível — suba um Postgres em localhost:5432 (usuário/senha/banco: elysia/elysia/elysia_financas) por conta própria, ou ajuste DATABASE_URL em backend/.env e bot/.env depois deste script rodar." >&2
+		echo "Docker Desktop não está rodando (ou não foi encontrado) — abra-o antes de continuar, ou suba um Postgres em localhost:5432 (usuário/senha/banco: elysia/elysia/elysia_financas) por conta própria e ajuste DATABASE_URL em backend/.env e bot/.env depois deste script rodar." >&2
 	fi
 else
 	PROVIDER="sqlite"

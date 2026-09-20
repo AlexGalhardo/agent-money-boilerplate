@@ -1,19 +1,24 @@
 #!/usr/bin/env bash
-# Bootstrap local via Docker + Docker Compose (Linux/macOS) — builda e sobe
-# os 3 serviços do monorepo (backend, frontend, bot) em containers. Sem Docker,
-# veja ./setup-unix-using-pm2.sh. No Windows, veja
-# ./setup-windows-using-docker.sh.
+# Bootstrap local via Docker Desktop (Windows 11 + WSL2) — builda e sobe os
+# 3 serviços do monorepo (backend, frontend, bot) em containers. Rode este
+# arquivo de dentro do WSL2 (recomendado) ou do Git Bash — NÃO funciona no
+# PowerShell/cmd.exe. Sem Docker, veja ./setups/setup-windows-using-pm2.sh.
+#
+# Pré-requisito: Docker Desktop instalado e aberto, com a integração WSL2
+# habilitada (Settings > Resources > WSL Integration), e este repositório
+# clonado dentro do filesystem do WSL2 (ex: ~/code/..., não /mnt/c/...) para
+# builds rápidos — ver https://docs.docker.com/desktop/wsl/.
 #
 # Uso:
-#   ./setup-unix-using-docker.sh            # pergunta o banco (padrão SQLite)
-#   ./setup-unix-using-docker.sh sqlite     # sem perguntar
-#   ./setup-unix-using-docker.sh postgres   # sem perguntar
+#   ./setups/setup-windows-using-docker.sh            # pergunta o banco (padrão SQLite)
+#   ./setups/setup-windows-using-docker.sh sqlite     # sem perguntar
+#   ./setups/setup-windows-using-docker.sh postgres   # sem perguntar
 
 set -e
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 source scripts/common.sh
 
-check_docker
+check_docker_desktop_windows
 prompt_database_choice "$1"
 
 if [ "$DB_CHOICE" = "postgres" ]; then

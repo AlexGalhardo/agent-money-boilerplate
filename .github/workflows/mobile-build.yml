@@ -29,7 +29,7 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
       # dev -> perfil "preview" (.apk pra sideload/teste), main -> perfil
       # "production" (.aab pronto pra submissão manual na Play Store — ver
-      # deploy-android-play-store.sh; `eas submit` continua manual de propósito).
+      # setups/deploy-android-play-store.sh; `eas submit` continua manual de propósito).
       - name: EAS Build (preview)
         if: github.ref == 'refs/heads/dev'
         working-directory: mobile

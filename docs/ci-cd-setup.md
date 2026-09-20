@@ -98,8 +98,8 @@ deploya em produção depois do GitHub Actions aprovar o commit.
 
 ### mobile (Expo/EAS)
 
-- Sem CI — build e submit 100% manuais via `deploy-android-apk.sh`
-  (perfil `preview`) e `deploy-android-play-store.sh` (perfil
+- Sem CI — build e submit 100% manuais via `setups/deploy-android-apk.sh`
+  (perfil `preview`) e `setups/deploy-android-play-store.sh` (perfil
   `production`, usa `mobile/google-play-service-account.json`, gitignored).
 - `mobile/eas.json` já tem os 3 perfis (`development`, `preview`,
   `production`) com `EXPO_PUBLIC_API_URL` por perfil.
@@ -190,7 +190,7 @@ commit não passou de verdade. Confirmado ao vivo via `gh run list` e
 - [x] Ligar `source.checkSuites=true` nos 3 services de produção
 - [x] Confirmar que o `sandbox` sobe de pé — os 3 services (backend/bot/
       frontend) subiram `SUCCESS` a partir de `dev`, URLs respondendo 200
-- [x] Corrigir o bug crítico do `deploy-android-apk.sh` (Gradle/Hermes
+- [x] Corrigir o bug crítico do `setups/deploy-android-apk.sh` (Gradle/Hermes
       falhando) — build real da EAS confirmado `finished` com `.apk`
       gerado (ver commit do patch do nativewind)
 - [x] Corrigir o bug do `getByLabel("Senha")` no e2e que travava o gate

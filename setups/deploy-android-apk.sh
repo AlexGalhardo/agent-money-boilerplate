@@ -12,11 +12,11 @@
 #     pelo celular (não localhost — veja mobile/.env.example).
 #
 # Uso:
-#   ./deploy-android-apk.sh            # build na nuvem da Expo (EAS), sem precisar de Android SDK local
-#   ./deploy-android-apk.sh --local    # build local (exige Android SDK + JDK instalados)
+#   ./setups/deploy-android-apk.sh            # build na nuvem da Expo (EAS), sem precisar de Android SDK local
+#   ./setups/deploy-android-apk.sh --local    # build local (exige Android SDK + JDK instalados)
 
 set -e
-cd "$(dirname "$0")/mobile"
+cd "$(dirname "$0")/../mobile"
 
 if ! command -v bun >/dev/null 2>&1; then
 	echo "Bun não encontrado. Instale em https://bun.sh antes de continuar." >&2

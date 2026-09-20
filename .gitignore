@@ -66,3 +66,15 @@ mobile/expo-env.d.ts
 mobile/ios
 mobile/android
 mobile/google-play-service-account.json
+
+# Claude Code runtime state — .claude/settings.json is checked-in project
+# config (shared plugin/permission setup), but worktrees/ is per-machine
+# runtime metadata from EnterWorktree, never meant to be committed.
+.claude/worktrees/
+
+# personal bank statement exports (ex: Nubank .csv import via /minha-conta)
+# — real personal financial data, never meant to be committed (see the
+# 2026-09-20 incident: paa.csv had leaked real PIX transaction data with
+# third-party names and partial document numbers). No .csv is otherwise
+# tracked in this repo.
+*.csv
