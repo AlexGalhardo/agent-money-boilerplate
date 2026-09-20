@@ -26,6 +26,10 @@ export default defineConfig({
 			url: FRONTEND_URL,
 			reuseExistingServer: !process.env.CI,
 			timeout: 60_000,
+			// vite.config.ts lê process.env.VITE_API_URL direto (sem loadEnv),
+			// então precisa vir como env var real do processo aqui — o
+			// .env.e2e do backend não é lido por esse processo do Vite.
+			env: { VITE_API_URL: "http://localhost:4200" },
 		},
 	],
 });

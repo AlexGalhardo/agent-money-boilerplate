@@ -34,7 +34,8 @@ test("the seeded admin can log in and log out", async ({ page }) => {
 
 	await expect(page).toHaveURL(/\/dashboard/);
 
-	await page.getByRole("button", { name: "Sair" }).click();
+	await page.getByRole("button", { name: "Admin", exact: true }).click();
+	await page.getByRole("menuitem", { name: "Sair" }).click();
 	await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
 });
 

@@ -16,11 +16,15 @@ const config = defineConfig({
 		// Espelha o proxy de produção (ver frontend/server.ts) pro dev server
 		// do Vite, pro cookie de sessão se comportar igual nos dois ambientes.
 		// Chave começando com "^" vira RegExp no Vite — necessário pra casar só
-		// `path` exato ou `path/...`, igual ao matcher de produção: sem isso,
-		// "/telegram" (prefixo string simples) também proxiaria por engano
-		// páginas como "/telegram-vincular" pra API.
+		// `path`, `path/...` ou `path?...`, igual ao matcher de produção (que
+		// compara só o pathname, sem query string): sem isso, "/telegram"
+		// (prefixo string simples) também proxiaria por engano páginas como
+		// "/telegram-vincular" pra API. O regex do Vite roda contra path+query
+		// inteiros — sem o "|\\?" no fim, uma chamada como "/transactions?page=1"
+		// não batia (não termina em "/" nem em fim de string) e caía no
+		// fallback SPA do Vite (404), nunca chegando no backend.
 		proxy: Object.fromEntries(
-			PROXIED_API_PATHS.map((path) => [`^${path}(/|$)`, { target: BACKEND_URL, changeOrigin: true }]),
+			PROXIED_API_PATHS.map((path) => [`^${path}(/|$|\\?)`, { target: BACKEND_URL, changeOrigin: true }]),
 		),
 	},
 	build: {

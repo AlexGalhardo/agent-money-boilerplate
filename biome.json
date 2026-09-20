@@ -16,7 +16,8 @@
 			"!**/generated",
 			"!**/*.gen.ts",
 			"!**/bun.lock",
-			"!.vscode"
+			"!.vscode",
+			"!.agents/skills/**"
 		]
 	},
 	"formatter": {
