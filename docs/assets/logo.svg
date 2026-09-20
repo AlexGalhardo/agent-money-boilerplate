@@ -1,0 +1,7 @@
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Money bag logo">
+	<circle cx="60" cy="60" r="58" fill="#facc15" stroke="#a16207" stroke-width="3" />
+	<path d="M60 30 C40 30 28 48 28 68 C28 90 42 100 60 100 C78 100 92 90 92 68 C92 48 80 30 60 30 Z" fill="#eab308" stroke="#854d0e" stroke-width="3" stroke-linejoin="round" />
+	<path d="M48 30 L52 18 L68 18 L72 30" fill="none" stroke="#854d0e" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />
+	<circle cx="60" cy="20" r="6" fill="#eab308" stroke="#854d0e" stroke-width="3" />
+	<text x="60" y="76" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="bold" fill="#854d0e" text-anchor="middle">$</text>
+</svg>
