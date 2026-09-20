@@ -1,5 +1,5 @@
 {
-	"name": "@elysia-galhardo-finances/bot",
+	"name": "@agent-money-boilerplate/bot",
 	"private": true,
 	"version": "0.1.0",
 	"engines": {
@@ -13,7 +13,7 @@
 		"hash-password": "bun run scripts/hash-password.ts"
 	},
 	"dependencies": {
-		"@elysia-galhardo-finances/backend": "workspace:*",
+		"@agent-money-boilerplate/backend": "workspace:*",
 		"@grammyjs/conversations": "2.1.1",
 		"bcryptjs": "3.0.3",
 		"better-auth": "1.7.4",

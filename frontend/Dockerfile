@@ -10,7 +10,7 @@ RUN bun install --frozen-lockfile
 
 FROM install AS build
 # backend/src é necessário apenas para a resolução de tipos do Eden
-# (import type { App } from "@elysia-galhardo-finances/backend/src/server")
+# (import type { App } from "@agent-money-boilerplate/backend/src/server")
 # durante o build — o runtime final não inclui o código da API.
 COPY backend/src ./backend/src
 COPY backend/tsconfig.json ./backend/tsconfig.json

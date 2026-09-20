@@ -6,7 +6,7 @@ const boolFromString = z
 	.transform((value) => value === "true");
 
 // O bot importa `prisma`/`encrypt`/`decrypt` diretamente de
-// `@elysia-galhardo-finances/backend` (mesmo banco, mesma criptografia — ver
+// `@agent-money-boilerplate/backend` (mesmo banco, mesma criptografia — ver
 // docs/telegram-bot-plan.md). Isso significa que o processo do bot também
 // precisa satisfazer o schema de env da API (DATABASE_URL, BETTER_AUTH_SECRET,
 // ENCRYPTION_KEY, etc.) mesmo sem usar autenticação/e-mail/Stripe — por isso

@@ -1,4 +1,4 @@
-import type { App } from "@elysia-galhardo-finances/backend/src/server";
+import type { App } from "@agent-money-boilerplate/backend/src/server";
 import { treaty } from "@elysiajs/eden";
 
 // Mesma origem do frontend (proxiada pra API — ver frontend/server.ts e

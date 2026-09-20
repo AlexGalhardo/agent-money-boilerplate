@@ -1,7 +1,7 @@
 import type {
 	TransactionCategory,
 	TransactionType,
-} from "@elysia-galhardo-finances/backend/src/modules/transactions/transaction.schema";
+} from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
 
 // Mesmos rótulos usados no dashboard web (frontend/src/lib/categories.ts) —
 // duplicado aqui de propósito: o bot não deve depender do workspace do

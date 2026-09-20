@@ -1,5 +1,5 @@
 {
-	"name": "@elysia-galhardo-finances/frontend",
+	"name": "@agent-money-boilerplate/frontend",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@better-auth/api-key": "1.7.5",
-		"@elysia-galhardo-finances/backend": "workspace:*",
+		"@agent-money-boilerplate/backend": "workspace:*",
 		"@elysiajs/eden": "1.4.9",
 		"@tailwindcss/vite": "4.3.3",
 		"@tanstack/react-devtools": "0.10.12",

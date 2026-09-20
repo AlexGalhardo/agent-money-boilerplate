@@ -1,12 +1,12 @@
-import { env as apiEnv } from "@elysia-galhardo-finances/backend/src/config/env";
-import { auth } from "@elysia-galhardo-finances/backend/src/lib/auth";
+import { env as apiEnv } from "@agent-money-boilerplate/backend/src/config/env";
+import { auth } from "@agent-money-boilerplate/backend/src/lib/auth";
 import {
 	ChatAlreadyLinkedError,
 	createLinkToken,
 	findUserById,
 	findUserIdByChatId,
 	linkChatToUser,
-} from "@elysia-galhardo-finances/backend/src/modules/telegram/telegram.service";
+} from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
 import { APIError } from "better-auth";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";

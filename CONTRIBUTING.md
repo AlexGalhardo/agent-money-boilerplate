@@ -1,132 +1,133 @@
-# Contribuindo com o Elysia Finanças
+# Contributing to Agent Money Boilerplate
 
-Obrigado pelo interesse em contribuir. Este documento resume o fluxo esperado
-de qualquer mudança neste repositório — humano ou agente de IA.
+Thanks for your interest in contributing. This document summarizes the
+expected workflow for any change to this repository — human or AI agent.
 
-## Antes de começar
+## Before you start
 
-1. Leia o [`CLAUDE.md`](./CLAUDE.md) — ele descreve a arquitetura do
-   monorepo, a stack e as convenções de código que este projeto segue à risca.
-2. Rode um dos scripts de setup (`./setups/setup-unix-using-docker.sh`,
-   `./setups/setup-unix-using-pm2.sh`, `./setups/setup-windows-using-docker.sh` ou
-   `./setups/setup-windows-using-pm2.sh`) para levantar o ambiente localmente. Cada
-   um está documentado em `docs/`.
-3. Abra uma [issue](../../issues) antes de começar qualquer mudança grande
-   (nova feature, refatoração de arquitetura) para alinhar a abordagem antes
-   de investir tempo escrevendo código. Bugs pequenos e typos podem ir direto
-   pra um Pull Request.
+1. Read [`CLAUDE.md`](./CLAUDE.md) — it describes the monorepo's
+   architecture, stack and the code conventions this project follows
+   closely, and links out to `docs/` for anything deeper.
+2. Run one of the setup scripts (`./setups/setup-unix-using-docker.sh`,
+   `./setups/setup-unix-using-pm2.sh`, `./setups/setup-windows-using-docker.sh`
+   or `./setups/setup-windows-using-pm2.sh`) to bring the environment up
+   locally. Each one is documented in `docs/`.
+3. Open an [issue](../../issues) before starting any large change (a new
+   feature, an architecture refactor) to align on the approach before
+   investing time writing code. Small bugs and typos can go straight to a
+   Pull Request.
 
-## Fluxo de branches
+## Branch workflow
 
-Este repositório segue um fluxo estrito de duas branches — `main` (única
-branch de longa duração) e `dev` (branch de trabalho descartável por tarefa).
-As regras completas, e o porquê de cada uma, estão em
+This repository follows a strict two-branch flow — `main` (the only
+long-lived branch) and `dev` (a disposable, per-task working branch). The
+full rules, and why each one exists, are in
 [`.agents/skills/git-branch-workflow/SKILL.md`](./.agents/skills/git-branch-workflow/SKILL.md).
-Resumo:
+Summary:
 
-1. Crie sua branch a partir de `main` atualizada.
-2. Faça suas mudanças e commits nela.
-3. Rode localmente o que o hook `pre-push` roda (veja "Antes de abrir PR"
-   abaixo) — só abra o PR se passar tudo.
-4. Abra um Pull Request contra `main`. Nunca commite direto em `main`, nunca
-   force-push em `main`.
+1. Branch off an up-to-date `main`.
+2. Make your changes and commits there.
+3. Run locally what the `pre-push` hook runs (see "Before opening a PR"
+   below) — only open the PR once everything passes.
+4. Open a Pull Request against `main`. Never commit directly to `main`,
+   never force-push `main`.
 
-## Mensagens de commit — Conventional Commits
+## Commit messages — Conventional Commits
 
-Toda mensagem de commit **é validada automaticamente** pelo hook
-`.husky/commit-msg` e precisa seguir
+Every commit message **is validated automatically** by the
+`.husky/commit-msg` hook and must follow
 [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
 
 ```text
-<tipo>(<escopo opcional>): <descrição>
+<type>(<optional scope>): <description>
 
-[corpo opcional]
+[optional body]
 
-[rodapé opcional, ex: BREAKING CHANGE: ...]
+[optional footer, e.g. BREAKING CHANGE: ...]
 ```
 
-Tipos aceitos: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
-`build`, `ci`, `chore`, `revert` — mais `merge`, usado só para o commit de
-merge de `dev` em `main` (ex: `merge: fix de autenticação (dev -> main)`).
+Accepted types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+`build`, `ci`, `chore`, `revert` — plus `merge`, used only for the commit
+that merges `dev` into `main` (e.g. `merge: auth fix (dev -> main)`).
 
-Exemplos:
+Examples:
 
 ```text
-feat(transactions): adiciona exportação de relatório em PDF
-fix(e2e): corrige proxy do vite dev em modo e2e
-docs(deploy): documenta variáveis de ambiente do Railway
-refactor(bot): extrai verify-password-step para módulo próprio
+feat(transactions): add PDF report export
+fix(e2e): fix the vite dev proxy in e2e mode
+docs(deploy): document Railway environment variables
+refactor(bot): extract verify-password-step into its own module
 ```
 
-Uma mudança que quebra compatibilidade (ver seção de versionamento abaixo)
-deve incluir `BREAKING CHANGE: <explicação>` no rodapé do commit, ou um `!`
-depois do tipo/escopo (`feat(api)!: remove endpoint legado`).
+A change that breaks compatibility (see the versioning section below)
+must include `BREAKING CHANGE: <explanation>` in the commit footer, or a
+`!` after the type/scope (`feat(api)!: remove legacy endpoint`).
 
-## Versionamento — Semantic Versioning
+## Versioning — Semantic Versioning
 
-Este projeto segue [SemVer 2.0.0](https://semver.org/lang/pt-BR/)
+This project follows [SemVer 2.0.0](https://semver.org/)
 (`MAJOR.MINOR.PATCH`):
 
-- **MAJOR** — mudança incompatível (breaking change) na API, no schema do
-  banco de forma não-migrável automaticamente, ou em contratos entre
-  `backend`/`frontend`/`bot`/`mobile`.
-- **MINOR** — nova funcionalidade compatível com versões anteriores.
-- **PATCH** — correção de bug compatível com versões anteriores.
+- **MAJOR** — an incompatible (breaking) change to the API, to the
+  database schema in a way that can't be auto-migrated, or to the
+  contracts between `backend`/`frontend`/`bot`/`mobile`.
+- **MINOR** — a new backwards-compatible feature.
+- **PATCH** — a backwards-compatible bug fix.
 
-Enquanto a versão for `0.MINOR.PATCH` (como é hoje — ver `package.json` na
-raiz), a API pública é considerada instável e mudanças incompatíveis podem
-acontecer em releases `MINOR`, como o próprio SemVer permite para a série
-`0.x`. O projeto sobe para `1.0.0` quando a API entre os quatro workspaces
-(rotas do backend consumidas por frontend/bot/mobile via Eden) for
-considerada estável o suficiente para garantir compatibilidade entre
-releases `MINOR`.
+While the version is `0.MINOR.PATCH` (as it is today — see the root
+`package.json`), the public API is considered unstable and incompatible
+changes may land in `MINOR` releases, as SemVer itself allows for the
+`0.x` series. The project moves to `1.0.0` once the API between the four
+workspaces (backend routes consumed by frontend/bot/mobile via Eden) is
+considered stable enough to guarantee compatibility across `MINOR`
+releases.
 
-Cada release relevante (tipicamente ao fechar um conjunto de mudanças em
-`main`) ganha uma tag `vX.Y.Z` e uma
-[GitHub Release](../../releases) correspondente, com as mudanças resumidas.
+Each relevant release (typically when closing out a set of changes on
+`main`) gets a `vX.Y.Z` tag and a matching
+[GitHub Release](../../releases) summarizing the changes.
 
-## Código
+## Code
 
-Siga as convenções já documentadas no [`CLAUDE.md`](./CLAUDE.md):
-Biome (tabs, largura de linha 120), módulos por domínio no backend
-(`*.routes.ts` → `*.service.ts` → `*.repository.ts`), testes ao lado do
-arquivo testado, e os quatro pontos de sincronia manual entre workspaces
-(categorias de transação, mapas de erro do better-auth, regras de senha,
-`.editorconfig` na raiz para indentação/charset consistentes entre editores).
+Follow the conventions already documented in [`CLAUDE.md`](./CLAUDE.md):
+Biome (tabs, 120-column lines), domain-based modules in the backend
+(`*.routes.ts` → `*.service.ts` → `*.repository.ts`), tests next to the
+file they test, English everywhere (code, comments, docs, commit
+messages), and the manual sync points between workspaces (transaction
+categories, better-auth error maps, password rules).
 
-## Antes de abrir o Pull Request
+## Before opening a Pull Request
 
-Rode o que o hook `pre-push` roda:
+Run what the `pre-push` hook runs:
 
 ```bash
 (cd backend && bunx --bun tsc --noEmit && bun run test:setup && bun run test && bun run build)
 (cd frontend && bunx --bun tsc --noEmit && bun run build)
 ```
 
-E, se sua mudança tocou `frontend/e2e/`, `frontend/playwright.config.ts` ou
-rotas que o E2E cobre, rode também os testes end-to-end:
+And, if your change touched `frontend/e2e/`, `frontend/playwright.config.ts`
+or routes the E2E suite covers, also run the end-to-end tests:
 
 ```bash
 cd frontend && bunx playwright test
 ```
 
-Um PR só é considerado pronto pra revisão com todos os itens acima passando
-— o hook `pre-push` (e o CI, em `.github/workflows/ci.yml`) bloqueiam o
-contrário.
+A PR is only considered ready for review once all of the above pass — the
+`pre-push` hook (and CI, in `.github/workflows/ci.yml`) block the
+opposite.
 
-## Relatando bugs e propondo features
+## Reporting bugs and proposing features
 
-Use as [issues](../../issues) do GitHub. Para bugs, inclua passos pra
-reproduzir, comportamento esperado vs. observado, e (quando fizer sentido)
-qual workspace é afetado (`backend`, `frontend`, `bot`, `mobile`). Para
-features, descreva o problema que a feature resolve antes da solução
-proposta — ajuda a discutir alternativas antes de qualquer código.
+Use GitHub [issues](../../issues). For bugs, include steps to reproduce,
+expected vs. observed behavior, and (when relevant) which workspace is
+affected (`backend`, `frontend`, `bot`, `mobile`). For features, describe
+the problem the feature solves before the proposed solution — it helps
+discuss alternatives before any code gets written.
 
-## Segredos e variáveis de ambiente
+## Secrets and environment variables
 
-Nunca commite um arquivo `.env` real (só `.env.example`/`.env.test`, sempre
-com valores de placeholder, nunca chaves reais). Se você suspeitar que um
-segredo real vazou em algum commit, avise imediatamente em vez de tentar
-corrigir sozinho reescrevendo histórico — histórico compartilhado
-(`main`/`dev` já pusheadas) só é reescrito de forma deliberada e combinada
-com quem mantém o projeto.
+Never commit a real `.env` file (only `.env.example`/`.env.test`, always
+with placeholder values, never real keys). If you suspect a real secret
+leaked into a commit, flag it immediately instead of trying to fix it
+yourself by rewriting history — shared history (`main`/`dev` already
+pushed) is only rewritten deliberately, in agreement with whoever
+maintains the project.

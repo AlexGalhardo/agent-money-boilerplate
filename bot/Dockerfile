@@ -11,7 +11,7 @@ RUN bun install --frozen-lockfile
 
 FROM install AS runtime
 # O bot importa prisma/encrypt/decrypt/transactionService diretamente de
-# @elysia-galhardo-finances/backend (ver docs/telegram-bot-plan.md) — precisa do
+# @agent-money-boilerplate/backend (ver docs/telegram-bot-plan.md) — precisa do
 # código-fonte e do schema Prisma da API dentro da imagem, não só do pacote.
 COPY --chown=bun:bun backend/src ./backend/src
 COPY --chown=bun:bun backend/prisma ./backend/prisma

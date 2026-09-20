@@ -30,7 +30,7 @@ export const app = new Elysia()
 		set.status = 500;
 		return { success: false, message: "Internal server error" };
 	})
-	.get("/", () => ({ success: true, message: "Elysia Finanças API" }))
+	.get("/", () => ({ success: true, message: "Agent Money Boilerplate API" }))
 	.get("/config", () => ({
 		success: true,
 		config: {
@@ -52,6 +52,6 @@ export const app = new Elysia()
 
 export const serverDNS = `${app.server?.hostname}:${app.server?.port}`;
 
-console.log(`🦊 Elysia Finanças API rodando em http://${serverDNS}`);
+console.log(`🦊 Agent Money Boilerplate API rodando em http://${serverDNS}`);
 
 export type App = typeof app;
