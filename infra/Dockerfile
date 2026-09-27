@@ -14,10 +14,10 @@
 # railway-entrypoint.sh. Isso ainda entrega os objetivos originais: um
 # único Dockerfile como fonte da verdade, e cada serviço no Railway com
 # deploy, logs, restart, scaling e variáveis de ambiente independentes.
-# Passo a passo completo: docs/deploy-railway.md. Fica em infra/ (não na
+# Passo a passo completo: docs/deploy/railway.md. Fica em infra/ (não na
 # raiz) — o Railway não detecta isso automaticamente, então o "Dockerfile
 # Path" de cada um dos 3 serviços precisa apontar pra infra/Dockerfile
-# explicitamente (ver docs/deploy-railway.md).
+# explicitamente (ver docs/deploy/railway.md).
 #
 # Uso local (fora do Railway, rode a partir da raiz do repo):
 #   docker build -f infra/Dockerfile -t agent-money-boilerplate .

@@ -20,7 +20,7 @@ module.exports = {
 			// VITE_API_URL aqui é lido em runtime pelo proxy de /auth, /users,
 			// /transactions etc. embutido em server.ts (ver
 			// frontend/proxy-paths.ts) — diferente do valor usado em build time
-			// (a URL pública, ver docs/setup-vps-ubuntu-from-zero.md), já que
+			// (a URL pública, ver docs/deploy/vps.md), já que
 			// backend e frontend rodam no mesmo host aqui.
 			env: { NODE_ENV: "production", PORT: "4001", VITE_API_URL: "http://localhost:4000" },
 			instances: 1,

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Dispatcher dos 3 serviços do Railway (backend, frontend, bot) a partir da
-# MESMA imagem — ver docs/deploy-railway.md para o porquê (Railway não
+# MESMA imagem — ver docs/deploy/railway.md para o porquê (Railway não
 # suporta escolher um build target de Dockerfile por serviço). Cada
 # Railway service define a variável RAILWAY_SERVICE_TARGET para escolher
 # qual processo esse container efetivamente roda.
@@ -26,7 +26,7 @@ case "$RAILWAY_SERVICE_TARGET" in
 		exec bun run src/index.ts
 		;;
 	*)
-		echo "RAILWAY_SERVICE_TARGET precisa ser 'backend', 'frontend' ou 'bot' (valor atual: '${RAILWAY_SERVICE_TARGET}'). Configure essa variável nas Variables do serviço no Railway — ver docs/deploy-railway.md." >&2
+		echo "RAILWAY_SERVICE_TARGET precisa ser 'backend', 'frontend' ou 'bot' (valor atual: '${RAILWAY_SERVICE_TARGET}'). Configure essa variável nas Variables do serviço no Railway — ver docs/deploy/railway.md." >&2
 		exit 1
 		;;
 esac

@@ -78,9 +78,53 @@ jobs:
       - name: Typecheck
         working-directory: frontend
         run: bunx tsc --noEmit
+      - name: Unit tests
+        working-directory: frontend
+        run: bun run test
       - name: Build
         working-directory: frontend
         run: bun run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - run: bun install --frozen-lockfile
+      # Eden types in mobile/src/lib/api.ts import the backend app type.
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
+      - name: Typecheck
+        working-directory: mobile
+        run: bunx tsc --noEmit
+      - name: Unit tests
+        working-directory: mobile
+        run: bun run test
+
+  mobile-e2e:
+    runs-on: ubuntu-latest
+    needs: [backend, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4"
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright browsers
+        working-directory: mobile
+        run: bunx playwright install --with-deps chromium
+      # Drives the Expo web build against the real API (see mobile/maestro/README.md);
+      # native-only flows stay in Maestro.
+      - name: Run mobile E2E (Expo web build)
+        working-directory: mobile
+        run: bunx playwright test
+        env:
+          CI: true
 
   e2e:
     runs-on: ubuntu-latest

@@ -8,6 +8,20 @@ re-deriving context.
 Branch: `dev` (see `.agents/skills/git-branch-workflow`). Nothing lands on
 `main` until the final checkpoint is green.
 
+## Session status (2026-09-27, end of session 1)
+
+- `main` = `34eec35`, CI green, deployed by Railway after CI. `dev` is ahead
+  with the docs restructure and the new CI jobs (`mobile`, `mobile-e2e`,
+  frontend unit tests) — **merge `dev` → `main` only after `ci.yml` on
+  `dev` is green** (the new jobs have not run on GitHub yet).
+- Next up, in order: CHANGELOG.md (Keep a Changelog, from git history
+  v0.0.1 → v0.1.0 + Unreleased, delete `mobile/CHANGELOG.md`, then update
+  rule 5 in CLAUDE.md/AGENTS.md) → project skills `agent-money-*`
+  (ship, verify, sync-points, mobile-ui, security) referenced by
+  `docs/workflows.md` → dedupe the local-setup rows in README's docs table
+  → translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`,
+  `infra/*` comments → Group 9 final verification.
+
 ## How to resume
 
 1. Read this file top to bottom, then `CLAUDE.md`.
@@ -177,8 +191,8 @@ Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versi
 - [x] Translate `.claude/skills/SOURCES.md` to English (`respondeae-*` kept, flagged as another project's examples)
 - [ ] Write project skills for repeated workflows (verify-all, monorepo install/lockfile, add-category sync points, security fix)
 - [ ] `CHANGELOG.md` (Keep a Changelog) from git history v0.0.1 → v0.1.0 + Unreleased; delete `mobile/CHANGELOG.md`
-- [ ] `docs/` reorganized: `README.md` index, `tooling.md`, `architecture.md`, `workflows.md`, `security.md`, `decisions/` (ADRs), `deploy/` (setup/deploy guides)
-- [ ] Update CLAUDE.md + AGENTS.md (changelog rule, new commands, skills locations)
+- [x] `docs/` reorganized: `README.md` index, `tooling.md`, `architecture.md`, `workflows.md`, `security.md`, `decisions/` (ADRs), `deploy/` (setup/deploy guides)
+- [x] Update CLAUDE.md + AGENTS.md deeper-docs section (changelog rule still pending with CHANGELOG.md)
 
 ## Group 10 — Requests added during the session
 

@@ -38,15 +38,12 @@ auth/database.
 
 ## Deeper docs
 
-- [`docs/architecture.md`](./docs/architecture.md) — stack, workspace
-  layout, `bunfig.toml`/`bun.lock` quirks, Eden typing, Docker notes
-- [`docs/code-conventions.md`](./docs/code-conventions.md) — module
-  layout, test placement, the 4 manual-sync points, auth/2FA flows
-- [`docs/commands.md`](./docs/commands.md) — every dev/test/build/setup
-  command, including the pre-PR checklist
-- [`docs/security.md`](./docs/security.md) — past
-  incidents and the guardrails they produced
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — branch workflow, commits,
-  SemVer, PR checklist
-- [`.agents/skills/git-branch-workflow/SKILL.md`](./.agents/skills/git-branch-workflow/SKILL.md) — full branch rules
+Start at [`docs/README.md`](./docs/README.md) — index of the knowledge base:
+architecture, code conventions, tooling, commands, workflows, security
+audit, mobile design system, ADRs (`docs/decisions/`) and deploy guides
+(`docs/deploy/`). Work in progress and next steps: [`PLAN.md`](./PLAN.md).
+
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — branch workflow, commits, SemVer, PR checklist
+- [`.agents/skills/git-branch-workflow/SKILL.md`](./.agents/skills/git-branch-workflow/SKILL.md) — branch rules
 - [`.agents/skills/open-source-guidelines-pre-push/SKILL.md`](./.agents/skills/open-source-guidelines-pre-push/SKILL.md) — pre-push checklist
+- [`.claude/skills/`](./.claude/skills) — vendored engineering and Expo skills (sources in `SOURCES.md`)

@@ -75,18 +75,18 @@ auth, payments, multi-client (web/bot/mobile) and agent-tooling scaffolding
 
 Guides live in [`docs/`](./docs):
 
-| Guide                                                                   | What it covers                                              |
-| ----------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [`setup-unix-using-docker.md`](./docs/setup-unix-using-docker.md)       | Local setup on Linux/macOS via Docker Compose               |
-| [`setup-unix-using-pm2.md`](./docs/setup-unix-using-pm2.md)             | Local setup on Linux/macOS via PM2, no Docker               |
-| [`setup-windows-using-docker.md`](./docs/setup-windows-using-docker.md) | Local setup on Windows 11 + WSL2 via Docker Desktop         |
-| [`setup-windows-using-pm2.md`](./docs/setup-windows-using-pm2.md)       | Local setup on Windows 11 + WSL2 via PM2, no Docker         |
-| [`deploy-railway.md`](./docs/deploy-railway.md)                         | Production deploy to Railway                                |
-| [`setup-vps-ubuntu.md`](./docs/setup-vps-ubuntu.md)                     | Deploy to an Ubuntu VPS with Docker                         |
-| [`setup-vps-ubuntu-from-zero.md`](./docs/setup-vps-ubuntu-from-zero.md) | Deploy to a fresh Ubuntu VPS without Docker                 |
-| [`setup-vercel-flyio.md`](./docs/setup-vercel-flyio.md)                 | Deploy the frontend to Vercel and the backend to Fly.io     |
-| [`deploy-android.md`](./docs/deploy-android.md)                         | Android app deploy — sideloadable APK and Google Play       |
-| [`ci-cd-setup.md`](./docs/ci-cd-setup.md)                               | GitHub Actions CI/CD and the Railway production deploy gate |
+| Guide                                                           | What it covers                                              |
+| --------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`setup-unix-using-docker.md`](./docs/deploy/local-setup.md)    | Local setup on Linux/macOS via Docker Compose               |
+| [`setup-unix-using-pm2.md`](./docs/deploy/local-setup.md)       | Local setup on Linux/macOS via PM2, no Docker               |
+| [`setup-windows-using-docker.md`](./docs/deploy/local-setup.md) | Local setup on Windows 11 + WSL2 via Docker Desktop         |
+| [`setup-windows-using-pm2.md`](./docs/deploy/local-setup.md)    | Local setup on Windows 11 + WSL2 via PM2, no Docker         |
+| [`deploy-railway.md`](./docs/deploy/railway.md)                 | Production deploy to Railway                                |
+| [`setup-vps-ubuntu.md`](./docs/deploy/vps.md)                   | Deploy to an Ubuntu VPS with Docker                         |
+| [`setup-vps-ubuntu-from-zero.md`](./docs/deploy/vps.md)         | Deploy to a fresh Ubuntu VPS without Docker                 |
+| [`setup-vercel-flyio.md`](./docs/deploy/vercel-flyio.md)        | Deploy the frontend to Vercel and the backend to Fly.io     |
+| [`deploy-android.md`](./docs/deploy/android.md)                 | Android app deploy — sideloadable APK and Google Play       |
+| [`ci-cd-setup.md`](./docs/deploy/ci-cd.md)                      | GitHub Actions CI/CD and the Railway production deploy gate |
 
 ## Setups
 
