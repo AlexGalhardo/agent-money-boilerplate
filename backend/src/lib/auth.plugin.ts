@@ -1,3 +1,4 @@
+import { APIError } from "better-auth";
 import { Elysia } from "elysia";
 import { userRepository } from "../modules/users/user.repository";
 import { auth } from "./auth";
@@ -26,10 +27,22 @@ async function handleAuthRequest(request: Request): Promise<Response> {
 	return response;
 }
 
+// An invalid or revoked `x-api-key` makes getSession throw (403
+// INVALID_API_KEY) instead of returning null — treat it as unauthenticated
+// rather than letting it surface as a 500.
+async function resolveSession(headers: Headers) {
+	try {
+		return await auth.api.getSession({ headers });
+	} catch (error) {
+		if (error instanceof APIError) return null;
+		throw error;
+	}
+}
+
 export const authPlugin = new Elysia({ name: "better-auth" }).mount(handleAuthRequest).macro({
 	auth: {
 		async resolve({ status, request: { headers } }) {
-			const session = await auth.api.getSession({ headers });
+			const session = await resolveSession(headers);
 
 			if (!session) {
 				return status(401, { success: false, message: "Sessão inválida ou expirada" });

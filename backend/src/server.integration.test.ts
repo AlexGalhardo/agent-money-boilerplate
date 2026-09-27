@@ -352,4 +352,38 @@ describe("API integration", () => {
 		const response = await request("/cron/check-expired-plans", { headers: { Authorization: "Bearer nope" } });
 		expect(response.status).toBe(401);
 	});
+
+	it("GET /openapi/json documents only the public transactions API, secured by x-api-key", async () => {
+		const response = await request("/openapi/json");
+		expect(response.status).toBe(200);
+		const spec = (await response.json()) as {
+			paths: Record<string, unknown>;
+			components: { securitySchemes: Record<string, { in: string; name: string }> };
+		};
+
+		const paths = Object.keys(spec.paths);
+		expect(paths.length).toBeGreaterThan(0);
+		expect(paths.every((path) => path.startsWith("/transactions"))).toBe(true);
+		expect(spec.components.securitySchemes.apiKey).toMatchObject({ in: "header", name: "x-api-key" });
+	});
+
+	it("answers 401 (not 500) for an invalid x-api-key", async () => {
+		const response = await request("/transactions", { headers: { "x-api-key": "not-a-real-key" } });
+		expect(response.status).toBe(401);
+	});
+
+	it("authenticates the documented developer API with a valid x-api-key", async () => {
+		const created = await request("/auth/api-key/create", {
+			method: "POST",
+			cookie: authCookie,
+			body: JSON.stringify({ name: "integration" }),
+		});
+		expect(created.status).toBe(200);
+		const { key } = (await created.json()) as { key: string };
+
+		const response = await request("/transactions", { headers: { "x-api-key": key } });
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as { success: boolean };
+		expect(body.success).toBe(true);
+	});
 });

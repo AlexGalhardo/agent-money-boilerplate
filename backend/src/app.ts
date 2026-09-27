@@ -1,5 +1,7 @@
 import { cors } from "@elysiajs/cors";
+import { openapi } from "@elysiajs/openapi";
 import { Elysia } from "elysia";
+import { z } from "zod";
 import { env } from "./config/env";
 import { authPlugin } from "./lib/auth.plugin";
 import { AppError } from "./lib/errors";
@@ -9,9 +11,31 @@ import { transactionRoutes } from "./modules/transactions/transaction.routes";
 import { transactionImportRoutes } from "./modules/transactions/transaction-import.routes";
 import { userRoutes } from "./modules/users/user.routes";
 
+// Public developer API only (transactions, authenticated with `x-api-key`).
+// The spec is served at /openapi/json and rendered by Scalar on the
+// frontend's /api page — no UI here (`provider: null`).
+const openapiPlugin = openapi({
+	provider: null,
+	mapJsonSchema: { zod: z.toJSONSchema },
+	exclude: { paths: [/^\/(?!transactions)/] },
+	documentation: {
+		info: {
+			title: "Agent Money API",
+			version: "0.2.0",
+			description:
+				"Acesse suas transações programaticamente. Gere um token em /api e envie-o no header `x-api-key` de cada requisição.",
+		},
+		components: {
+			securitySchemes: { apiKey: { type: "apiKey", in: "header", name: "x-api-key" } },
+		},
+		security: [{ apiKey: [] }],
+	},
+});
+
 /** The HTTP app without a listening socket — imported by tests and `server.ts`. */
 export const app = new Elysia()
 	.use(cors({ origin: env.FRONTEND_URL, credentials: true }))
+	.use(openapiPlugin)
 	.onError({ as: "global" }, ({ code, error, set }) => {
 		if (error instanceof AppError) {
 			set.status = error.status;

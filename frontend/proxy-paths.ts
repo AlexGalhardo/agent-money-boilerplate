@@ -5,4 +5,4 @@
 // (authClient, Eden `api`), since frontend and API are different Railway
 // domains. `/webhook` and `/cron` are left out on purpose: external services
 // call them on the API directly, never the browser.
-export const PROXIED_API_PATHS = ["/auth", "/users", "/transactions", "/payments", "/config", "/telegram"];
+export const PROXIED_API_PATHS = ["/auth", "/users", "/transactions", "/payments", "/config", "/telegram", "/openapi"];

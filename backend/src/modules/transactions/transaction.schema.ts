@@ -57,13 +57,53 @@ export type ListTransactionsQuery = z.infer<typeof listTransactionsQuerySchema>;
 export type TransactionCategory = (typeof transactionCategories)[number];
 export type TransactionType = (typeof transactionTypes)[number];
 
-export type TransactionDTO = {
-	id: string;
-	description: string;
-	amount: number;
-	category: TransactionCategory;
-	type: TransactionType;
-	date: string;
-	createdAt: string;
-	updatedAt: string | null;
-};
+export const transactionDTOSchema = z.object({
+	id: z.uuid(),
+	description: z.string().meta({ examples: ["SUPERMERCADO"] }),
+	amount: z
+		.number()
+		.int()
+		.nonnegative()
+		.describe("Integer number of cents")
+		.meta({ examples: [4990] }),
+	category: z.enum(transactionCategories),
+	type: z.enum(transactionTypes),
+	date: z
+		.string()
+		.describe("ISO 8601")
+		.meta({ examples: ["2026-09-27T12:00:00.000Z"] }),
+	createdAt: z
+		.string()
+		.describe("ISO 8601")
+		.meta({ examples: ["2026-09-27T12:00:00.000Z"] }),
+	updatedAt: z.string().nullable().describe("ISO 8601"),
+});
+
+export type TransactionDTO = z.infer<typeof transactionDTOSchema>;
+
+/** Body of every expected failure (see AppError and the error mapper in app.ts). */
+export const errorResponseSchema = z.object({ success: z.literal(false), message: z.string() });
+
+export const transactionResponseSchema = z.object({ success: z.literal(true), transaction: transactionDTOSchema });
+
+export const transactionListResponseSchema = z.object({
+	success: z.literal(true),
+	transactions: z.array(transactionDTOSchema),
+	total: z.number().int(),
+	page: z.number().int(),
+	perPage: z.number().int(),
+});
+
+export const statisticsResponseSchema = z.object({
+	success: z.literal(true),
+	stats: z.array(
+		z.object({
+			category: z.string(),
+			type: z.enum(transactionTypes),
+			total: z.number().int(),
+			percentage: z.number(),
+		}),
+	),
+});
+
+export const deleteResponseSchema = z.object({ success: z.literal(true), message: z.string() });
