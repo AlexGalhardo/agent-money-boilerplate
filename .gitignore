@@ -78,3 +78,6 @@ mobile/google-play-service-account.json
 # third-party names and partial document numbers). No .csv is otherwise
 # tracked in this repo.
 *.csv
+
+# personal scratch notes / task prompts — kept local, never committed
+TODO.md
