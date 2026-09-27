@@ -11,7 +11,9 @@
 		// Prettier normalizes emphasis/list markers; don't fight it.
 		"MD004": false,
 		"MD049": false,
-		"MD050": false
+		"MD050": false,
+		// Prettier aligns table pipes; markdownlint's table style would fight it.
+		"MD060": false
 	},
 	"globs": ["**/*.md"],
 	"ignores": [
