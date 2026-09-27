@@ -1,61 +1,51 @@
-import {
-	findUserById,
-	findUserIdByChatId,
-} from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
+import { findUserIdByChatId } from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
+import { userRepository } from "@agent-money-boilerplate/backend/src/modules/users/user.repository";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import type { BotConversation } from "../types";
+import { escapeMarkdown } from "./markdown";
 
-export const HELP_TEXT = [
-	"💬 *Money BOT*",
-	"",
-	"Use os botões abaixo para navegar. Toda operação que acessa seus dados",
-	"pede sua senha pessoal antes de continuar.",
-].join("\n");
+export const HELP_TEXT = ["💬 *Money BOT*", "", "Use os botões abaixo para navegar."].join("\n");
 
 export function mainMenuKeyboard(): InlineKeyboard {
 	return new InlineKeyboard()
-		.text("💸 Despesa", "menu:despesa")
-		.text("💰 Receita", "menu:receita")
+		.text("💸 Despesa", "menu:expense")
+		.text("💰 Receita", "menu:income")
 		.row()
-		.text("📃 Transações", "menu:transacoes")
-		.text("📊 Resumo", "menu:resumo")
+		.text("📃 Transações", "menu:transactions")
+		.text("📊 Resumo", "menu:summary")
 		.row()
-		.text("🔎 Buscar", "menu:buscar")
-		.text("🗑️ Apagar", "menu:apagar")
+		.text("🔎 Buscar", "menu:search")
+		.text("🗑️ Apagar", "menu:delete")
 		.row()
-		.text("📄 Relatório PDF", "menu:relatorio")
+		.text("📄 Relatório PDF", "menu:report")
 		.row()
-		.text("📂 Categorias", "menu:categorias")
-		.text("❓ Ajuda", "menu:ajuda")
+		.text("📂 Categorias", "menu:categories")
+		.text("❓ Ajuda", "menu:help")
 		.row()
-		.text("🔌 Trocar de conta", "menu:trocar-conta");
+		.text("🔌 Trocar de conta", "menu:switch-account");
 }
 
-// Shown instead of mainMenuKeyboard() whenever the chat isn't linked to an
-// account yet. The single button re-enters the "start" conversation (via the
-// same "menu:" callback prefix bot.ts already dispatches through
-// ctx.conversation.enter), which is what actually runs the login/signup/
-// Google/link-by-ID flow — this keyboard itself has no conversation waiting
-// on it, so it must never offer any button beyond this one.
+// Shown instead of mainMenuKeyboard() whenever the chat isn't linked yet. The
+// single button re-enters the "start" conversation (through the same "menu:"
+// callback prefix bot.ts dispatches), which runs the access flow — nothing
+// waits on this keyboard, so it must never offer any other button.
 export function loginPromptKeyboard(): InlineKeyboard {
-	return new InlineKeyboard().text("🔑 Entrar / Criar conta", "menu:entrar");
+	return new InlineKeyboard().text("🔑 Entrar / Criar conta", "menu:login");
 }
 
 /**
- * Always shows which account is connected to this chat (name, chat ID and
- * the ID used as "account" in Minha Conta on the site), when one is linked —
- * an explicit requirement to never leave which account is in use ambiguous.
+ * Always shows which account is connected to this chat, when one is linked —
+ * an explicit requirement to never leave the account in use ambiguous.
  */
-async function buildMenuMessage(chatId: number, user: { name: string; id: string } | null): Promise<string> {
+function buildMenuMessage(user: { name: string; email: string } | null): string {
 	if (!user) return HELP_TEXT;
 
 	const accountBlock = [
 		"",
 		"👤 *Conta conectada*",
-		`Nome: ${user.name}`,
-		`Chat ID: ${chatId}`,
-		`ID da conta (dashboard): \`${user.id}\``,
+		`Nome: ${escapeMarkdown(user.name)}`,
+		`E-mail: ${escapeMarkdown(user.email)}`,
 	].join("\n");
 
 	return `${HELP_TEXT}${accountBlock}`;
@@ -66,17 +56,15 @@ async function buildMenuMessage(chatId: number, user: { name: string; id: string
  * now" — every place that renders a menu after some operation (not in the
  * middle of a login/signup conversation) must go through this instead of
  * reaching for mainMenuKeyboard() directly, otherwise a signed-out chat gets
- * shown the full transaction menu (it used to, see docs/security-incidents.md
- * equivalent bug report from 2026-09-20).
+ * shown the full transaction menu (a bug fixed on 2026-09-20).
  */
 export async function buildMenu(chatId: number | undefined): Promise<{ text: string; keyboard: InlineKeyboard }> {
 	if (chatId === undefined) return { text: HELP_TEXT, keyboard: loginPromptKeyboard() };
 
 	const userId = await findUserIdByChatId(chatId);
-	const user = userId ? await findUserById(userId) : null;
+	const user = userId ? await userRepository.findById(userId) : null;
 
-	const text = await buildMenuMessage(chatId, user);
-	return { text, keyboard: user ? mainMenuKeyboard() : loginPromptKeyboard() };
+	return { text: buildMenuMessage(user), keyboard: user ? mainMenuKeyboard() : loginPromptKeyboard() };
 }
 
 /**

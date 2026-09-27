@@ -1,8 +1,8 @@
 #!/bin/sh
-# O bot usa o Prisma Client gerado dentro de backend/prisma/generated (mesmo
-# schema, mesmo banco da API) — precisa ser gerado no filesystem deste
-# container também, já que cada serviço do compose tem seu próprio
-# filesystem (só o banco é compartilhado, via volume).
+# The bot uses the Prisma Client generated inside backend/prisma/generated
+# (same schema and database as the API) — it has to be generated in this
+# container's filesystem too, since each compose service has its own
+# filesystem (only the database is shared, through a volume).
 set -e
 
 (cd ../backend && bunx prisma generate)

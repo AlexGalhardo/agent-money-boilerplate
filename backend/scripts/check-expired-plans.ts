@@ -2,13 +2,13 @@ import { prisma } from "../src/config/prisma";
 import { paymentService } from "../src/modules/payments/payment.service";
 
 /**
- * Script standalone para cron em VPS/Docker (fora do contexto Vercel Cron,
- * que usa a rota POST /cron/check-expired-plans). Uso sugerido no crontab:
- * `0 3 * * * cd /path/to/api && bun run scripts/check-expired-plans.ts`
+ * Standalone cron entrypoint for VPS/Docker (outside Vercel Cron, which calls
+ * GET /cron/check-expired-plans). Suggested crontab line:
+ * `0 3 * * * cd /path/to/backend && bun run scripts/check-expired-plans.ts`
  */
 async function main(): Promise<void> {
 	const updated = await paymentService.checkExpiredPlans();
-	console.log(`${updated} usuário(s) com plano marcado como expirado.`);
+	console.log(`${updated} user(s) marked as expired.`);
 }
 
 main()

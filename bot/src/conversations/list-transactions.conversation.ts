@@ -1,25 +1,20 @@
 import { transactionService } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.service";
 import type { Context } from "grammy";
 import { formatTransactionList } from "../formatting/format";
-import { ensureUserReady } from "../lib/user-gate";
-import { requirePassword } from "../lib/verify-password-step";
 import type { BotConversation } from "../types";
 
 const MIN_LIMIT = 1;
 const MAX_LIMIT = 10;
 
-// Pedir o limite antes de listar (em vez de sempre mostrar 10 com um botão
-// "Ver mais" pra paginar) evita a conversation ficar esperando por uma
-// callback_query que nunca chega quando a última página não tem mais botão
-// nenhum — o fluxo sempre termina com um `return`, e é o `withMainMenu` (ver
-// lib/menu.ts) quem garante que o menu principal reaparece em seguida.
-export async function listTransactionsConversation(conversation: BotConversation, ctx: Context): Promise<void> {
-	const userId = await ensureUserReady(conversation, ctx);
-	if (!userId) return;
-
-	const passed = await requirePassword(conversation, ctx);
-	if (!passed) return;
-
+// Asking for the limit up front (instead of a "See more" pagination button)
+// keeps the conversation from waiting on a callback that never comes once the
+// last page has no button — the flow always ends with a `return`, and
+// `withMainMenu` (lib/menu.ts) brings the menu back afterwards.
+export async function listTransactionsConversation(
+	conversation: BotConversation,
+	ctx: Context,
+	userId: string,
+): Promise<void> {
 	await ctx.reply(`📃 Quantas transações você quer ver? (${MIN_LIMIT} a ${MAX_LIMIT})`);
 
 	let limit: number | null = null;

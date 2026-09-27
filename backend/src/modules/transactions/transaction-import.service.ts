@@ -1,14 +1,14 @@
-import { prisma } from "../../config/prisma";
 import { decrypt, encrypt } from "../../lib/encryption";
-import { FREE_TRANSACTION_LIMIT, FreeLimitReachedError, hasActivePlan } from "../../lib/plan";
+import { AppError } from "../../lib/errors";
+import { FreeLimitReachedError, transactionAllowance } from "../../lib/plan";
+import { userRepository } from "../users/user.repository";
 import { transactionRepository } from "./transaction.repository";
 import type { TransactionCategory, TransactionType } from "./transaction.schema";
 import type { ImportedTransactionInput } from "./transaction-import.schema";
 
-export class ImportParseError extends Error {
+export class ImportParseError extends AppError {
 	constructor(message: string) {
-		super(message);
-		this.name = "ImportParseError";
+		super(message, 400);
 	}
 }
 
@@ -20,8 +20,8 @@ type ParsedCsvRow = {
 	type: TransactionType;
 };
 
-// O extrato do Nubank exporta datas no formato dd/mm/aaaa e valores com sinal
-// (negativo = despesa, positivo = receita), sempre nesta ordem de colunas.
+// Nubank statements export dates as dd/mm/yyyy and signed values
+// (negative = expense, positive = income), always in this column order.
 const NUBANK_HEADER_PREFIX = "data,valor,identificador";
 const DATE_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
@@ -79,10 +79,10 @@ export function parseNubankCsv(csv: string): ParsedCsvRow[] {
 	});
 }
 
-// Regras de categorização por palavra-chave, avaliadas em ordem. A primeira
-// que casar vence. Transações que não casam nenhuma regra caem em "other" e
-// são marcadas como needsReview para o usuário escolher a categoria na tela
-// de revisão da importação, em vez de a aplicação decidir sozinha.
+// Keyword categorization rules, evaluated in order — the first match wins.
+// Rows matching nothing fall back to "other" and are flagged needsReview so
+// the user picks the category on the import review screen, instead of the
+// app guessing.
 const CATEGORY_RULES: { pattern: RegExp; category: TransactionCategory }[] = [
 	{ pattern: /\bRDB\b/i, category: "investment" },
 	{ pattern: /LANCHONETE|LANCHES|MARMITARIA|RESTAURANTE|PADARIA|A[ÇC]OUGUE|SUPERMERCADO|IFOOD/i, category: "food" },
@@ -120,8 +120,8 @@ export const transactionImportService = {
 		const parsed = parseNubankCsv(csv);
 
 		const rows: ImportPreviewRow[] = parsed.map((row) => {
-			// Descrições importadas seguem o mesmo padrão UPPERCASE das
-			// transações criadas manualmente (ver TransactionForm).
+			// Imported descriptions follow the same UPPERCASE convention as
+			// manually created ones (see TransactionForm).
 			const description = row.description.toUpperCase();
 			const { category, matched } = categorizeDescription(description);
 			return {
@@ -149,13 +149,10 @@ export const transactionImportService = {
 		userId: string,
 		transactions: ImportedTransactionInput[],
 	): Promise<{ created: number; skippedDuplicates: number; skippedLimit: number }> {
-		const user = await prisma.user.findUniqueOrThrow({
-			where: { id: userId },
-			select: { planStatus: true, planExpiresAt: true, freeTransactionCount: true },
-		});
+		const quota = await userRepository.findPlanQuota(userId);
 
-		// Garante UPPERCASE mesmo se o cliente pular a tela de preview (ex: uso
-		// direto da API) — mesmo padrão das transações criadas manualmente.
+		// Enforces UPPERCASE even when a client skips the preview step (direct
+		// API use) — same convention as manually created transactions.
 		const normalized = transactions.map((row) => ({ ...row, description: row.description.toUpperCase() }));
 
 		const existing = await transactionRepository.findManyForDedupe(userId);
@@ -167,11 +164,9 @@ export const transactionImportService = {
 			(row) => !existingKeys.has(dedupeKey(row.description, row.amount, new Date(row.createdAt))),
 		);
 
-		// Plano gratuito: só aceita importar até completar o limite total de
-		// transações — o restante do lote é descartado, não a importação inteira.
-		const remainingAllowance = hasActivePlan(user)
-			? deduped.length
-			: Math.max(0, FREE_TRANSACTION_LIMIT - user.freeTransactionCount);
+		// Free plan: import only up to the remaining allowance — the rest of the
+		// batch is dropped, not the whole import.
+		const remainingAllowance = transactionAllowance(quota);
 		const toCreate = deduped.slice(0, remainingAllowance);
 		const skippedLimit = deduped.length - toCreate.length;
 
@@ -193,10 +188,7 @@ export const transactionImportService = {
 			})),
 		);
 
-		await prisma.user.update({
-			where: { id: userId },
-			data: { freeTransactionCount: { increment: toCreate.length } },
-		});
+		await userRepository.incrementFreeTransactionCount(userId, toCreate.length);
 
 		return {
 			created: toCreate.length,

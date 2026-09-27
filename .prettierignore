@@ -1,0 +1,11 @@
+# Prettier only formats Markdown here — Biome owns TS/JS/JSON/CSS.
+node_modules
+**/node_modules
+**/dist
+**/build
+.claude/skills
+.claude/agents
+.claude/references
+.agents/skills
+**/.tanstack
+**/generated

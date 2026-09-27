@@ -1,40 +1,48 @@
-# Funções compartilhadas pelos 4 scripts de bootstrap da raiz
-# (setup-unix-using-docker.sh, setup-unix-using-pm2.sh,
-# setup-windows-using-docker.sh, setup-windows-using-pm2.sh).
-# Não é executável sozinho — é sempre `source`d por eles.
+# Functions shared by setups/setup-docker.sh and setups/setup-pm2.sh.
+# Not executable on its own — always `source`d.
+
+# WSL2 or Git Bash on Windows — only changes error messages (Docker Desktop
+# vs a native Docker daemon), the setup itself is identical.
+is_windows_host() {
+	grep -qi microsoft /proc/version 2>/dev/null && return 0
+	case "$(uname -s)" in
+	MINGW* | MSYS* | CYGWIN*) return 0 ;;
+	esac
+	return 1
+}
 
 require_bun() {
 	if ! command -v bun >/dev/null 2>&1; then
-		echo "Bun não encontrado. Instale em https://bun.sh antes de continuar." >&2
+		echo "Bun not found. Install it from https://bun.sh before continuing." >&2
 		exit 1
 	fi
 }
 
 check_docker() {
 	if ! command -v docker >/dev/null 2>&1; then
-		echo "Docker não encontrado. Instale em https://docs.docker.com/get-docker/ antes de continuar." >&2
+		if is_windows_host; then
+			echo "Docker not found. Install Docker Desktop (https://www.docker.com/products/docker-desktop/), enable WSL2 integration in its settings and reopen this terminal." >&2
+		else
+			echo "Docker not found. Install it from https://docs.docker.com/get-docker/ before continuing." >&2
+		fi
 		exit 1
 	fi
 	if ! docker info >/dev/null 2>&1; then
-		echo "Docker instalado, mas o daemon não está rodando. Inicie o Docker e tente de novo." >&2
+		if is_windows_host; then
+			echo "Docker Desktop doesn't seem to be running. Open it, wait for the whale icon to finish starting and run this script again." >&2
+		else
+			echo "Docker is installed but the daemon isn't running. Start Docker and try again." >&2
+		fi
 		exit 1
 	fi
 }
 
-check_docker_desktop_windows() {
-	if ! command -v docker >/dev/null 2>&1; then
-		echo "Docker não encontrado. Instale o Docker Desktop (https://www.docker.com/products/docker-desktop/), habilite a integração com o WSL2 nas configurações e reabra este terminal antes de continuar." >&2
-		exit 1
-	fi
-	if ! docker info >/dev/null 2>&1; then
-		echo "Docker Desktop parece não estar rodando. Abra o Docker Desktop, espere o ícone da baleia terminar de iniciar e rode este script de novo." >&2
-		exit 1
-	fi
+docker_available() {
+	command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1
 }
 
-# openssl vem com o Git for Windows e com o WSL/Linux/macOS, mas na dúvida
-# caímos para o crypto do Node embutido no Bun (dependência já obrigatória
-# deste projeto) em vez de falhar o setup.
+# openssl ships with Git for Windows, WSL, Linux and macOS; fall back to
+# Bun's built-in crypto (Bun is already required) instead of failing.
 generate_hex32() {
 	if command -v openssl >/dev/null 2>&1; then
 		openssl rand -hex 32
@@ -43,10 +51,9 @@ generate_hex32() {
 	fi
 }
 
-# Troca em-place funcionando igual em GNU sed (Linux, WSL, Git Bash) e BSD
-# sed (macOS): passar uma extensão de backup (mesmo vazia) depois de -i é a
-# única sintaxe aceita pelos dois — por isso sempre criamos e removemos um
-# ".bak" em vez de tentar detectar o sistema operacional.
+# In-place edit that works the same with GNU sed (Linux, WSL, Git Bash) and
+# BSD sed (macOS): a backup extension right after -i is the only syntax both
+# accept, so always create and delete a ".bak" instead of detecting the OS.
 replace_in_file() {
 	local pattern="$1"
 	local file="$2"
@@ -54,10 +61,9 @@ replace_in_file() {
 	rm -f "$file.bak"
 }
 
-# Pergunta interativamente qual banco usar. Se $1 já vier preenchido com
-# "sqlite" ou "postgres" (argumento de linha de comando do script chamador),
-# pula o prompt — mantém compatibilidade com o antigo `./setup.sh postgres`.
-# Sem terminal interativo (ex: rodando em CI), assume SQLite.
+# Asks which database to use. A preset "sqlite"/"postgres" (the calling
+# script's first argument) skips the prompt; without an interactive terminal
+# (CI) it defaults to SQLite.
 prompt_database_choice() {
 	local preset="$1"
 	if [ "$preset" = "sqlite" ] || [ "$preset" = "postgres" ]; then
@@ -69,31 +75,31 @@ prompt_database_choice() {
 		return
 	fi
 	echo ""
-	echo "Qual banco de dados você quer usar?"
-	echo "  a) SQLite   (configuração rápida, padrão)"
+	echo "Which database do you want to use?"
+	echo "  a) SQLite   (quick setup, default)"
 	echo "  b) Postgres"
-	read -r -p "Escolha [a]: " answer
+	read -r -p "Choice [a]: " answer
 	case "$answer" in
 	b | B | postgres | Postgres) DB_CHOICE="postgres" ;;
 	*) DB_CHOICE="sqlite" ;;
 	esac
 }
 
-# Cria backend/.env a partir do .env.example na primeira vez (gerando
-# BETTER_AUTH_SECRET/ENCRYPTION_KEY) e, se $2 (database_url) vier preenchido,
-# sobrescreve DATABASE_PROVIDER/DATABASE_URL sempre — mesmo em runs
-# seguintes — para permitir trocar de banco sem apagar o .env manualmente.
+# Creates backend/.env from .env.example the first time (generating
+# BETTER_AUTH_SECRET/ENCRYPTION_KEY). DATABASE_PROVIDER/DATABASE_URL are
+# rewritten on every run so switching databases doesn't require deleting
+# the .env by hand.
 write_api_env() {
 	local provider="$1"
 	local database_url="$2"
 
 	if [ ! -f backend/.env ]; then
-		echo "==> Criando backend/.env a partir de backend/.env.example"
+		echo "==> Creating backend/.env from backend/.env.example"
 		cp backend/.env.example backend/.env
 		replace_in_file "s/^BETTER_AUTH_SECRET=.*/BETTER_AUTH_SECRET=$(generate_hex32)/" backend/.env
 		replace_in_file "s/^ENCRYPTION_KEY=.*/ENCRYPTION_KEY=$(generate_hex32)/" backend/.env
 	else
-		echo "==> backend/.env já existe, mantendo segredos e demais variáveis como estão"
+		echo "==> backend/.env already exists — keeping its secrets and variables"
 	fi
 
 	if [ -n "$database_url" ]; then
@@ -102,19 +108,18 @@ write_api_env() {
 	fi
 }
 
-# Espelha os segredos e a config de banco de backend/.env em bot/.env (mesmo
-# banco, mesma chave de criptografia — ver CLAUDE.md). Variáveis específicas
-# do bot (TELEGRAM_*, BOT_PASSWORD_HASH_BASE64) ficam como estiverem — o
-# usuário preenche manualmente, o bot é opcional.
+# Mirrors backend/.env's secrets and database into bot/.env (same database,
+# same encryption key). Bot-only variables (TELEGRAM_*, BOT_PASSWORD_*) are
+# left alone — the bot is optional and filled in by hand.
 write_bot_env() {
 	local provider="$1"
 	local database_url="$2"
 
 	if [ ! -f bot/.env ]; then
-		echo "==> Criando bot/.env a partir de bot/.env.example"
+		echo "==> Creating bot/.env from bot/.env.example"
 		cp bot/.env.example bot/.env
 	else
-		echo "==> bot/.env já existe, mantendo como está (segredos e banco serão sincronizados)"
+		echo "==> bot/.env already exists — syncing only secrets and database"
 	fi
 
 	local better_auth_secret
@@ -128,84 +133,76 @@ write_bot_env() {
 	replace_in_file "s#^DATABASE_URL=.*#DATABASE_URL=$database_url#" bot/.env
 }
 
-# Pergunta se a API deve subir com o fluxo de pagamento PIX (AbacatePay) em
-# TESTE_MODE (sem chaves reais, com o botão "Pagar PIX Teste Mode") ou não
-# (chaves de desenvolvimento da AbacatePay, para testar o fluxo de PIX de
-# verdade localmente). Sem terminal interativo (ex: CI), assume modo teste.
-prompt_test_mode_choice() {
+# PIX payments: test mode (no keys, "Pay PIX Test Mode" button) or your own
+# AbacatePay dev keys (real sandbox flow). Non-interactive runs use test mode.
+prompt_payment_mode() {
 	if [ ! -t 0 ]; then
-		TEST_MODE_CHOICE="teste"
+		PAYMENT_MODE="test"
 		return
 	fi
 	echo ""
-	echo "Subir o pagamento via PIX (AbacatePay) em modo TESTE?"
-	echo "  a) Sim, TESTE_MODE (padrão — sem chaves reais, com botão de simular PIX)"
-	echo "  b) Não, usar chaves de desenvolvimento da AbacatePay (fluxo de PIX real, para testar localmente)"
-	read -r -p "Escolha [a]: " answer
+	echo "Run PIX payments (AbacatePay) in TEST mode?"
+	echo "  a) Yes (default — no keys needed, a button simulates the payment)"
+	echo "  b) No, use my AbacatePay dev keys (real sandbox flow)"
+	read -r -p "Choice [a]: " answer
 	case "$answer" in
-	b | B | nao | não | Nao | Não) TEST_MODE_CHOICE="real" ;;
-	*) TEST_MODE_CHOICE="teste" ;;
+	b | B | no | No) PAYMENT_MODE="sandbox" ;;
+	*) PAYMENT_MODE="test" ;;
 	esac
 }
 
-# Grava em backend/.env as variáveis do AbacatePay conforme a escolha de
-# prompt_test_mode_choice. No modo "real", usa as chaves de desenvolvimento
-# combinadas com quem pediu este setup — permitem exercitar o fluxo de PIX
-# de verdade (sandbox da própria AbacatePay) em vez do botão de simulação.
+# Keys are typed in, never stored in this repository (a dev key that used to
+# be hardcoded here is listed in docs/security.md as compromised).
 write_abacatepay_env() {
-	local choice="$1"
+	local mode="$1"
 
-	if [ "$choice" = "real" ]; then
+	if [ "$mode" = "sandbox" ]; then
+		local api_key webhook_secret
+		read -r -s -p "AbacatePay dev API key: " api_key
+		echo ""
+		webhook_secret=$(generate_hex32)
 		replace_in_file "s#^ENABLE_ABACATEPAY=.*#ENABLE_ABACATEPAY=true#" backend/.env
-		replace_in_file "s#^ABACATEPAY_API_KEY=.*#ABACATEPAY_API_KEY=abc_dev_mwae6mwTjzuZD5R0ApWRAWmB#" backend/.env
-		replace_in_file "s#^ABACATEPAY_WEBHOOK_SECRET=.*#ABACATEPAY_WEBHOOK_SECRET=CEF9B8447FF29F1E0B2C260406AF00B6#" backend/.env
+		replace_in_file "s#^ABACATEPAY_API_KEY=.*#ABACATEPAY_API_KEY=$api_key#" backend/.env
+		replace_in_file "s#^ABACATEPAY_WEBHOOK_SECRET=.*#ABACATEPAY_WEBHOOK_SECRET=$webhook_secret#" backend/.env
 		replace_in_file "s#^ABACATEPAY_PIX_TEST_MODE=.*#ABACATEPAY_PIX_TEST_MODE=false#" backend/.env
-		echo "==> AbacatePay configurado com chaves de desenvolvimento (fluxo de PIX real, não simulado)."
-		echo "    Webhook: \${APP_URL}/webhook/abacatepay?webhookSecret=CEF9B8447FF29F1E0B2C260406AF00B6"
+		echo "==> AbacatePay configured with your dev key. Register the webhook as:"
+		echo "    \${APP_URL}/webhook/abacatepay?webhookSecret=<ABACATEPAY_WEBHOOK_SECRET from backend/.env>"
 	else
 		replace_in_file "s#^ENABLE_ABACATEPAY=.*#ENABLE_ABACATEPAY=false#" backend/.env
 		replace_in_file "s#^ABACATEPAY_PIX_TEST_MODE=.*#ABACATEPAY_PIX_TEST_MODE=true#" backend/.env
-		echo "==> AbacatePay em modo teste (sem chaves reais)."
+		echo "==> AbacatePay in test mode (no real keys)."
 	fi
 }
 
 bot_is_configured() {
-	[ -f bot/.env ] && grep -Eq "^TELEGRAM_BOT_TOKEN=.+" bot/.env
+	[ -f bot/.env ] && grep -Eq "^TELEGRAM_BOT_TOKEN=.+" bot/.env && ! grep -q "^TELEGRAM_BOT_TOKEN=<" bot/.env
 }
 
 print_bot_hint() {
 	echo ""
-	echo "Bot do Telegram (opcional): edite bot/.env com TELEGRAM_BOT_TOKEN e"
-	echo "BOT_PASSWORD_HASH_BASE64 (gere com"
-	echo "\`cd bot && bun run hash-password \"sua-senha\"\`)."
-	echo "Veja docs/telegram-bot.md para o passo a passo completo (o bot é"
-	echo "multi-tenant: cada chat se vincula à própria conta enviando o ID dela,"
-	echo "sem allowlist de chat fixo)."
+	echo "Telegram bot (optional): set TELEGRAM_BOT_TOKEN and BOT_PASSWORD_HASH_BASE64"
+	echo "in bot/.env (generate the hash with \`cd bot && bun run hash-password \"your-password\"\`)."
+	echo "The bot is multi-tenant: each chat links to its own account by logging in"
+	echo "from the chat. See docs/deploy/local-setup.md."
 }
 
-# Prisma Studio não sobe junto com o resto — é uma UI opcional para
-# inspecionar/editar dados direto no banco, iniciada sob demanda.
-#
-# No Docker com SQLite, o banco fica num volume nomeado (só visível de
-# dentro do container) — por isso o Studio precisa rodar lá também, não no
-# host. Nos demais casos (PM2, ou Docker com Postgres exposto em
-# localhost:5432), `bun run db:studio` no host já funciona direto.
+# Prisma Studio is an on-demand UI, not started with the rest. With Docker +
+# SQLite the database lives in a named volume (only visible inside the
+# container), so Studio must run there; otherwise the host command works.
 print_prisma_studio_hint() {
-	local mode="$1" # "local" (padrão) ou "docker-sqlite"
+	local mode="$1" # "local" (default) or "docker-sqlite"
 	local compose_args="$2"
 
 	if [ "$mode" = "docker-sqlite" ]; then
 		echo "  Prisma Studio: docker compose ${compose_args} exec backend bunx prisma studio --port 5555 --hostname 0.0.0.0"
-		echo "                 (rode num terminal separado, depois abra http://localhost:5555)"
+		echo "                 (in another terminal, then open http://localhost:5555)"
 	else
-		echo "  Prisma Studio: cd backend && bun run db:studio   (abre em http://localhost:5555)"
+		echo "  Prisma Studio: cd backend && bun run db:studio   (opens http://localhost:5555)"
 	fi
 }
 
-# Mata o(s) processo(s) escutando numa porta TCP — cobre tanto Unix/WSL2
-# (lsof, ou fuser como fallback) quanto Git Bash no Windows (netstat.exe +
-# taskkill.exe nativos, sem depender de nenhuma ferramenta extra instalada).
-# Sempre loga o que encontrou/matou, mesmo quando não há nada pra fazer.
+# Kills whatever listens on a TCP port — Unix/WSL2 (lsof, fuser) and Git
+# Bash on Windows (native netstat.exe + taskkill.exe). Always logs.
 kill_process_on_port() {
 	local port="$1"
 	local pids=""
@@ -215,7 +212,7 @@ kill_process_on_port() {
 	elif command -v fuser >/dev/null 2>&1; then
 		pids=$(fuser "${port}/tcp" 2>/dev/null || true)
 	elif command -v netstat >/dev/null 2>&1; then
-		# Saída do netstat.exe do Windows: "  TCP    0.0.0.0:4000     0.0.0.0:0    LISTENING    12345"
+		# Windows netstat.exe output: "  TCP    0.0.0.0:4000     0.0.0.0:0    LISTENING    12345"
 		pids=$(netstat -ano -p tcp 2>/dev/null |
 			grep -i "LISTENING" |
 			awk -v p=":$port$" '$2 ~ p {print $NF}' |
@@ -223,11 +220,11 @@ kill_process_on_port() {
 	fi
 
 	if [ -z "$pids" ]; then
-		echo "    Porta ${port}: livre"
+		echo "    Port ${port}: free"
 		return
 	fi
 
-	echo "    Porta ${port}: em uso pelo(s) PID $(echo "$pids" | tr '\n' ' ')— encerrando"
+	echo "    Port ${port}: used by PID $(echo "$pids" | tr '\n' ' ')— stopping"
 	for pid in $pids; do
 		if command -v taskkill >/dev/null 2>&1; then
 			taskkill //F //PID "$pid" >/dev/null 2>&1 || true
@@ -237,30 +234,26 @@ kill_process_on_port() {
 	done
 }
 
-# Garante que as portas usadas pelos serviços da aplicação (4000 API, 4001
-# frontend, e opcionalmente 5432 do Postgres) estejam livres antes de subir
-# tudo de novo — mata processos PM2 antigos com os mesmos nomes, para/remove
-# containers Docker (de qualquer stack) publicando essas portas, e por fim
-# qualquer processo solto (ex: um `bun run dev` que ficou pra trás) ainda
-# escutando nelas. Sempre explícito nos logs sobre o que foi encontrado e
-# encerrado, pra facilitar debug de "porta já em uso".
+# Frees the app ports (4000 API, 4001 frontend, optionally 5432 Postgres):
+# removes old elysia-* PM2 processes, stops Docker containers publishing
+# those ports, then kills any stray process still listening.
 free_app_ports() {
 	local ports=("$@")
-	echo "==> Garantindo que as portas ${ports[*]} estão livres"
+	echo "==> Making sure ports ${ports[*]} are free"
 
 	if command -v pm2 >/dev/null 2>&1 && pm2 jlist 2>/dev/null | grep -q '"name":"elysia-'; then
-		echo "    Processos elysia-* antigos rodando no PM2 — removendo (pm2 delete)"
+		echo "    Removing old elysia-* PM2 processes"
 		pm2 delete elysia-backend elysia-frontend elysia-bot >/dev/null 2>&1 || true
 	fi
 
-	if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+	if docker_available; then
 		for port in "${ports[@]}"; do
 			local containers
 			containers=$(docker ps -q --filter "publish=${port}" 2>/dev/null || true)
 			if [ -n "$containers" ]; then
 				local names
 				names=$(docker ps --filter "publish=${port}" --format '{{.Names}}' | tr '\n' ' ')
-				echo "    Porta ${port}: em uso por container(s) Docker ($names) — parando"
+				echo "    Port ${port}: used by Docker container(s) ($names) — stopping"
 				docker stop $containers >/dev/null
 			fi
 		done
@@ -271,10 +264,9 @@ free_app_ports() {
 	done
 }
 
-# Espera um endpoint HTTP responder antes de seguir (usado para aguardar o
-# container da API terminar migrations + Prisma generate no entrypoint antes
-# de rodar o seed). Sem curl disponível, desiste na hora — quem chamar trata
-# o retorno diferente de 0 avisando para rodar o passo manualmente.
+# Waits for an HTTP endpoint (the API container finishing migrations +
+# Prisma generate) before seeding. Without curl it gives up immediately and
+# the caller prints the manual command.
 wait_for_http() {
 	local url="$1"
 	local tries="${2:-30}"

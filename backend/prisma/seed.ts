@@ -1,3 +1,4 @@
+import { env } from "../src/config/env";
 import { prisma } from "../src/config/prisma";
 import { auth } from "../src/lib/auth";
 import { encrypt } from "../src/lib/encryption";
@@ -7,12 +8,17 @@ const ADMIN_EMAIL = "admin@gmail.com";
 const ADMIN_PASSWORD = "adminBR@123";
 const TRANSACTIONS_COUNT = 500;
 
-// Usuário real do dono do projeto, para subir localmente e usar o app com
-// seus próprios dados (ex: botão "Importar" com o extrato do Nubank), sem
-// as 500 transações fake geradas para o admin de demonstração/e2e.
-const PERSONAL_EMAIL = "aleexgvieira@gmail.com";
-const PERSONAL_PASSWORD = "galhardyn";
-const PERSONAL_NAME = "Alex Galhardo Vieira";
+// Optional personal account (no fake transactions) for using the app locally
+// with your own data, e.g. importing a real bank statement. Credentials come
+// from the environment — never hardcode real ones here (this file is public).
+const personalAccount =
+	Bun.env.SEED_PERSONAL_EMAIL && Bun.env.SEED_PERSONAL_PASSWORD
+		? {
+				email: Bun.env.SEED_PERSONAL_EMAIL,
+				password: Bun.env.SEED_PERSONAL_PASSWORD,
+				name: Bun.env.SEED_PERSONAL_NAME ?? "Personal",
+			}
+		: null;
 
 const descriptionsByCategory: Record<(typeof transactionCategories)[number], string[]> = {
 	food: ["Supermercado", "Restaurante", "iFood", "Padaria", "Feira"],
@@ -35,10 +41,25 @@ const descriptionsByCategory: Record<(typeof transactionCategories)[number], str
 	other: ["Doação", "Taxa bancária", "Diversos"],
 };
 
+// Deterministic PRNG (mulberry32) with a fixed seed: every environment —
+// local, CI, E2E — gets the same demo transactions, so tests that look for
+// seeded data (e.g. searching "Uber") can't flake on an unlucky draw.
+function createRandom(seed: number): () => number {
+	let state = seed;
+	return () => {
+		state = (state + 0x6d2b79f5) | 0;
+		let t = Math.imul(state ^ (state >>> 15), 1 | state);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
+const random = createRandom(20260927);
+
 function randomFrom<T>(items: readonly T[]): T {
-	const item = items[Math.floor(Math.random() * items.length)];
+	const item = items[Math.floor(random() * items.length)];
 	if (item === undefined) {
-		throw new Error("randomFrom chamado com array vazio");
+		throw new Error("randomFrom called with an empty array");
 	}
 	return item;
 }
@@ -46,14 +67,14 @@ function randomFrom<T>(items: readonly T[]): T {
 function randomDateWithinLastYear(): Date {
 	const now = Date.now();
 	const oneYearMs = 365 * 24 * 60 * 60 * 1000;
-	return new Date(now - Math.floor(Math.random() * oneYearMs));
+	return new Date(now - Math.floor(random() * oneYearMs));
 }
 
 async function seedAdminUser(): Promise<string> {
 	const existing = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL } });
 
 	if (existing) {
-		console.log(`Usuário admin já existe (${ADMIN_EMAIL}), reaproveitando.`);
+		console.log(`Admin user already exists (${ADMIN_EMAIL}), reusing it.`);
 		return existing.id;
 	}
 
@@ -63,9 +84,9 @@ async function seedAdminUser(): Promise<string> {
 
 	await prisma.user.update({
 		where: { id: result.user.id },
-		// Conta de demonstração/E2E com plano ativo "para sempre" — sem isso, o
-		// limite de 10 transações do plano gratuito (Fase 6) bloquearia as 500
-		// transações de seed e os testes E2E que criam transações via esta conta.
+		// Demo/E2E account on a "forever" active plan — otherwise the free plan's
+		// 10-transaction limit would block the 500 seeded transactions and the
+		// E2E tests that create transactions through this account.
 		data: {
 			emailVerified: true,
 			planStatus: "active",
@@ -73,7 +94,7 @@ async function seedAdminUser(): Promise<string> {
 		},
 	});
 
-	console.log(`Usuário admin criado: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+	console.log(`Admin user created: ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
 	return result.user.id;
 }
 
@@ -81,7 +102,7 @@ async function seedTransactions(userId: string): Promise<void> {
 	const existingCount = await prisma.transaction.count({ where: { userId } });
 
 	if (existingCount > 0) {
-		console.log(`Usuário admin já tem ${existingCount} transações, pulando geração de seed.`);
+		console.log(`Admin user already has ${existingCount} transactions, skipping.`);
 		return;
 	}
 
@@ -99,7 +120,7 @@ async function seedTransactions(userId: string): Promise<void> {
 					? "expense"
 					: randomFrom(transactionTypes);
 		const description = randomFrom(descriptionsByCategory[category]);
-		const amount = Math.floor(Math.random() * 490_00) + 10_00; // 10.00 a 500.00
+		const amount = Math.floor(random() * 490_00) + 10_00; // 10.00 to 500.00
 
 		return {
 			userId,
@@ -112,33 +133,33 @@ async function seedTransactions(userId: string): Promise<void> {
 	});
 
 	await prisma.transaction.createMany({ data });
-	console.log(`${TRANSACTIONS_COUNT} transações geradas para o usuário admin.`);
+	console.log(`${TRANSACTIONS_COUNT} transactions generated for the admin user.`);
 }
 
-async function seedPersonalUser(): Promise<void> {
-	const existing = await prisma.user.findUnique({ where: { email: PERSONAL_EMAIL } });
+async function seedPersonalUser(account: { email: string; password: string; name: string }): Promise<void> {
+	const existing = await prisma.user.findUnique({ where: { email: account.email } });
 
 	if (existing) {
-		console.log(`Usuário pessoal já existe (${PERSONAL_EMAIL}), reaproveitando.`);
+		console.log(`Personal user already exists (${account.email}), reusing it.`);
 		return;
 	}
 
-	const result = await auth.api.signUpEmail({
-		body: { email: PERSONAL_EMAIL, password: PERSONAL_PASSWORD, name: PERSONAL_NAME },
-	});
+	const result = await auth.api.signUpEmail({ body: account });
+	await prisma.user.update({ where: { id: result.user.id }, data: { emailVerified: true } });
 
-	await prisma.user.update({
-		where: { id: result.user.id },
-		data: { emailVerified: true },
-	});
-
-	console.log(`Usuário pessoal criado: ${PERSONAL_EMAIL} / ${PERSONAL_PASSWORD} (sem transações de exemplo).`);
+	console.log(`Personal user created: ${account.email} (no sample transactions).`);
 }
 
 async function main(): Promise<void> {
+	// The demo admin's password is public (README, E2E suites) — seeding it
+	// into a production database would hand out a working account.
+	if (env.NODE_ENV === "production") {
+		throw new Error("Refusing to seed with NODE_ENV=production.");
+	}
+
 	const adminId = await seedAdminUser();
 	await seedTransactions(adminId);
-	await seedPersonalUser();
+	if (personalAccount) await seedPersonalUser(personalAccount);
 }
 
 main()

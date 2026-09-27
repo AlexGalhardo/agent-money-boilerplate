@@ -11,12 +11,14 @@
 		"generate-routes": "tsr generate",
 		"build": "vite build",
 		"start": "PORT=4001 bun server.ts",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test": "bun test src"
 	},
 	"dependencies": {
-		"@better-auth/api-key": "1.7.5",
 		"@agent-money-boilerplate/backend": "workspace:*",
+		"@better-auth/api-key": "1.7.5",
 		"@elysiajs/eden": "1.4.9",
+		"@scalar/api-reference-react": "0.9.74",
 		"@tailwindcss/vite": "4.3.3",
 		"@tanstack/react-devtools": "0.10.12",
 		"@tanstack/react-query": "5.102.8",
@@ -35,7 +37,7 @@
 		"react-dom": "19.2.3",
 		"recharts": "3.10.1",
 		"tailwindcss": "4.3.3",
-		"xlsx": "0.18.5",
+		"write-excel-file": "4.1.1",
 		"zod": "4.6.2"
 	},
 	"devDependencies": {

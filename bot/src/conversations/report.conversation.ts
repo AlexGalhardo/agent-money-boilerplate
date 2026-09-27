@@ -2,17 +2,9 @@ import type { Context } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { last30Days, lastWeek } from "../date-ranges/date-ranges";
 import { buildPeriodReportPdf } from "../lib/pdf-report";
-import { ensureUserReady } from "../lib/user-gate";
-import { requirePassword } from "../lib/verify-password-step";
 import type { BotConversation } from "../types";
 
-export async function reportConversation(conversation: BotConversation, ctx: Context): Promise<void> {
-	const userId = await ensureUserReady(conversation, ctx);
-	if (!userId) return;
-
-	const passed = await requirePassword(conversation, ctx);
-	if (!passed) return;
-
+export async function reportConversation(conversation: BotConversation, ctx: Context, userId: string): Promise<void> {
 	const keyboard = new InlineKeyboard()
 		.text("Últimos 7 dias", "report:7")
 		.text("Últimos 30 dias", "report:30")

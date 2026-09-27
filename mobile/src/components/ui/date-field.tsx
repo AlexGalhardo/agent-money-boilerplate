@@ -1,10 +1,10 @@
+import { Feather } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Platform, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 
 import { dateToISO, isoToBR, isoToDate } from "@/lib/format";
-import { useAppColorScheme } from "@/lib/theme";
-import { Pressable } from "@/shared/components/atoms/pressable";
+import { colors } from "@/theme";
 
 type Props = {
 	label: string;
@@ -25,73 +25,56 @@ export function DateField({
 	minimumDate,
 	maximumDate,
 }: Props) {
-	const [show, setShow] = useState(false);
-	const { isDark } = useAppColorScheme();
-	const current = value ? isoToDate(value) : new Date();
+	const [open, setOpen] = useState(false);
 
 	return (
-		<View className="gap-1.5">
-			<Text className="text-sm font-medium text-slate-700 dark:text-slate-200">{label}</Text>
-			<View className="flex-row items-center gap-2">
-				<Pressable
-					onPress={() => setShow((prev) => !prev)}
-					style={{
-						flex: 1,
-						height: 48,
-						justifyContent: "center",
-						borderRadius: 12,
-						borderWidth: 1,
-						borderColor: isDark ? "#475569" : "#cbd5e1",
-						backgroundColor: isDark ? "#1e293b" : "#ffffff",
-						paddingHorizontal: 16,
-					}}
-				>
-					<Text
-						className={`text-base ${value ? "text-slate-900 dark:text-slate-100" : "text-slate-400 dark:text-slate-500"}`}
-					>
-						{value ? isoToBR(value) : placeholder}
-					</Text>
-				</Pressable>
+		<View className="gap-2">
+			<Text className="text-footnote font-medium text-muted">{label}</Text>
+			<Pressable
+				onPress={() => setOpen((current) => !current)}
+				accessibilityRole="button"
+				accessibilityLabel={label}
+				className="h-[52px] flex-row items-center gap-3 rounded-control bg-raised px-4 active:opacity-70"
+			>
+				<Feather name="calendar" size={16} color={colors.subtle} />
+				<Text className={`flex-1 text-body ${value ? "text-fg" : "text-subtle"}`}>
+					{value ? isoToBR(value) : placeholder}
+				</Text>
 				{value && onClear ? (
 					<Pressable
 						onPress={() => {
-							setShow(false);
+							setOpen(false);
 							onClear();
 						}}
-						hitSlop={8}
-						style={{ borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 }}
+						hitSlop={10}
+						accessibilityRole="button"
+						accessibilityLabel={`Limpar ${label}`}
+						className="active:opacity-60"
 					>
-						<Text className="text-sm font-medium text-blue-600">Limpar</Text>
+						<Feather name="x" size={16} color={colors.subtle} />
 					</Pressable>
 				) : null}
-			</View>
+			</Pressable>
 
-			{show ? (
-				<View className={Platform.OS === "ios" ? "items-start" : undefined}>
+			{open ? (
+				<View className="gap-2">
 					<DateTimePicker
-						value={current}
+						value={value ? isoToDate(value) : new Date()}
 						mode="date"
 						display={Platform.OS === "ios" ? "inline" : "default"}
+						themeVariant="dark"
+						accentColor={colors.brand}
 						minimumDate={minimumDate}
 						maximumDate={maximumDate}
 						onChange={(event, selected) => {
-							if (Platform.OS !== "ios") setShow(false);
+							if (Platform.OS !== "ios") setOpen(false);
 							if (event.type === "dismissed") return;
 							if (selected) onChange(dateToISO(selected));
 						}}
 					/>
 					{Platform.OS === "ios" ? (
-						<Pressable
-							onPress={() => setShow(false)}
-							style={{
-								marginTop: 4,
-								alignSelf: "flex-end",
-								borderRadius: 8,
-								paddingHorizontal: 12,
-								paddingVertical: 8,
-							}}
-						>
-							<Text className="text-sm font-semibold text-blue-600">Concluir</Text>
+						<Pressable onPress={() => setOpen(false)} className="self-end px-3 py-2 active:opacity-60">
+							<Text className="text-subhead font-semibold text-brand">Concluir</Text>
 						</Pressable>
 					) : null}
 				</View>

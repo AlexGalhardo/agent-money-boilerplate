@@ -44,7 +44,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 		<html lang="pt-BR" suppressHydrationWarning>
 			<head>
 				<HeadContent />
-				{/** biome-ignore lint/security/noDangerouslySetInnerHtml: script inline necessário para evitar flash de tema errado antes da hidratação */}
+				{/** biome-ignore lint/security/noDangerouslySetInnerHtml: static inline script (no user input) that prevents a wrong-theme flash before hydration */}
 				<script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
 			</head>
 			<body suppressHydrationWarning>

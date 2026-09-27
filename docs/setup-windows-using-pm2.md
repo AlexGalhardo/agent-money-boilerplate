@@ -27,21 +27,21 @@ distro equivalente) ou do **Git Bash**. Ele não roda no PowerShell nem no
 # dentro do WSL2 (ou Git Bash)
 git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
 cd galhardo-money-bot
-./setups/setup-windows-using-pm2.sh
+./setups/setup-pm2.sh
 ```
 
 O script pergunta qual banco usar:
 
-```
+```text
 Qual banco de dados você quer usar?
   a) SQLite   (configuração rápida, padrão)
   b) Postgres
 ```
 
 Para pular a pergunta, passe o banco como argumento:
-`./setups/setup-windows-using-pm2.sh sqlite` ou `./setups/setup-windows-using-pm2.sh postgres`.
+`./setups/setup-pm2.sh sqlite` ou `./setups/setup-pm2.sh postgres`.
 
-O comportamento é idêntico ao `setups/setup-unix-using-pm2.sh` (instala PM2 e
+O comportamento é idêntico ao `setups/setup-pm2.sh` (instala PM2 e
 dependências, cria os `.env`, aplica migrations, popula o banco e sobe
 `elysia-backend` + `elysia-frontend` com PM2), só com mensagens de erro
 adaptadas para o Docker Desktop quando Postgres é escolhido.
@@ -52,8 +52,8 @@ builds já compilados.
 
 ## Rodando
 
-- API: http://localhost:4000 (docs OpenAPI em `/docs`)
-- Frontend: http://localhost:4001
+- API: <http://localhost:4000> (docs OpenAPI em `/docs`)
+- Frontend: <http://localhost:4001>
 
 ## Bot do Telegram (opcional)
 

@@ -1,13 +1,12 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { resetLockoutState } from "./lockout";
-import { evaluatePasswordAttempt } from "./verify-password-step";
+import { evaluatePasswordAttempt, passwordLockout } from "./verify-password-step";
 
 const CHAT_ID = 555;
 const CORRECT_PASSWORD = "test-password-123";
 
 describe("evaluatePasswordAttempt", () => {
 	beforeEach(() => {
-		resetLockoutState();
+		passwordLockout.reset();
 	});
 
 	it("returns correct for the right password", () => {

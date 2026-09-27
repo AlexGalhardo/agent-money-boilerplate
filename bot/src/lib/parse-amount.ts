@@ -1,4 +1,4 @@
-/** Aceita vírgula ou ponto como separador decimal (ex: "49,90" ou "49.90"). */
+/** Accepts a comma or a dot as the decimal separator (e.g. "49,90" or "49.90"). */
 export function parseAmountToCents(text: string): number | null {
 	const normalized = text.trim().replace(",", ".");
 	const value = Number.parseFloat(normalized);

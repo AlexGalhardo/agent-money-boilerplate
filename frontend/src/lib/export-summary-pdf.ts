@@ -1,8 +1,7 @@
-// `html2canvas` (sem sufixo) não entende funções de cor modernas como
-// `oklch()`/`lab()` — que é como o Tailwind CSS v4 gera as cores deste
-// projeto — e lança "Attempting to parse an unsupported color function" ao
-// capturar qualquer elemento estilizado com ele. O fork `html2canvas-pro` é
-// mantido justamente para suportar essas funções de cor.
+// Plain `html2canvas` doesn't understand modern color functions like
+// `oklch()`/`lab()` — which is how Tailwind CSS v4 emits this project's
+// colors — and throws "Attempting to parse an unsupported color function".
+// The `html2canvas-pro` fork exists precisely to support them.
 import html2canvas from "html2canvas-pro";
 import { jsPDF } from "jspdf";
 

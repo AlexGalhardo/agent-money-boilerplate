@@ -15,12 +15,12 @@ além do Docker no host. Para rodar sem Docker, veja
 ```bash
 git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
 cd galhardo-money-bot
-./setups/setup-unix-using-docker.sh
+./setups/setup-docker.sh
 ```
 
 O script pergunta qual banco usar:
 
-```
+```text
 Qual banco de dados você quer usar?
   a) SQLite   (configuração rápida, padrão)
   b) Postgres
@@ -29,8 +29,8 @@ Qual banco de dados você quer usar?
 Para pular a pergunta (útil em automação), passe o banco como argumento:
 
 ```bash
-./setups/setup-unix-using-docker.sh sqlite     # equivalente a responder "a"
-./setups/setup-unix-using-docker.sh postgres   # equivalente a responder "b"
+./setups/setup-docker.sh sqlite     # equivalente a responder "a"
+./setups/setup-docker.sh postgres   # equivalente a responder "b"
 ```
 
 O script:
@@ -48,12 +48,11 @@ O script:
 
 ## Rodando
 
-- API: http://localhost:4000 (docs OpenAPI em `/docs`)
-- Frontend: http://localhost:4001
+- API: <http://localhost:4000> (docs OpenAPI em `/docs`)
+- Frontend: <http://localhost:4001>
 
 Usuários de teste: `admin@gmail.com` / `adminBR@123` (500 transações de
-demonstração) e `aleexgvieira@gmail.com` / `galhardyn` (conta pessoal, sem
-transações — pronta para importar seu extrato pelo botão **Importar**).
+demonstração).
 
 ## Bot do Telegram (opcional)
 

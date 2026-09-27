@@ -85,8 +85,8 @@ describe("paymentService", () => {
 				}),
 			);
 			expect(prismaMock.paymentLog.upsert).toHaveBeenCalled();
-			// O id retornado deve ser o id INTERNO do PixCharge (usado depois por
-			// getCheckoutStatus/simulateCheckout), nunca o externalId da AbacatePay.
+			// Must be the INTERNAL PixCharge id (used later by
+			// getCheckoutStatus/simulateCheckout), never AbacatePay's externalId.
 			expect(result).toEqual({
 				id: "internal-charge-1",
 				brCode: "00020126...",
@@ -225,15 +225,27 @@ describe("paymentService", () => {
 			expect(prismaMock.user.update).not.toHaveBeenCalled();
 		});
 
-		it("activates the plan on transparent.completed", async () => {
+		it("activates the plan on transparent.completed once AbacatePay confirms the charge is paid", async () => {
 			prismaMock.pixCharge.findUnique.mockResolvedValue(buildCharge());
 			prismaMock.paymentLog.upsert.mockResolvedValue({});
+			abacatepayMock.checkPixCharge.mockResolvedValue({ id: "ext-1", status: "PAID" });
 
 			await paymentService.handleWebhookEvent({ event: "transparent.completed", data: { id: "ext-1" } });
 
+			expect(abacatepayMock.checkPixCharge).toHaveBeenCalledWith("ext-1");
 			expect(prismaMock.user.update).toHaveBeenCalledWith(
 				expect.objectContaining({ data: expect.objectContaining({ planStatus: "active" }) }),
 			);
+		});
+
+		it("ignores a forged transparent.completed for a charge AbacatePay reports as unpaid", async () => {
+			prismaMock.pixCharge.findUnique.mockResolvedValue(buildCharge());
+			abacatepayMock.checkPixCharge.mockResolvedValue({ id: "ext-1", status: "PENDING" });
+
+			await paymentService.handleWebhookEvent({ event: "transparent.completed", data: { id: "ext-1" } });
+
+			expect(prismaMock.user.update).not.toHaveBeenCalled();
+			expect(prismaMock.paymentLog.upsert).not.toHaveBeenCalled();
 		});
 
 		it("marks the charge as failed on transparent.refunded", async () => {

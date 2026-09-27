@@ -1,39 +1,31 @@
 import { Elysia } from "elysia";
 import { authPlugin } from "../../lib/auth.plugin";
-import { FreeLimitReachedError } from "../../lib/plan";
 import { importConfirmRequestSchema, importPreviewRequestSchema } from "./transaction-import.schema";
-import { ImportParseError, transactionImportService } from "./transaction-import.service";
+import { transactionImportService } from "./transaction-import.service";
 
-export const transactionImportRoutes = new Elysia({ prefix: "/transactions/import" })
+export const transactionImportRoutes = new Elysia({ prefix: "/transactions/import", tags: ["Importação"] })
 	.use(authPlugin)
 	.guard({ auth: true })
-	.post(
-		"/preview",
-		async ({ body, status }) => {
-			try {
-				const result = transactionImportService.preview(body.csv);
-				return { success: true, ...result };
-			} catch (error) {
-				if (error instanceof ImportParseError) {
-					return status(400, { success: false, message: error.message });
-				}
-				throw error;
-			}
+	.post("/preview", ({ body }) => ({ success: true, ...transactionImportService.preview(body.csv) }), {
+		body: importPreviewRequestSchema,
+		detail: {
+			summary: "Pré-visualizar extrato do Nubank",
+			description:
+				"Recebe o conteúdo do CSV do Nubank (até 5 MB) e devolve as linhas classificadas por categoria, sem gravar nada.",
 		},
-		{ body: importPreviewRequestSchema },
-	)
+	})
 	.post(
 		"/confirm",
-		async ({ user, body, status }) => {
-			try {
-				const result = await transactionImportService.confirm(user.id, body.transactions);
-				return { success: true, ...result };
-			} catch (error) {
-				if (error instanceof FreeLimitReachedError) {
-					return status(403, { success: false, message: error.message });
-				}
-				throw error;
-			}
+		async ({ user, body }) => ({
+			success: true,
+			...(await transactionImportService.confirm(user.id, body.transactions)),
+		}),
+		{
+			body: importConfirmRequestSchema,
+			detail: {
+				summary: "Confirmar importação",
+				description:
+					"Grava as linhas (até 5000). Duplicatas (mesma descrição, valor e dia) são ignoradas; no plano gratuito só entra até o limite restante.",
+			},
 		},
-		{ body: importConfirmRequestSchema },
 	);

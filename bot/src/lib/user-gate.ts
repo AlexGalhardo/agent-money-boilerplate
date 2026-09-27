@@ -5,7 +5,7 @@ import {
 	AbacatePayNotConfiguredError,
 	paymentService,
 } from "@agent-money-boilerplate/backend/src/modules/payments/payment.service";
-import { findUserById } from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
+import { userRepository } from "@agent-money-boilerplate/backend/src/modules/users/user.repository";
 import type { Context } from "grammy";
 import { InlineKeyboard, InputFile } from "grammy";
 import { formatDate } from "../formatting/format";
@@ -13,12 +13,11 @@ import type { BotConversation } from "../types";
 import { ensureLinked } from "./auth-flows";
 
 /**
- * Garante que o chat está vinculado a uma conta (pelo menu de login/criar
- * conta/Google/ID em `ensureLinked`, ver ./auth-flows.ts) e que essa conta
- * tem plano ativo (oferecendo o checkout PIX no próprio chat se não tiver).
- * Só retorna um userId quando as duas condições são satisfeitas — do
- * contrário, já respondeu ao usuário explicando o motivo e quem chamou deve
- * simplesmente parar (`return`).
+ * Ensures the chat is linked to an account (through `ensureLinked`'s access
+ * menu, see ./auth-flows.ts) and that the account has an active plan
+ * (offering PIX checkout right in the chat otherwise). Returns a userId only
+ * when both hold — otherwise the user was already told why, and the caller
+ * should just stop.
  */
 export async function ensureUserReady(conversation: BotConversation, ctx: Context): Promise<string | null> {
 	const userId = await ensureLinked(conversation, ctx);
@@ -28,7 +27,7 @@ export async function ensureUserReady(conversation: BotConversation, ctx: Contex
 }
 
 async function ensureActivePlan(conversation: BotConversation, ctx: Context, userId: string): Promise<string | null> {
-	const user = await conversation.external(() => findUserById(userId));
+	const user = await conversation.external(() => userRepository.findById(userId));
 	if (user && hasActivePlan(user)) return userId;
 
 	await ctx.reply(
@@ -68,7 +67,7 @@ async function runPaymentLoop(conversation: BotConversation, userId: string): Pr
 
 		const paid = await offerPixCheckout(conversation, chosen, userId, plan);
 		if (paid) return userId;
-		// usuário cancelou ou o PIX expirou — deixa escolher outro plano de novo
+		// cancelled or the PIX expired — let the user pick a plan again
 		await chosen.reply("Escolha um plano para continuar:", { reply_markup: planKeyboard() });
 	}
 }
@@ -77,15 +76,10 @@ type PixCheckoutResult =
 	| { ok: true; charge: Awaited<ReturnType<typeof paymentService.createPixCheckout>> }
 	| { ok: false };
 
-// The exception must be caught IN HERE (not in a try/catch after the
-// `await conversation.external(...)` call) because @grammyjs/conversations
-// clones the returned/thrown value with `structuredClone` to write it to the
-// replay log — and `structuredClone` on an Error instance drops its
-// prototype chain, `.name` and any custom property (only `message`/`stack`
-// survive). An `error instanceof AbacatePayNotConfiguredError` check done
-// after `external()` never matches; the correct fix is to return a plain
-// (serializable) value that survives the clone, same pattern as `callAuth`
-// in bot/src/lib/auth-flows.ts.
+// Caught IN HERE, not after `conversation.external()`: the conversations
+// plugin clones results with `structuredClone`, which strips an Error's
+// subclass, so an `instanceof` check outside never matches. Same pattern as
+// `callAuth` in ./auth-flows.ts.
 async function tryCreatePixCheckout(userId: string, plan: (typeof planIds)[number]): Promise<PixCheckoutResult> {
 	try {
 		const charge = await paymentService.createPixCheckout(userId, plan);
@@ -136,10 +130,9 @@ async function offerPixCheckout(
 
 		if (data === "pix:simulate" && testMode) {
 			await action.reply("Esse PIX será pago em 10 segundos...");
-			// @grammyjs/conversations v2 não tem um `conversation.sleep()`
-			// embutido — `external()` roda o timeout uma única vez na execução
-			// real (nunca durante replay), que é o jeito replay-safe de
-			// esperar um tempo fixo dentro de uma conversation.
+			// @grammyjs/conversations v2 has no `conversation.sleep()` —
+			// `external()` runs the timeout once on the real execution (never
+			// on replay), the replay-safe way to wait inside a conversation.
 			await conversation.external(() => new Promise<void>((resolve) => setTimeout(resolve, 10_000)));
 			await conversation.external(() => paymentService.simulateCheckout(userId, charge.id));
 		}

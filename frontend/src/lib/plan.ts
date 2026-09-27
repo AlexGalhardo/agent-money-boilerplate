@@ -4,9 +4,8 @@ export function hasActivePlan(user: { planStatus: string; planExpiresAt: string 
 	return user.planStatus === "active" && (user.planExpiresAt === null || new Date(user.planExpiresAt) > new Date());
 }
 
-/** Dias restantes do plano PRO, arredondado pra cima (o dia do vencimento
- * ainda conta como 1, não 0) — ou `null` sem plano ativo ou sem data de
- * expiração (plano vitalício). */
+/** Days left on the PRO plan, rounded up (the expiry day still counts as 1)
+ * — or `null` with no active plan or no expiry date (lifetime plan). */
 export function planDaysRemaining(user: { planStatus: string; planExpiresAt: string | Date | null }): number | null {
 	if (!hasActivePlan(user) || !user.planExpiresAt) return null;
 	const diffMs = new Date(user.planExpiresAt).getTime() - Date.now();

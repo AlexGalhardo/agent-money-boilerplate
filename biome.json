@@ -17,11 +17,15 @@
 			"!**/*.gen.ts",
 			"!**/bun.lock",
 			"!.vscode",
-			"!.agents/skills"
+			"!.agents/skills",
+			"!.claude/skills",
+			"!.claude/agents",
+			"!.claude/references"
 		]
 	},
 	"formatter": {
 		"enabled": true,
+		"useEditorconfig": true,
 		"indentStyle": "tab",
 		"indentWidth": 4,
 		"lineWidth": 120

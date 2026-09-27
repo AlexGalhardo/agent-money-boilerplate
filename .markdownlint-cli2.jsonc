@@ -1,0 +1,29 @@
+{
+	// https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+	"config": {
+		"default": true,
+		// Prettier owns wrapping/formatting; line length is a prose choice.
+		"MD013": false,
+		// <details>, <br>, badges and similar inline HTML are used on purpose.
+		"MD033": false,
+		// Repeated headings ("Added", "Fixed") are required by Keep a Changelog.
+		"MD024": { "siblings_only": true },
+		// Prettier normalizes emphasis/list markers; don't fight it.
+		"MD004": false,
+		"MD049": false,
+		"MD050": false,
+		// Prettier aligns table pipes; markdownlint's table style would fight it.
+		"MD060": false
+	},
+	"globs": ["**/*.md"],
+	"ignores": [
+		"**/node_modules/**",
+		".claude/skills/**",
+		".claude/agents/**",
+		".claude/references/**",
+		".agents/skills/**",
+		"**/dist/**",
+		"**/.tanstack/**",
+		"TODO.md"
+	]
+}

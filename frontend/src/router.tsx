@@ -1,5 +1,6 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
+import { ErrorPage } from "./components/error-page";
 import { NotFoundPage } from "./components/not-found";
 import { getContext } from "./integrations/tanstack-query/root-provider";
 import { routeTree } from "./routeTree.gen";
@@ -14,6 +15,7 @@ export function getRouter() {
 		defaultPreload: "intent",
 		defaultPreloadStaleTime: 0,
 		defaultNotFoundComponent: NotFoundPage,
+		defaultErrorComponent: ErrorPage,
 	});
 
 	setupRouterSsrQueryIntegration({ router, queryClient: context.queryClient });

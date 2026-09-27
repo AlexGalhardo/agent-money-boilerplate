@@ -9,10 +9,10 @@ export type ServerSession = {
 } | null;
 
 /**
- * O frontend e a API rodam em servidores separados, então durante SSR
- * (navegação direta por URL) o `authClient.getSession()` do browser não
- * tem acesso ao cookie de sessão — é preciso repassar o header `Cookie`
- * da requisição recebida para o endpoint de sessão da API.
+ * Frontend and API run on separate servers, so during SSR (direct URL
+ * navigation) the browser's `authClient.getSession()` can't see the session
+ * cookie — the incoming request's `Cookie` header is forwarded to the API's
+ * session endpoint instead.
  */
 export const getServerSession = createServerFn({ method: "GET" }).handler(async (): Promise<ServerSession> => {
 	const request = getRequest();
@@ -28,8 +28,8 @@ export const getServerSession = createServerFn({ method: "GET" }).handler(async 
 
 export type ServerPlan = { planStatus: string; planExpiresAt: string | null } | null;
 
-/** Mesma necessidade de repasse de cookie de `getServerSession`, mas pros
- * campos de plano (não nativos do better-auth) expostos em `/users/me`. */
+/** Same cookie forwarding as `getServerSession`, for the plan fields
+ * (not native to better-auth) exposed by `/users/me`. */
 export const getServerPlan = createServerFn({ method: "GET" }).handler(async (): Promise<ServerPlan> => {
 	const request = getRequest();
 	const cookie = request.headers.get("cookie");

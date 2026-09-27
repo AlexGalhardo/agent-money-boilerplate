@@ -19,10 +19,8 @@ export const Route = createFileRoute("/")({
 });
 
 function Home() {
-	// A landing segue o tema global (claro/escuro) como o resto do app —
-	// o toggle no footer aplica a classe "dark" no <html>, e essa classe
-	// aqui só espelha o estado atual (ver bug corrigido: antes ficava sempre
-	// "dark" fixo na div, então o toggle não tinha efeito visual nenhum).
+	// only mirrors the current state (a past bug hardcoded "dark" on the div,
+	// so the toggle had no visual effect).
 	const isDark = useIsDarkTheme();
 
 	return (

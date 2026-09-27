@@ -1,11 +1,11 @@
 import type { App } from "@agent-money-boilerplate/backend/src/server";
 import { treaty } from "@elysiajs/eden";
 
-// Mesma origem do frontend (proxiada pra API — ver frontend/server.ts e
-// vite.config.ts), não a URL pública da API diretamente: o cookie de sessão
-// pertence ao domínio do frontend (ver auth-client.ts), então uma chamada
-// cross-site direta pra API não o enviaria. `window` não existe durante SSR,
-// mas esse client só é usado dentro de componentes React (client-side).
+// Same origin as the frontend (proxied to the API — see frontend/server.ts and
+// vite.config.ts), not the API's public URL: the session cookie belongs to
+// the frontend domain (see auth-client.ts), so a direct cross-site call
+// wouldn't carry it. `window` doesn't exist during SSR, but this client is
+// only used inside React components (client-side).
 const API_URL =
 	typeof window !== "undefined" ? window.location.origin : (import.meta.env.VITE_API_URL ?? "http://localhost:4000");
 

@@ -1,19 +1,25 @@
 import { env as apiEnv } from "@agent-money-boilerplate/backend/src/config/env";
 import { auth } from "@agent-money-boilerplate/backend/src/lib/auth";
 import {
-	ChatAlreadyLinkedError,
 	createLinkToken,
-	findUserById,
 	findUserIdByChatId,
 	linkChatToUser,
 } from "@agent-money-boilerplate/backend/src/modules/telegram/telegram.service";
+import { userRepository } from "@agent-money-boilerplate/backend/src/modules/users/user.repository";
 import { APIError } from "better-auth";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import { z } from "zod";
 import type { BotConversation } from "../types";
 import { translateAuthError } from "./auth-errors";
+import { createLockout, remainingMinutes } from "./lockout";
 import { failingPasswordRules, PASSWORD_RULES } from "./password-rules";
+
+// The bot calls `auth.api.*` in-process, which bypasses better-auth's HTTP
+// rate limiter — without this, a chat could brute-force passwords.
+export const loginLockout = createLockout({ maxAttempts: 5, lockoutMinutes: 15 });
+
+const emailSchema = z.email();
 
 function authMenuKeyboard(): InlineKeyboard {
 	return new InlineKeyboard()
@@ -21,18 +27,16 @@ function authMenuKeyboard(): InlineKeyboard {
 		.row()
 		.text("🆕 Criar conta", "authmenu:signup")
 		.row()
-		.text("🌐 Entrar com Google", "authmenu:google")
+		.text("🌐 Entrar pelo navegador (Google ou e-mail)", "authmenu:web")
 		.row()
-		.text("❓ Esqueci minha senha", "authmenu:forgot")
-		.row()
-		.text("🆔 Vincular por ID da conta", "authmenu:id");
+		.text("❓ Esqueci minha senha", "authmenu:forgot");
 }
 
 function capitalizeFirstLetter(value: string): string {
 	return value.length === 0 ? value : value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-/** Pede um texto e repete até `validate` devolver `null` (válido). */
+/** Asks for text and repeats until `validate` returns `null` (valid). */
 async function promptText(
 	conversation: BotConversation,
 	ctx: Context,
@@ -55,7 +59,7 @@ async function promptText(
 	}
 }
 
-/** Como `promptText`, mas apaga cada mensagem digitada — a resposta é uma senha. */
+/** Like `promptText`, but deletes every typed message — the answer is a password. */
 async function promptPassword(
 	conversation: BotConversation,
 	ctx: Context,
@@ -80,8 +84,15 @@ async function promptPassword(
 	}
 }
 
-/** Roda `fn` e devolve o `code` do better-auth em caso de erro, sem deixar o `APIError` vazar. */
-async function callAuth<T>(fn: () => Promise<T>): Promise<{ ok: true; data: T } | { ok: false; code?: string }> {
+type AuthResult<T> = { ok: true; data: T } | { ok: false; code?: string };
+
+/**
+ * Runs a better-auth call and returns a plain, serializable result. It must
+ * not throw across `conversation.external()`: @grammyjs/conversations clones
+ * results with `structuredClone`, which strips an Error's subclass, so an
+ * `instanceof APIError` check after `external()` would never match.
+ */
+async function callAuth<T>(fn: () => Promise<T>): Promise<AuthResult<T>> {
 	try {
 		return { ok: true, data: await fn() };
 	} catch (error) {
@@ -92,78 +103,62 @@ async function callAuth<T>(fn: () => Promise<T>): Promise<{ ok: true; data: T } 
 	}
 }
 
-const emailSchema = z.email();
+type LoginAttempt =
+	| { outcome: "locked"; minutes: number }
+	| { outcome: "failed"; code?: string }
+	| { outcome: "two-factor" }
+	| { outcome: "ok"; userId: string; name: string };
 
-async function handleIdLink(conversation: BotConversation, ctx: Context, chatId: number): Promise<string | null> {
-	const candidateId = await promptText(
-		conversation,
-		ctx,
-		"Envie o *ID da sua conta* — você encontra em *Minha Conta* no site, na seção “Bot do Telegram”.",
-		() => null,
-	);
+async function attemptLogin(chatId: number, email: string, password: string): Promise<LoginAttempt> {
+	const lock = loginLockout.check(chatId);
+	if (lock.locked) return { outcome: "locked", minutes: remainingMinutes(lock) };
 
-	const user = await conversation.external(() => findUserById(candidateId));
-	if (!user) {
-		await ctx.reply("ID não encontrado. Confira em Minha Conta e toque em 'Vincular por ID da conta' de novo.");
-		return null;
+	const result = await callAuth(() => auth.api.signInEmail({ body: { email, password } }));
+	if (!result.ok) {
+		const status = loginLockout.recordFailure(chatId);
+		return status.locked
+			? { outcome: "locked", minutes: remainingMinutes(status) }
+			: { outcome: "failed", code: result.code };
 	}
 
-	// See the same-shaped comment on tryCreatePixCheckout in
-	// bot/src/lib/user-gate.ts: catching ChatAlreadyLinkedError in a
-	// try/catch placed after `await conversation.external(...)` never
-	// matches, because structuredClone (used internally to log the result
-	// for replay) strips a thrown Error's subclass identity. Catch it inside
-	// the wrapped callback and return a plain value instead.
-	const linked = await conversation.external(async () => {
-		try {
-			await linkChatToUser(chatId, candidateId);
-			return { ok: true as const };
-		} catch (error) {
-			if (error instanceof ChatAlreadyLinkedError) return { ok: false as const };
-			throw error;
-		}
-	});
-	if (!linked.ok) {
-		await ctx.reply(
-			"Esse chat já está vinculado a outra conta. Desvincule pelo site (apague o Chat ID em Minha Conta e salve) antes de vincular esta.",
-		);
-		return null;
-	}
+	loginLockout.recordSuccess(chatId);
+	if ("twoFactorRedirect" in result.data && result.data.twoFactorRedirect) return { outcome: "two-factor" };
+	if (!("user" in result.data)) return { outcome: "failed" };
 
-	await ctx.reply(`✅ Conta vinculada! Olá, ${user.name}.`);
-	return candidateId;
+	await linkChatToUser(chatId, result.data.user.id);
+	return { outcome: "ok", userId: result.data.user.id, name: result.data.user.name };
 }
 
 async function handleLogin(conversation: BotConversation, ctx: Context, chatId: number): Promise<string | null> {
 	const email = await promptText(conversation, ctx, "Digite seu *e-mail*:", (text) =>
 		emailSchema.safeParse(text).success ? null : "E-mail inválido.",
 	);
-
 	const password = await promptPassword(conversation, ctx, "🔒 Digite sua senha:", () => null);
 
-	const result = await conversation.external(() =>
-		callAuth(() => auth.api.signInEmail({ body: { email, password } })),
-	);
+	const attempt = await conversation.external(() => attemptLogin(chatId, email, password));
 
-	if (!result.ok) {
-		if (result.code === "EMAIL_NOT_VERIFIED") {
-			await ctx.reply("📧 Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada antes de entrar.");
+	switch (attempt.outcome) {
+		case "locked":
+			await ctx.reply(`🚫 Muitas tentativas incorretas. Tente novamente em ${attempt.minutes} min.`);
 			return null;
-		}
-		await ctx.reply(`❌ ${translateAuthError(result.code, "E-mail e/ou senha incorretos")}`);
-		return null;
+		case "failed":
+			if (attempt.code === "EMAIL_NOT_VERIFIED") {
+				await ctx.reply(
+					"📧 Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada antes de entrar.",
+				);
+				return null;
+			}
+			await ctx.reply(`❌ ${translateAuthError(attempt.code, "E-mail e/ou senha incorretos")}`);
+			return null;
+		case "two-factor":
+			await ctx.reply(
+				"🔐 Sua conta tem verificação em duas etapas. Use a opção 'Entrar pelo navegador' para vincular este chat.",
+			);
+			return null;
+		case "ok":
+			await ctx.reply(`✅ Conta vinculada! Olá, ${attempt.name}.`);
+			return attempt.userId;
 	}
-
-	if ("twoFactorRedirect" in result.data && result.data.twoFactorRedirect) {
-		await ctx.reply(
-			"🔐 Sua conta tem verificação em duas etapas ativada. O bot ainda não suporta esse fluxo — entre pelo site, ou toque em 'Vincular por ID da conta'.",
-		);
-		return null;
-	}
-
-	await conversation.external(() => linkChatToUser(chatId, result.data.user.id));
-	await ctx.reply(`✅ Conta vinculada! Olá, ${result.data.user.name}.`);
-	return result.data.user.id;
 }
 
 async function handleSignup(conversation: BotConversation, ctx: Context, chatId: number): Promise<string | null> {
@@ -208,9 +203,10 @@ async function handleSignup(conversation: BotConversation, ctx: Context, chatId:
 		return null;
 	}
 
-	await conversation.external(() => linkChatToUser(chatId, result.data.user.id));
+	const userId = result.data.user.id;
+	await conversation.external(() => linkChatToUser(chatId, userId));
 	await ctx.reply(`✅ Conta criada e vinculada! Bem-vindo(a), ${result.data.user.name}.`);
-	return result.data.user.id;
+	return userId;
 }
 
 async function handleForgotPassword(conversation: BotConversation, ctx: Context): Promise<null> {
@@ -222,7 +218,9 @@ async function handleForgotPassword(conversation: BotConversation, ctx: Context)
 	);
 
 	await conversation.external(() =>
-		auth.api.requestPasswordReset({ body: { email, redirectTo: `${apiEnv.FRONTEND_URL}/resetar-senha` } }),
+		callAuth(() =>
+			auth.api.requestPasswordReset({ body: { email, redirectTo: `${apiEnv.FRONTEND_URL}/resetar-senha` } }),
+		),
 	);
 
 	await ctx.reply(
@@ -231,21 +229,22 @@ async function handleForgotPassword(conversation: BotConversation, ctx: Context)
 	return null;
 }
 
-async function handleGoogleLink(conversation: BotConversation, ctx: Context, chatId: number): Promise<string | null> {
+/** Links through the browser: works for Google and for accounts with 2FA. */
+async function handleWebLink(conversation: BotConversation, ctx: Context, chatId: number): Promise<string | null> {
 	const { url } = await conversation.external(async () => {
 		const { token } = await createLinkToken(chatId);
 		return { url: `${apiEnv.FRONTEND_URL}/telegram-vincular?token=${encodeURIComponent(token)}` };
 	});
 
 	const keyboard = new InlineKeyboard()
-		.url("🌐 Entrar com Google", url)
+		.url("🌐 Abrir no navegador", url)
 		.row()
-		.text("🔄 Já entrei, verificar vínculo", "googlelink:check")
+		.text("🔄 Já entrei, verificar vínculo", "weblink:check")
 		.row()
-		.text("❌ Cancelar", "googlelink:cancel");
+		.text("❌ Cancelar", "weblink:cancel");
 
 	await ctx.reply(
-		"Toque no botão abaixo para entrar com sua conta Google pelo navegador. Depois, volte aqui e toque em *Já entrei, verificar vínculo*.",
+		"Toque no botão abaixo para entrar pelo navegador (Google ou e-mail e senha). O link vale por 15 minutos. Depois, volte aqui e toque em *Já entrei, verificar vínculo*.",
 		{ parse_mode: "Markdown", reply_markup: keyboard },
 	);
 
@@ -256,32 +255,45 @@ async function handleGoogleLink(conversation: BotConversation, ctx: Context, cha
 		const data = action.callbackQuery.data;
 		await action.answerCallbackQuery();
 
-		if (data === "googlelink:cancel") {
+		if (data === "weblink:cancel") {
 			await action.reply("Operação cancelada.");
 			return null;
 		}
 
-		if (data === "googlelink:check") {
-			const linkedUserId = await conversation.external(() => findUserIdByChatId(chatId));
-			if (!linkedUserId) {
+		if (data === "weblink:check") {
+			const linked = await conversation.external(async () => {
+				const userId = await findUserIdByChatId(chatId);
+				const user = userId ? await userRepository.findById(userId) : null;
+				return user ? { userId: user.id, name: user.name } : null;
+			});
+			if (!linked) {
 				await action.reply(
 					"Ainda não encontrei o vínculo. Conclua o login no navegador e toque em verificar de novo.",
 				);
 				continue;
 			}
-			const user = await conversation.external(() => findUserById(linkedUserId));
-			await action.reply(`✅ Conta vinculada! Olá, ${user?.name ?? ""}.`);
-			return linkedUserId;
+			await action.reply(`✅ Conta vinculada! Olá, ${linked.name}.`);
+			return linked.userId;
 		}
 	}
 }
 
+const AUTH_MENU_HANDLERS: Record<
+	string,
+	(conversation: BotConversation, ctx: Context, chatId: number) => Promise<string | null>
+> = {
+	login: handleLogin,
+	signup: handleSignup,
+	web: handleWebLink,
+	forgot: (conversation, ctx) => handleForgotPassword(conversation, ctx),
+};
+
 /**
- * Mostra o menu de acesso (login, criar conta, Google, esqueci senha,
- * vincular por ID) até que uma das opções resulte numa conta vinculada ao
- * chat. Mesma lógica/validações do frontend (ver frontend/src/routes/entrar.tsx,
- * criar-conta.tsx, esqueci-senha.tsx) reaproveitando o better-auth direto —
- * o bot importa `auth` do workspace do backend, sem HTTP.
+ * Shows the access menu (login, sign up, browser login, forgot password)
+ * until one option links an account to this chat. Every path proves control
+ * of the account — never link from an identifier the user merely types.
+ * Reuses better-auth in-process (the bot imports `auth` from the backend
+ * workspace, no HTTP).
  */
 export async function ensureLinked(conversation: BotConversation, ctx: Context): Promise<string | null> {
 	const chatId = ctx.chat?.id;
@@ -298,24 +310,10 @@ export async function ensureLinked(conversation: BotConversation, ctx: Context):
 		const choice = await conversation.waitFor("callback_query:data", {
 			otherwise: (otherCtx) => otherCtx.reply("Toque em uma das opções acima."),
 		});
-		const data = choice.callbackQuery.data;
 		await choice.answerCallbackQuery();
 
-		if (!data.startsWith("authmenu:")) continue;
-		const option = data.slice("authmenu:".length);
-
-		const userId =
-			option === "login"
-				? await handleLogin(conversation, choice, chatId)
-				: option === "signup"
-					? await handleSignup(conversation, choice, chatId)
-					: option === "google"
-						? await handleGoogleLink(conversation, choice, chatId)
-						: option === "forgot"
-							? await handleForgotPassword(conversation, choice)
-							: option === "id"
-								? await handleIdLink(conversation, choice, chatId)
-								: null;
+		const handler = AUTH_MENU_HANDLERS[choice.callbackQuery.data.replace(/^authmenu:/, "")];
+		const userId = handler ? await handler(conversation, choice, chatId) : null;
 
 		if (userId) return userId;
 	}

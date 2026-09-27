@@ -2,8 +2,6 @@ import { transactionService } from "@agent-money-boilerplate/backend/src/modules
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import { formatCurrencyCents, formatDate, getCategoryLabel } from "../formatting/format";
-import { ensureUserReady } from "../lib/user-gate";
-import { requirePassword } from "../lib/verify-password-step";
 import type { BotConversation } from "../types";
 
 type Candidate = { id: string; description: string; amount: number; category: string; createdAt: string };
@@ -12,13 +10,11 @@ function summarize(candidate: Candidate): string {
 	return `${formatCurrencyCents(candidate.amount)} · ${getCategoryLabel(candidate.category)} · ${formatDate(candidate.createdAt)} — ${candidate.description}`;
 }
 
-export async function deleteTransactionConversation(conversation: BotConversation, ctx: Context): Promise<void> {
-	const userId = await ensureUserReady(conversation, ctx);
-	if (!userId) return;
-
-	const passed = await requirePassword(conversation, ctx);
-	if (!passed) return;
-
+export async function deleteTransactionConversation(
+	conversation: BotConversation,
+	ctx: Context,
+	userId: string,
+): Promise<void> {
 	await ctx.reply("🗑️ Digite o nome (ou parte do nome) da transação que deseja apagar:");
 
 	let candidates: Candidate[] = [];

@@ -42,7 +42,7 @@ as an open source repo.
    `.env.e2e` files must contain **only placeholders** (e.g.
    `<generate-with-openssl-rand-hex-32>`), never a value that ever
    actually worked — this has already happened in this repository (see
-   [`docs/security-incidents.md`](../../../docs/security-incidents.md)).
+   [`docs/security.md`](../../../docs/security.md)).
    If you find a real secret staged or already committed, stop and flag
    it to whoever maintains the project — don't try to rewrite shared
    history yourself (see `git-branch-workflow/SKILL.md`, "What NOT to

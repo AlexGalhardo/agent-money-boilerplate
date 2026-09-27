@@ -168,7 +168,7 @@ commit não passou de verdade. Confirmado ao vivo via `gh run list` e
   habilitar, não por asserção incorreta. Não reproduzi de forma
   consistente entre rodadas (uma vez até o teste de login+logout do
   admin passou, outra vez deu timeout no mesmo `getByRole("button", {
-  name: "Sair" })`), o que aponta mais pra lentidão do ambiente local
+name: "Sair" })`), o que aponta mais pra lentidão do ambiente local
   (Windows, dev server do Vite sem otimização, sandbox desta sessão)
   do que pra um bug determinístico — os runners do GitHub Actions
   historicamente não mostravam esse padrão antes do bug do

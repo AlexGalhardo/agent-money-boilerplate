@@ -1,65 +1,62 @@
 import { randomBytes } from "node:crypto";
 import { prisma } from "../../config/prisma";
+import { AppError } from "../../lib/errors";
+import { userRepository } from "../users/user.repository";
 
-// 15 minutos é tempo suficiente pra completar um login (inclusive com OAuth
-// do Google) no navegador sem deixar o token vulnerável por muito tempo.
+// Long enough to finish a browser login (including Google OAuth) without
+// leaving a usable token around for long.
 const LINK_TOKEN_TTL_MS = 15 * 60 * 1000;
 
-export class ChatAlreadyLinkedError extends Error {
+export class ChatAlreadyLinkedError extends AppError {
 	constructor() {
-		super("Esse chat já está vinculado a outra conta");
-		this.name = "ChatAlreadyLinkedError";
+		super("Esse chat já está vinculado a outra conta", 409);
 	}
 }
 
-export class InvalidLinkTokenError extends Error {
+export class InvalidLinkTokenError extends AppError {
 	constructor() {
-		super("Link inválido ou expirado");
-		this.name = "InvalidLinkTokenError";
+		super("Link inválido ou expirado", 400);
 	}
 }
 
 /**
- * O bot é multi-tenant desde a Fase 9: cada chat do Telegram é vinculado a
- * uma conta do app via `User.telegramChatId` (numérico como string), campo
- * preenchível tanto em `/minha-conta` quanto pelo próprio bot. Vive no
- * backend (não no bot) porque tanto o bot quanto o fluxo de login com Google
- * do bot (que termina numa página do frontend, ver telegram.routes.ts)
- * precisam ler/escrever esse vínculo.
+ * The bot is multi-tenant: each Telegram chat is linked to one app account
+ * through `User.telegramChatId`. Linking must always prove control of the
+ * account — either the bot's e-mail/password login, or the single-use token
+ * redeemed by an authenticated web session (`completeLinkToken`). Never link
+ * from an identifier the requester merely claims to own.
  */
 export async function findUserIdByChatId(chatId: number): Promise<string | null> {
-	const user = await prisma.user.findUnique({ where: { telegramChatId: String(chatId) } });
+	const user = await userRepository.findByTelegramChatId(String(chatId));
 	return user?.id ?? null;
 }
 
-export async function findUserById(userId: string) {
-	return prisma.user.findUnique({ where: { id: userId } });
-}
-
-/** Vincula o chat a uma conta existente. Falha se o chat já pertence a outra. */
+/** Links the chat to an account the caller has already authenticated as. */
 export async function linkChatToUser(chatId: number, userId: string): Promise<void> {
-	const existing = await prisma.user.findUnique({ where: { telegramChatId: String(chatId) } });
+	const existing = await userRepository.findByTelegramChatId(String(chatId));
 	if (existing && existing.id !== userId) {
 		throw new ChatAlreadyLinkedError();
 	}
 
-	await prisma.user.update({ where: { id: userId }, data: { telegramChatId: String(chatId) } });
+	await userRepository.update(userId, { telegramChatId: String(chatId) });
 }
 
-/** Desvincula o chat da conta atual, permitindo vincular outra em seguida. */
 export async function unlinkChatFromUser(chatId: number): Promise<void> {
-	const user = await prisma.user.findUnique({ where: { telegramChatId: String(chatId) } });
+	const user = await userRepository.findByTelegramChatId(String(chatId));
 	if (!user) return;
 
-	await prisma.user.update({ where: { id: user.id }, data: { telegramChatId: null } });
+	await userRepository.update(user.id, { telegramChatId: null });
+}
+
+export async function unlinkUser(userId: string): Promise<void> {
+	await userRepository.update(userId, { telegramChatId: null });
 }
 
 /**
- * Gera um token de uso único pro fluxo de "entrar com Google" do bot: o bot
- * não consegue abrir um navegador dentro do chat, então manda um link com
- * esse token pra uma página do frontend — quando o usuário completa o login
- * lá (Google ou e-mail/senha), `completeLink` consome o token e vincula o
- * chat à conta autenticada.
+ * Single-use token for linking a chat from the browser: the bot can't run
+ * OAuth inside the chat, so it sends a link to a frontend page carrying this
+ * token; once the user is logged in there (Google or e-mail/password),
+ * `completeLinkToken` redeems it for the authenticated account.
  */
 export async function createLinkToken(chatId: number): Promise<{ token: string; expiresAt: Date }> {
 	const token = randomBytes(32).toString("base64url");
@@ -71,15 +68,13 @@ export async function createLinkToken(chatId: number): Promise<{ token: string; 
 }
 
 /**
- * Resgata um token de link (chamado pela página do frontend, já autenticada)
- * e vincula o chat correspondente à conta logada. Sempre apaga o token,
- * mesmo se expirado, pra não deixar lixo acumulando na tabela.
+ * Deleting first (instead of find-then-delete) makes redemption atomic: two
+ * concurrent requests with the same token can't both succeed, because only
+ * one `delete` finds the row. Expired tokens are deleted too, so they don't
+ * pile up.
  */
 export async function completeLinkToken(userId: string, token: string): Promise<{ chatId: number }> {
-	const record = await prisma.telegramLinkToken.findUnique({ where: { token } });
-	if (record) {
-		await prisma.telegramLinkToken.delete({ where: { token } });
-	}
+	const record = await prisma.telegramLinkToken.delete({ where: { token } }).catch(() => null);
 
 	if (!record || record.expiresAt < new Date()) {
 		throw new InvalidLinkTokenError();

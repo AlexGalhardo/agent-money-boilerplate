@@ -16,10 +16,8 @@ const envSchema = z.object({
 
 	BETTER_AUTH_SECRET: z.string().min(32),
 
-	// 32 bytes em hexadecimal (64 caracteres), usado para AES-256-GCM.
-	ENCRYPTION_KEY: z
-		.string()
-		.regex(/^[0-9a-f]{64}$/i, "ENCRYPTION_KEY deve ter 64 caracteres hexadecimais (32 bytes)"),
+	// 32 bytes as hex (64 characters), used for AES-256-GCM.
+	ENCRYPTION_KEY: z.string().regex(/^[0-9a-f]{64}$/i, "ENCRYPTION_KEY must be 64 hex characters (32 bytes)"),
 
 	ENABLE_CONFIRM_EMAIL: boolFromString,
 	ENABLE_2FA: boolFromString,
@@ -33,8 +31,8 @@ const envSchema = z.object({
 
 	ABACATEPAY_API_KEY: z.string().optional(),
 	ABACATEPAY_WEBHOOK_SECRET: z.string().optional(),
-	// Botão "Pagar PIX Teste Mode" no /checkout + endpoint de simulação de
-	// pagamento (sandbox/devMode da AbacatePay) — nunca ligar em produção.
+	// "Pay PIX Test Mode" button on /checkout + the payment simulation
+	// endpoint (AbacatePay sandbox/devMode) — never enable in production.
 	ABACATEPAY_PIX_TEST_MODE: boolFromString,
 
 	CRON_SECRET: z.string().optional(),
@@ -43,19 +41,18 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 function loadEnv(): Env {
-	// Variáveis opcionais deixadas em branco no .env (ex: "RESEND_FROM_EMAIL=")
-	// chegam como string vazia, não undefined — sem isso, validadores de
-	// formato como z.email() rejeitam um .env local com campos opcionais
-	// não preenchidos.
+	// Optional variables left blank in .env (e.g. "RESEND_FROM_EMAIL=") arrive
+	// as empty strings, not undefined — without this, format validators like
+	// z.email() reject a local .env with unfilled optional fields.
 	const raw = Object.fromEntries(
 		Object.entries(Bun.env).map(([key, value]) => [key, value === "" ? undefined : value]),
 	);
 	const parsed = envSchema.safeParse(raw);
 
 	if (!parsed.success) {
-		console.error("Variaveis de ambiente invalidas:");
+		console.error("Invalid environment variables:");
 		console.error(z.treeifyError(parsed.error));
-		throw new Error("Falha ao carregar variaveis de ambiente. Verifique seu .env.");
+		throw new Error("Failed to load environment variables. Check your .env.");
 	}
 
 	return parsed.data;

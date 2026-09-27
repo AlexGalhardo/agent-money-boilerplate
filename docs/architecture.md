@@ -31,16 +31,16 @@ Portuguese "Elysia Finanças" name that preceded it).
 
 ## Stack
 
-| Layer         | Technology                                                                            |
-| ------------- | -------------------------------------------------------------------------------------- |
-| Runtime / API | Bun + ElysiaJS                                                                        |
-| ORM           | Prisma (dual schema: `schema.sqlite.prisma` and `schema.postgresql.prisma`)           |
-| Validation    | Zod                                                                                   |
-| Auth          | better-auth (cookie sessions, optional 2FA plugin)                                    |
-| Frontend      | TanStack Start + Tailwind CSS v4                                                      |
+| Layer         | Technology                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| Runtime / API | Bun + ElysiaJS                                                                           |
+| ORM           | Prisma (dual schema: `schema.sqlite.prisma` and `schema.postgresql.prisma`)              |
+| Validation    | Zod                                                                                      |
+| Auth          | better-auth (cookie sessions, optional 2FA plugin)                                       |
+| Frontend      | TanStack Start + Tailwind CSS v4                                                         |
 | Mobile        | Expo + React Native + NativeWind (sessions via @better-auth/expo, no backend of its own) |
-| Testing       | `bun:test` (unit/integration/smoke) + Playwright (E2E)                                |
-| Lint/format   | Biome (tabs, 120-column lines)                                                        |
+| Testing       | `bun:test` (unit/integration/smoke) + Playwright (E2E)                                   |
+| Lint/format   | Biome (tabs, 120-column lines)                                                           |
 
 ## End-to-end typing
 
@@ -75,7 +75,7 @@ which doesn't understand the `"lockfileVersion": 2` format that bun >= 1.4
 writes by default (reproduced error: `UnknownLockfileVersion` +
 `lockfile had changes, but lockfile is frozen` during the build). Newer
 bun (1.4.x, used in `infra/Dockerfile` and locally) reads the v1 format
-fine — it just can't be the one that *generates* the lockfile.
+fine — it just can't be the one that _generates_ the lockfile.
 
 Whenever you add or update a dependency, regenerate the lockfile with a
 pinned bun version instead of the globally installed one:

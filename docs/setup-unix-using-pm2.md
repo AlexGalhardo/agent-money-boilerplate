@@ -19,19 +19,19 @@ veja [`setup-windows-using-pm2.md`](./setup-windows-using-pm2.md).
 ```bash
 git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
 cd galhardo-money-bot
-./setups/setup-unix-using-pm2.sh
+./setups/setup-pm2.sh
 ```
 
 O script pergunta qual banco usar:
 
-```
+```text
 Qual banco de dados você quer usar?
   a) SQLite   (configuração rápida, padrão)
   b) Postgres
 ```
 
 Para pular a pergunta, passe o banco como argumento:
-`./setups/setup-unix-using-pm2.sh sqlite` ou `./setups/setup-unix-using-pm2.sh postgres`.
+`./setups/setup-pm2.sh sqlite` ou `./setups/setup-pm2.sh postgres`.
 
 O script:
 
@@ -41,7 +41,7 @@ O script:
    Postgres foi escolhido, sobe só o container do banco
    (`docker compose up -d postgres`) quando o Docker está disponível.
 3. Aplica migrations, gera o Prisma Client e popula o banco
-   (`db:seed` — `admin@gmail.com` / `adminBR@123` + `aleexgvieira@gmail.com` / `galhardyn`).
+   (`db:seed` — `admin@gmail.com` / `adminBR@123`).
 4. Sobe `elysia-backend` e `elysia-frontend` com
    `pm2 start infra/ecosystem.local.config.js --only elysia-backend,elysia-frontend`.
    `elysia-bot` só é iniciado automaticamente se `bot/.env` já tiver
@@ -53,8 +53,8 @@ já compilados (ver [`setup-vps-ubuntu-from-zero.md`](./setup-vps-ubuntu-from-ze
 
 ## Rodando
 
-- API: http://localhost:4000 (docs OpenAPI em `/docs`)
-- Frontend: http://localhost:4001
+- API: <http://localhost:4000> (docs OpenAPI em `/docs`)
+- Frontend: <http://localhost:4001>
 
 ## Bot do Telegram (opcional)
 

@@ -1,8 +1,7 @@
-// Mesmo enum/rótulos/cores do backend e do frontend (ver
-// frontend/src/lib/categories.ts e backend/src/modules/transactions/transaction.schema.ts)
-// — duplicado de propósito, mesmo padrão de categoryLabels no bot (ver
-// CLAUDE.md), pra não depender do workspace do frontend (React/TanStack) só
-// por causa de um mapa de strings.
+// Same enum/labels as the backend and frontend
+// (backend/src/modules/transactions/transaction.schema.ts,
+// frontend/src/lib/categories.ts) — duplicated on purpose, see
+// docs/code-conventions.md "sync points".
 export const categoryLabels = {
 	food: "Alimentação",
 	transport: "Transporte",
@@ -46,22 +45,21 @@ export function getCategoryLabel(category: string): string {
 	return category in categoryLabels ? categoryLabels[category as TransactionCategory] : category;
 }
 
-// Mesma paleta categórica do frontend (ver buildColorMap em
-// frontend/src/lib/categories.ts) — só a variante clara, os gráficos do
-// mobile não seguem o tema escuro do sistema por ora.
+// The frontend's validated (CVD-safe) categorical palette, dark variant —
+// the app is dark-only (see docs/design-system.md).
 function buildColorMap(order: TransactionCategory[]): Record<string, string> {
 	const slots = [
-		"#2a78d6",
-		"#eb6834",
-		"#1baf7a",
-		"#eda100",
-		"#e87ba4",
-		"#008300",
-		"#4a3aa7",
-		"#e34948",
-		"#0e9594",
-		"#a1662f",
-		"#c026d3",
+		"#3987e5",
+		"#d95926",
+		"#199e70",
+		"#c98500",
+		"#d55181",
+		"#2e9b2e",
+		"#9085e9",
+		"#e66767",
+		"#2dd4d2",
+		"#c98047",
+		"#e879f9",
 	];
 	const map: Record<string, string> = {};
 	order.forEach((category, index) => {
@@ -76,5 +74,5 @@ export const incomeCategoryColor = buildColorMap(incomeCategories);
 
 export function getCategoryColor(category: string, type: "income" | "expense"): string {
 	const colors = type === "income" ? incomeCategoryColor : expenseCategoryColor;
-	return colors[category] ?? "#525252";
+	return colors[category] ?? "#71717a";
 }

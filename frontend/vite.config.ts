@@ -13,16 +13,13 @@ const config = defineConfig({
 	resolve: { tsconfigPaths: true },
 	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
 	server: {
-		// Espelha o proxy de produção (ver frontend/server.ts) pro dev server
-		// do Vite, pro cookie de sessão se comportar igual nos dois ambientes.
-		// Chave começando com "^" vira RegExp no Vite — necessário pra casar só
-		// `path`, `path/...` ou `path?...`, igual ao matcher de produção (que
-		// compara só o pathname, sem query string): sem isso, "/telegram"
-		// (prefixo string simples) também proxiaria por engano páginas como
-		// "/telegram-vincular" pra API. O regex do Vite roda contra path+query
-		// inteiros — sem o "|\\?" no fim, uma chamada como "/transactions?page=1"
-		// não batia (não termina em "/" nem em fim de string) e caía no
-		// fallback SPA do Vite (404), nunca chegando no backend.
+		// Mirrors the production proxy (frontend/server.ts) in Vite's dev server
+		// so the session cookie behaves the same in both. A key starting with "^"
+		// becomes a RegExp in Vite — needed to match only `path`, `path/...` or
+		// `path?...` like the production matcher: a plain prefix "/telegram" would
+		// also proxy pages like "/telegram-vincular". Vite matches against
+		// path+query, so without "|\\?" a call like "/transactions?page=1" fell
+		// through to Vite's SPA fallback (404) and never reached the backend.
 		proxy: Object.fromEntries(
 			PROXIED_API_PATHS.map((path) => [`^${path}(/|$|\\?)`, { target: BACKEND_URL, changeOrigin: true }]),
 		),
@@ -30,16 +27,12 @@ const config = defineConfig({
 	build: {
 		rollupOptions: {
 			output: {
-				// O build de produção roda o client e o SSR como duas builds
-				// separadas (ver TanStack Start), e cada uma reprocessa o CSS do
-				// Tailwind de forma independente — a ordem de descoberta das
-				// classes não é 100% determinística entre as duas, então o hash
-				// de conteúdo do CSS às vezes sai diferente entre elas. O bundle
-				// de SSR referencia o nome que ELE calculou, não o que o client
-				// realmente gerou, e esse descompasso faz o <link rel="stylesheet">
-				// apontar pra um arquivo que não existe (reproduzido em builds
-				// dentro de container Docker; nem sempre em builds locais).
-				// Nome fixo (sem hash) só pro CSS elimina esse descompasso.
+				// The production build runs client and SSR as two separate builds, and
+				// each processes Tailwind's CSS independently — class discovery order
+				// isn't fully deterministic between them, so the CSS content hash can
+				// differ. The SSR bundle references ITS hash, not the file the client
+				// build emitted, and <link rel="stylesheet"> 404s (reproduced in Docker
+				// builds). A fixed, hash-less name for CSS only removes the mismatch.
 				assetFileNames: (asset) => {
 					const name = asset.name ?? asset.names?.[0] ?? "";
 					return name.endsWith(".css") ? "assets/[name][extname]" : "assets/[name]-[hash][extname]";

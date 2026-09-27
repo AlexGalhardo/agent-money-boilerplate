@@ -27,7 +27,7 @@ sem passar pela Play Store.
 
 O script builda na nuvem da Expo (perfil `preview` — `buildType: "apk"`,
 `distribution: "internal"`) e imprime um link de download ao final (também
-disponível em https://expo.dev, aba **Builds** do projeto). Baixe o `.apk`
+disponível em <https://expo.dev>, aba **Builds** do projeto). Baixe o `.apk`
 pelo link, transfira pro celular (cabo USB, e-mail, Google Drive, etc.) e
 abra o arquivo — o Android vai pedir permissão pra instalar de "fontes
 desconhecidas" na primeira vez (**Configurações > Segurança**, ou o próprio
@@ -74,7 +74,7 @@ faixa **internal testing** via
 Console.
 
 Sem `--submit`, o script só builda e imprime o link de download — suba o
-`.aab` manualmente em https://play.google.com/console quando preferir.
+`.aab` manualmente em <https://play.google.com/console> quando preferir.
 
 ## Identidade do app
 

@@ -5,27 +5,24 @@ const boolFromString = z
 	.default("false")
 	.transform((value) => value === "true");
 
-// O bot importa `prisma`/`encrypt`/`decrypt` diretamente de
-// `@agent-money-boilerplate/backend` (mesmo banco, mesma criptografia — ver
-// docs/telegram-bot-plan.md). Isso significa que o processo do bot também
-// precisa satisfazer o schema de env da API (DATABASE_URL, BETTER_AUTH_SECRET,
-// ENCRYPTION_KEY, etc.) mesmo sem usar autenticação/e-mail/Stripe — por isso
-// `bot/.env.example` espelha `backend/.env.example` e soma as variáveis abaixo.
+// The bot imports `prisma`/`encrypt`/`decrypt` and services straight from
+// `@agent-money-boilerplate/backend` (same database, same encryption), so the
+// bot process must also satisfy the API's env schema (DATABASE_URL,
+// BETTER_AUTH_SECRET, ENCRYPTION_KEY, ...) — `bot/.env.example` mirrors
+// `backend/.env.example` plus the variables below.
 const envSchema = z.object({
-	TELEGRAM_BOT_TOKEN: z.string().min(1, "TELEGRAM_BOT_TOKEN é obrigatório"),
-	// Guardado em base64: um hash bcrypt tem "$" literais (ex: "$2b$10$..."),
-	// e tanto o parser de .env do Bun quanto o do Docker Compose tentam
-	// expandir "$" como referência de variável — cada um com uma sintaxe de
-	// escape diferente e incompatível entre si. Base64 evita o problema por
-	// completo, nos dois lugares (ver bot/scripts/hash-password.ts).
+	TELEGRAM_BOT_TOKEN: z.string().min(1, "TELEGRAM_BOT_TOKEN is required"),
+	// Stored as base64: a bcrypt hash contains literal "$" (e.g. "$2b$10$..."),
+	// and both Bun's and Docker Compose's .env parsers try to expand "$" as a
+	// variable reference, each with a different, incompatible escape syntax.
+	// Base64 sidesteps both (see bot/scripts/hash-password.ts).
 	BOT_PASSWORD_HASH_BASE64: z
 		.string()
-		.min(1, "BOT_PASSWORD_HASH_BASE64 é obrigatório (gere com `bun run hash-password`)"),
+		.min(1, "BOT_PASSWORD_HASH_BASE64 is required (generate with `bun run hash-password`)"),
 	BOT_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
 	BOT_LOCKOUT_MINUTES: z.coerce.number().int().positive().default(15),
-	// Feature flag: pede a senha pessoal (ver verify-password-step.ts) antes de
-	// cada transação/consulta feita pelo bot. Padrão "false" — desligado até
-	// virar uma decisão consciente ligar de novo (ver requirePassword).
+	// Feature flag: ask for the personal password (verify-password-step.ts)
+	// before every data action in the bot. Off by default.
 	TELEGRAM_BOT_USE_PASSWORD_TO_CONFIRM_ACTIONS: boolFromString,
 });
 
@@ -39,9 +36,9 @@ function loadEnv(): BotEnv {
 	const parsed = envSchema.safeParse(raw);
 
 	if (!parsed.success) {
-		console.error("Variaveis de ambiente do bot invalidas:");
+		console.error("Invalid bot environment variables:");
 		console.error(z.treeifyError(parsed.error));
-		throw new Error("Falha ao carregar variaveis de ambiente do bot. Verifique seu bot/.env.");
+		throw new Error("Failed to load bot environment variables. Check bot/.env.");
 	}
 
 	const { BOT_PASSWORD_HASH_BASE64, ...rest } = parsed.data;

@@ -1,6 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { api } from "../lib/api";
+import { apiErrorMessage } from "../lib/api-error";
 import type { TransactionCategory } from "../lib/categories";
 import { categoryLabels, categoryOptions, formatCurrencyCents } from "../lib/categories";
 import { inputClassName } from "./auth-card";
@@ -30,7 +31,7 @@ export function ImportTransactionsModal({ onClose, onImported }: { onClose: () =
 		mutationFn: async (csv: string) => {
 			const { data, error: reqError } = await api.transactions.import.preview.post({ csv });
 			if (reqError || !data || !("rows" in data)) {
-				throw new Error(extractMessage(reqError) ?? "Não foi possível ler o arquivo CSV");
+				throw new Error(apiErrorMessage(reqError, "Não foi possível ler o arquivo CSV"));
 			}
 			return data;
 		},
@@ -59,7 +60,7 @@ export function ImportTransactionsModal({ onClose, onImported }: { onClose: () =
 				})),
 			});
 			if (reqError || !data || !("created" in data)) {
-				throw new Error(extractMessage(reqError) ?? "Não foi possível importar as transações");
+				throw new Error(apiErrorMessage(reqError, "Não foi possível importar as transações"));
 			}
 			return data;
 		},
@@ -261,14 +262,4 @@ function Stat({ label, value, highlight }: { label: string; value: number; highl
 			<p className={`text-lg font-semibold ${highlight ? "text-amber-500" : ""}`}>{value}</p>
 		</div>
 	);
-}
-
-function extractMessage(error: unknown): string | null {
-	if (error && typeof error === "object" && "value" in error) {
-		const value = (error as { value?: unknown }).value;
-		if (value && typeof value === "object" && "message" in value) {
-			return String((value as { message: unknown }).message);
-		}
-	}
-	return null;
 }

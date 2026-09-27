@@ -16,11 +16,11 @@ Guide for Claude Code (and any AI agent) working in this repository.
 3. **Follow open source practice**: [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
    (enforced by `.husky/commit-msg`), [SemVer](https://semver.org/), and
    the PR checklist in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-4. **No obvious comments** — only the *why* when it's non-obvious. Tabs,
+4. **No obvious comments** — only the _why_ when it's non-obvious. Tabs,
    not spaces (Biome owns formatting, `bun run format`).
 5. Never create or edit any `changelog.md`. Never commit `*.csv` (real
    bank statements have leaked before — see
-   [`docs/security-incidents.md`](./docs/security-incidents.md)).
+   [`docs/security.md`](./docs/security.md)).
 6. `.claude/settings.json` is shared project config and stays tracked —
    only `.claude/worktrees/` is gitignored.
 
@@ -46,7 +46,7 @@ auth/database.
   layout, test placement, the 4 manual-sync points, auth/2FA flows
 - [`docs/commands.md`](./docs/commands.md) — every dev/test/build/setup
   command, including the pre-PR checklist
-- [`docs/security-incidents.md`](./docs/security-incidents.md) — past
+- [`docs/security.md`](./docs/security.md) — past
   incidents and the guardrails they produced
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) — branch workflow, commits,
   SemVer, PR checklist

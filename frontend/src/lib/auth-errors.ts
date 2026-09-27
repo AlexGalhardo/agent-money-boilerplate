@@ -1,8 +1,7 @@
-// Mapa dos error codes nativos do better-auth (core + plugin twoFactor, ver
-// node_modules/better-auth's BASE_ERROR_CODES e TWO_FACTOR_ERROR_CODES) para
-// mensagens em português. `error.code` é estável entre versões; `error.message`
-// não é — vem sempre em inglês direto do better-auth, então nunca deve ir pra
-// tela sem passar por essa tradução.
+// Maps better-auth's native error codes (core + twoFactor plugin, see
+// node_modules/better-auth's BASE_ERROR_CODES and TWO_FACTOR_ERROR_CODES) to
+// Portuguese. `error.code` is stable across versions; `error.message` isn't
+// and is always English, so it must never reach the screen untranslated.
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
 	USER_NOT_FOUND: "Usuário não encontrado",
 	FAILED_TO_CREATE_USER: "Não foi possível criar o usuário",
@@ -72,10 +71,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 /**
- * Traduz um erro do better-auth pelo `error.code` (estável entre versões).
- * `error.message` nunca é usado como texto exibido — é sempre inglês vindo
- * direto do better-auth. Quando o code não está mapeado, usa o `fallback`
- * (já em português) passado pelo chamador.
+ * Translates a better-auth error by `error.code`, falling back to the
+ * caller's (already Portuguese) message for unmapped codes.
  */
 export function translateAuthError(
 	error: { code?: string | null; message?: string | null } | null | undefined,

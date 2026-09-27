@@ -1,14 +1,16 @@
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AuthShell } from "@/components/auth-shell";
+import { PasswordChecklist } from "@/components/password-checklist";
 import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
 import { TextField } from "@/components/ui/text-field";
 import { resetPassword } from "@/lib/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
-import { isStrongPassword, PASSWORD_RULES } from "@/lib/password-rules";
+import { isStrongPassword } from "@/lib/password-rules";
+
+const INVALID_LINK = "Link inválido ou expirado. Volte para “Esqueci minha senha” e solicite um novo.";
 
 export default function ResetPasswordScreen() {
 	const router = useRouter();
@@ -24,7 +26,7 @@ export default function ResetPasswordScreen() {
 		setError(null);
 
 		if (!token) {
-			setError("Link inválido ou expirado. Solicite uma nova redefinição de senha.");
+			setError(INVALID_LINK);
 			return;
 		}
 		if (!isStrongPassword(password)) {
@@ -46,67 +48,28 @@ export default function ResetPasswordScreen() {
 	}
 
 	return (
-		<SafeAreaView className="flex-1 bg-white">
-			<KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
-				<Animated.ScrollView
-					entering={FadeInDown.duration(240)}
-					contentContainerClassName="grow justify-center px-6 py-10"
-					keyboardShouldPersistTaps="handled"
-				>
-					<Text className="text-3xl font-bold text-slate-900">Nova senha</Text>
-					<Text className="mt-2 text-base text-slate-500">Escolha uma nova senha para sua conta.</Text>
-
-					<View className="mt-8 gap-4">
-						{!token ? (
-							<Text className="text-sm text-red-600">
-								Link inválido ou expirado. Volte para "Esqueci minha senha" e solicite um novo.
-							</Text>
-						) : null}
-
-						<TextField
-							label="Nova senha"
-							value={password}
-							onChangeText={setPassword}
-							placeholder="Crie uma nova senha forte"
-							secureTextEntry
-						/>
-
-						{password.length > 0 ? (
-							<View className="gap-1">
-								{PASSWORD_RULES.map((rule) => {
-									const ok = rule.test(password);
-									return (
-										<Text
-											key={rule.key}
-											className={`text-xs ${ok ? "text-emerald-600" : "text-red-500"}`}
-										>
-											{ok ? "✓" : "✗"} {rule.label}
-										</Text>
-									);
-								})}
-							</View>
-						) : null}
-
-						{error ? <Text className="text-sm text-red-600">{error}</Text> : null}
-						{done ? (
-							<Text className="text-sm text-emerald-600">Senha redefinida. Redirecionando…</Text>
-						) : null}
-
-						<Button
-							label="Redefinir senha"
-							onPress={onSubmit}
-							loading={submitting}
-							disabled={!password || !token}
-						/>
-					</View>
-
-					<View className="mt-6 flex-row justify-center gap-1">
-						<Link href="/login" className="text-sm font-semibold text-blue-600">
-							Voltar para o login
-						</Link>
-					</View>
-				</Animated.ScrollView>
-			</KeyboardAvoidingView>
-		</SafeAreaView>
+		<AuthShell
+			title="Nova senha"
+			subtitle="Escolha uma nova senha para sua conta."
+			footer={
+				<Link href="/login" className="text-subhead font-semibold text-fg">
+					Voltar para o login
+				</Link>
+			}
+		>
+			{!token ? <Notice kind="error" message={INVALID_LINK} /> : null}
+			<TextField
+				label="Nova senha"
+				value={password}
+				onChangeText={setPassword}
+				placeholder="Crie uma nova senha forte"
+				autoComplete="new-password"
+				secureTextEntry
+			/>
+			<PasswordChecklist password={password} />
+			<Notice kind="error" message={token ? error : null} />
+			<Notice kind="success" message={done ? "Senha redefinida. Redirecionando…" : null} />
+			<Button label="Redefinir senha" onPress={onSubmit} loading={submitting} disabled={!password || !token} />
+		</AuthShell>
 	);
 }

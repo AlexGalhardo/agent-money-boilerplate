@@ -2,7 +2,7 @@
 
 ## General
 
-- **No obvious comments.** Only comment the *why* when it's not obvious
+- **No obvious comments.** Only comment the _why_ when it's not obvious
   from the code itself (a hidden constraint, a workaround, an invariant).
   The existing codebase follows this closely — keep the pattern.
 - **Tabs, not spaces.** Formatting is Biome's job (`bun run format`), not
@@ -38,7 +38,7 @@ when you touch any one of them.
    `error.message` from better-auth is always English and unstable
    across versions — always translate via `error.code` through a local
    map: `frontend/src/lib/auth-errors.ts` (`translateAuthError(error,
-   fallback)`), `bot/src/lib/auth-errors.ts`, `mobile/src/lib/auth-errors.ts`.
+fallback)`), `bot/src/lib/auth-errors.ts`, `mobile/src/lib/auth-errors.ts`.
 3. **Password rules** (8-32 characters + complexity) are duplicated in
    `frontend/src/components/password-strength-input.tsx`,
    `bot/src/lib/password-rules.ts` and `mobile/src/lib/password-rules.ts`.

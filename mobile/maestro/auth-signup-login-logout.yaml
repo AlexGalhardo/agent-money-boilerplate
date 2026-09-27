@@ -1,37 +1,41 @@
 appId: com.elysiagalhardofinances.money
 ---
-# Signs up a brand-new account (random email so the flow is repeatable),
-# confirms it landed on the dashboard, logs out from Minha Conta, then logs
-# back in with the same credentials to prove the round trip works.
+# Signs up a brand-new account (random e-mail so the flow is repeatable),
+# confirms it lands on the dashboard, then logs out from "Minha Conta".
 #
-# Field selectors use `id` matching TextField's default testID
-# (`field-<label>`, see src/components/ui/text-field.tsx) rather than
-# tapping on the visible label text, which isn't part of the input itself.
-- launchApp
+# Inputs are targeted by `id`, which matches TextField's default testID
+# (`field-<label>`, src/components/ui/text-field.tsx); nav buttons by their
+# `nav-*` testIDs (src/components/ui/bottom-nav.tsx).
+- launchApp:
+    clearState: true
 - assertVisible: "Entrar"
 
 - tapOn: "Criar conta"
 - tapOn:
     id: "field-Nome"
-- inputText: "E2E Maestro"
+- inputText: "Maestro"
 - tapOn:
     id: "field-E-mail"
 - inputRandomEmail
 - tapOn:
     id: "field-Senha"
 - inputText: "SenhaForte@123"
-- tapOn: "Criar conta"
+- hideKeyboard
+- tapOn:
+    text: "Criar conta"
+    index: 1
 
-# Signup redirects straight to the dashboard once the account is created.
-- assertVisible: "Olá,"
+# Sign-up goes straight to the dashboard once the account exists.
+- assertVisible: "Olá, Maestro"
 
 - tapOn:
-    id: "Minha conta"
+    id: "nav-profile"
 - assertVisible: "Minha Conta"
 - scrollUntilVisible:
     element:
       text: "Sair da conta"
 - tapOn: "Sair da conta"
+# Native confirmation alert — match the button, not the alert title.
 - tapOn:
     text: "^Sair$"
 - assertVisible: "Entrar"

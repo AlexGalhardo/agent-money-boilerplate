@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { app } from "./server";
+import { app } from "./app";
 
 describe("smoke", () => {
 	it("boots the app and serves the health check", async () => {

@@ -2,34 +2,24 @@ import type {
 	TransactionCategory,
 	TransactionType,
 } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
-import { transactionCategories } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
+import { createTransactionSchema } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
 import { transactionService } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.service";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
 import { categoryLabels, formatCurrencyCents } from "../formatting/format";
-import { chunk } from "../lib/chunk";
+import { categoryKeyboard, parseCategoryCallback } from "../lib/keyboards";
 import { parseAmountToCents } from "../lib/parse-amount";
-import { ensureUserReady } from "../lib/user-gate";
-import { requirePassword } from "../lib/verify-password-step";
 import type { BotConversation } from "../types";
 
-function categoryKeyboard(): InlineKeyboard {
-	const keyboard = new InlineKeyboard();
-	for (const row of chunk(transactionCategories, 2)) {
-		for (const category of row) keyboard.text(categoryLabels[category], `cat:${category}`);
-		keyboard.row();
-	}
-	return keyboard;
-}
+const descriptionSchema = createTransactionSchema.shape.description;
+const amountSchema = createTransactionSchema.shape.amount;
 
 export function createAddTransactionConversation(type: TransactionType, label: string) {
-	return async function addTransactionConversation(conversation: BotConversation, ctx: Context): Promise<void> {
-		const userId = await ensureUserReady(conversation, ctx);
-		if (!userId) return;
-
-		const passed = await requirePassword(conversation, ctx);
-		if (!passed) return;
-
+	return async function addTransactionConversation(
+		conversation: BotConversation,
+		ctx: Context,
+		userId: string,
+	): Promise<void> {
 		await ctx.reply(`💰 Qual o valor da ${label}? (ex: 49.90)`);
 
 		let amountCents: number | null = null;
@@ -37,8 +27,10 @@ export function createAddTransactionConversation(type: TransactionType, label: s
 			const reply = await conversation.waitFor("message:text", {
 				otherwise: (otherCtx) => otherCtx.reply("Digite o valor em texto, ex: 49.90"),
 			});
-			amountCents = parseAmountToCents(reply.message.text);
-			if (amountCents === null) {
+			const parsed = amountSchema.safeParse(parseAmountToCents(reply.message.text));
+			if (parsed.success) {
+				amountCents = parsed.data;
+			} else {
 				await reply.reply("Valor inválido. Digite um número maior que zero, ex: 49.90");
 			}
 		}
@@ -50,26 +42,23 @@ export function createAddTransactionConversation(type: TransactionType, label: s
 			const reply = await conversation.waitFor("callback_query:data", {
 				otherwise: (otherCtx) => otherCtx.reply("Use os botões acima para escolher a categoria."),
 			});
-			const data = reply.callbackQuery.data;
 			await reply.answerCallbackQuery();
-			if (data.startsWith("cat:") && transactionCategories.includes(data.slice(4) as TransactionCategory)) {
-				category = data.slice(4) as TransactionCategory;
-			}
+			category = parseCategoryCallback(reply.callbackQuery.data);
 		}
 
 		await ctx.reply("📝 Descreva a transação (ex: Supermercado, Uber, Salário...):");
 
 		let description: string | null = null;
-		while (!description) {
+		while (description === null) {
 			const reply = await conversation.waitFor("message:text", {
 				otherwise: (otherCtx) => otherCtx.reply("Descreva a transação em texto:"),
 			});
-			const text = reply.message.text.trim();
-			if (!text) {
-				await reply.reply("Descrição não pode ser vazia. Descreva a transação:");
-				continue;
+			const parsed = descriptionSchema.safeParse(reply.message.text);
+			if (parsed.success) {
+				description = parsed.data;
+			} else {
+				await reply.reply("A descrição precisa ter entre 1 e 280 caracteres. Descreva a transação:");
 			}
-			description = text;
 		}
 
 		const summary = [
@@ -95,9 +84,8 @@ export function createAddTransactionConversation(type: TransactionType, label: s
 			return;
 		}
 
-		await conversation.external(() =>
-			transactionService.create(userId, { description, amount: amountCents as number, category, type }),
-		);
+		const input = { description, amount: amountCents, category, type };
+		await conversation.external(() => transactionService.create(userId, input));
 
 		await confirmation.reply(`✅ ${type === "expense" ? "Despesa" : "Receita"} registrada com sucesso!`);
 	};

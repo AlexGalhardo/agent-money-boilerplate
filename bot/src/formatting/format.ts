@@ -3,9 +3,9 @@ import type {
 	TransactionType,
 } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
 
-// Mesmos rótulos usados no dashboard web (frontend/src/lib/categories.ts) —
-// duplicado aqui de propósito: o bot não deve depender do workspace do
-// frontend (React/TanStack) só por causa de um mapa de strings.
+// Same labels as the web dashboard (frontend/src/lib/categories.ts) —
+// duplicated on purpose so the bot doesn't depend on the frontend workspace
+// (React/TanStack) for a string map. See docs/code-conventions.md, sync points.
 export const categoryLabels: Record<TransactionCategory, string> = {
 	food: "Alimentação",
 	transport: "Transporte",

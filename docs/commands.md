@@ -65,12 +65,12 @@ whoever asked for the task. Full PR checklist: [`CONTRIBUTING.md`](../CONTRIBUTI
 
 Four variants depending on OS and whether you want Docker — all ask
 interactively for SQLite or Postgres, or accept the database as an
-argument to skip the prompt (e.g. `./setups/setup-unix-using-docker.sh postgres`):
+argument to skip the prompt (e.g. `./setups/setup-docker.sh postgres`):
 
-- [`./setups/setup-unix-using-docker.sh`](../setups/setup-unix-using-docker.sh) — Linux/macOS, brings up backend+frontend+bot via Docker Compose
-- [`./setups/setup-unix-using-pm2.sh`](../setups/setup-unix-using-pm2.sh) — Linux/macOS, runs the 3 with PM2, no Docker
-- [`./setups/setup-windows-using-docker.sh`](../setups/setup-windows-using-docker.sh) — Windows 11 + WSL2, via Docker Desktop
-- [`./setups/setup-windows-using-pm2.sh`](../setups/setup-windows-using-pm2.sh) — Windows 11 + WSL2, with PM2, no Docker
+- [`./setups/setup-docker.sh`](../setups/setup-docker.sh) — Linux/macOS, brings up backend+frontend+bot via Docker Compose
+- [`./setups/setup-pm2.sh`](../setups/setup-pm2.sh) — Linux/macOS, runs the 3 with PM2, no Docker
+- [`./setups/setup-docker.sh`](../setups/setup-docker.sh) — Windows 11 + WSL2, via Docker Desktop
+- [`./setups/setup-pm2.sh`](../setups/setup-pm2.sh) — Windows 11 + WSL2, with PM2, no Docker
 
 Details for each in [`setup-unix-using-docker.md`](./setup-unix-using-docker.md),
 [`setup-unix-using-pm2.md`](./setup-unix-using-pm2.md),
