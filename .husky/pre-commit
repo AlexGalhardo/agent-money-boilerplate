@@ -1,23 +1,29 @@
 set -e
 
-# Já aconteceu mais de uma vez de um binário compilado (bun build --compile,
-# ~90MB) ser commitado por engano — bloqueia isso na raiz em vez de confiar
-# só no .gitignore.
+# A compiled binary (bun build --compile, ~90MB) was committed by accident
+# more than once — block it here instead of trusting .gitignore alone.
 staged_exes=$(git diff --cached --name-only --diff-filter=ACM | grep -i '\.exe$' || true)
 if [ -n "$staged_exes" ]; then
-	echo "Commit bloqueado: arquivo(s) .exe staged — nunca deveriam ir pro git:" >&2
+	echo "Commit blocked: staged .exe file(s) must never be committed:" >&2
 	echo "$staged_exes" >&2
+	exit 1
+fi
+
+# Real bank statements have leaked before (see docs/security.md).
+staged_csvs=$(git diff --cached --name-only --diff-filter=ACM | grep -i '\.csv$' || true)
+if [ -n "$staged_csvs" ]; then
+	echo "Commit blocked: staged .csv file(s) may contain real financial data:" >&2
+	echo "$staged_csvs" >&2
 	exit 1
 fi
 
 if git diff --cached --name-only | grep -qx "bun.lock"; then
 	lockfile_version=$(grep -m1 '"lockfileVersion"' bun.lock | grep -o '[0-9]\+')
 	if [ "$lockfile_version" != "1" ]; then
-		echo "bun.lock está com lockfileVersion $lockfile_version, mas o build do mobile na EAS usa bun 1.3.14, que só entende lockfileVersion 1." >&2
-		echo "Regenere o lockfile com uma versão de bun compatível: npx bun@1.3.14 install" >&2
+		echo "bun.lock has lockfileVersion $lockfile_version, but the EAS mobile build uses bun 1.3.14, which only reads lockfileVersion 1." >&2
+		echo "Regenerate the lockfile with a compatible bun: npx bun@1.3.14 install" >&2
 		exit 1
 	fi
 fi
 
-bun run format
 bun run lint

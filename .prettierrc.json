@@ -1,0 +1,5 @@
+{
+	"$schema": "https://json.schemastore.org/prettierrc",
+	"proseWrap": "preserve",
+	"overrides": [{ "files": "*.md", "options": { "useTabs": false, "tabWidth": 2 } }]
+}
