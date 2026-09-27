@@ -92,17 +92,15 @@ Guides live in [`docs/`](./docs):
 
 Executable bootstrap/deploy scripts live in [`setups/`](./setups) — each
 asks interactively for SQLite or PostgreSQL, or accepts it as an argument to
-skip the prompt (e.g. `./setups/setup-unix-using-docker.sh postgres`):
+skip the prompt (e.g. `./setups/setup-docker.sh postgres`):
 
-| Script                                                                    | What it does                                                                |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [`setup-unix-using-docker.sh`](./setups/setup-unix-using-docker.sh)       | Bootstrap locally via Docker Compose (Linux/macOS)                          |
-| [`setup-unix-using-pm2.sh`](./setups/setup-unix-using-pm2.sh)             | Bootstrap locally via PM2, no Docker (Linux/macOS)                          |
-| [`setup-windows-using-docker.sh`](./setups/setup-windows-using-docker.sh) | Bootstrap locally via Docker Desktop (Windows 11 + WSL2)                    |
-| [`setup-windows-using-pm2.sh`](./setups/setup-windows-using-pm2.sh)       | Bootstrap locally via PM2, no Docker (Windows 11 + WSL2)                    |
-| [`deploy-android-apk.sh`](./setups/deploy-android-apk.sh)                 | Build a sideloadable Android APK (EAS cloud build or local)                 |
-| [`deploy-android-play-store.sh`](./setups/deploy-android-play-store.sh)   | Build (and optionally submit) the Android App Bundle for Google Play        |
-| [`railway-entrypoint.sh`](./setups/railway-entrypoint.sh)                 | Container entrypoint used by the Railway deploy (see the root `Dockerfile`) |
+| Script                                                                  | What it does                                                                |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`setup-docker.sh`](./setups/setup-docker.sh)                           | Bootstrap locally via Docker Compose (Linux, macOS, Windows 11 + WSL2)      |
+| [`setup-pm2.sh`](./setups/setup-pm2.sh)                                 | Bootstrap locally via PM2, no Docker (Linux, macOS, Windows 11 + WSL2)      |
+| [`deploy-android-apk.sh`](./setups/deploy-android-apk.sh)               | Build a sideloadable Android APK (EAS cloud build or local)                 |
+| [`deploy-android-play-store.sh`](./setups/deploy-android-play-store.sh) | Build (and optionally submit) the Android App Bundle for Google Play        |
+| [`railway-entrypoint.sh`](./setups/railway-entrypoint.sh)               | Container entrypoint used by the Railway deploy (see the root `Dockerfile`) |
 
 ## How to contribute
 

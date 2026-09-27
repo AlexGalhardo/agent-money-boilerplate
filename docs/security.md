@@ -44,6 +44,7 @@ preconditions; **Low** = defense in depth.
 | 15  | A05   | Low      | `image` accepted any URL scheme (`javascript:`)                                                                                                                                              | http(s) only                                                                                                                                   | Fixed                      |
 | 16  | A05   | Low      | Validation errors echoed Elysia's full schema; AbacatePay errors echoed upstream messages/config                                                                                             | Generic messages to clients, details to server logs                                                                                            | Fixed                      |
 | 17  | A09   | Low      | E-mail recipients written to logs when Resend isn't configured                                                                                                                               | Recipient removed from the log line                                                                                                            | Fixed                      |
+| 18  | A07   | High     | AbacatePay dev API key + webhook secret hardcoded in `scripts/common.sh`                                                                                                                     | Prompted at setup time, secret generated per install. **Revoke the old key**                                                                   | Fixed (rotation pending)   |
 
 ### Accepted / deferred
 
@@ -103,3 +104,13 @@ is used. **Guardrail:** seed credentials come from the environment.
 production backend. It was never staged, but the key should be revoked and
 the file deleted. **Guardrail:** keep ad-hoc scripts outside the repo, or
 read keys from the environment.
+
+### 2026-09-27 — AbacatePay dev credentials in the setup script
+
+`scripts/common.sh` hardcoded an AbacatePay dev API key and webhook secret
+(written into `backend/.env` when choosing the "real PIX" setup option).
+Found while consolidating the setup scripts. The key is now typed in at
+setup time and the webhook secret is generated per install. **The old key
+is in git history — revoke it in the AbacatePay dashboard.**
+**Guardrail:** no credential of any kind in scripts; the pre-push checklist
+covers `setups/` and `scripts/` too.

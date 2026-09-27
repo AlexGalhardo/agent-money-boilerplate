@@ -27,7 +27,7 @@ distro equivalente) ou do **Git Bash**. Ele não roda no PowerShell nem no
 # dentro do WSL2 (ou Git Bash)
 git clone git@github.com:AlexGalhardo/galhardo-money-bot.git
 cd galhardo-money-bot
-./setups/setup-windows-using-docker.sh
+./setups/setup-docker.sh
 ```
 
 O script pergunta qual banco usar:
@@ -39,11 +39,11 @@ Qual banco de dados você quer usar?
 ```
 
 Para pular a pergunta, passe o banco como argumento:
-`./setups/setup-windows-using-docker.sh sqlite` ou `./setups/setup-windows-using-docker.sh postgres`.
+`./setups/setup-docker.sh sqlite` ou `./setups/setup-docker.sh postgres`.
 
 O script confere se o Docker Desktop está rodando antes de continuar e
 avisa (em vez de travar sem explicação) se não estiver. Fora isso, o
-comportamento é idêntico ao `setups/setup-unix-using-docker.sh`:
+comportamento é idêntico ao `setups/setup-docker.sh`:
 
 1. Cria `backend/.env` e `bot/.env` a partir dos `.env.example` (gerando
    segredos na primeira vez).
@@ -104,7 +104,7 @@ docker compose -f infra/docker-compose.sqlite.yml --project-directory . exec bac
 - **`bad interpreter` ao rodar o script**: geralmente sinal de que o arquivo
   foi salvo com `CRLF` em vez de `LF` — o `.gitattributes` do repositório já
   força `LF` para `*.sh`, então um `git clone` normal não deveria reproduzir
-  isso; se ocorrer, rode `dos2unix setup-windows-using-docker.sh`.
+  isso; se ocorrer, rode `dos2unix setups/setup-docker.sh`.
 
 ## Comandos úteis
 

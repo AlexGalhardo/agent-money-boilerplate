@@ -8,10 +8,9 @@ expected workflow for any change to this repository — human or AI agent.
 1. Read [`CLAUDE.md`](./CLAUDE.md) — it describes the monorepo's
    architecture, stack and the code conventions this project follows
    closely, and links out to `docs/` for anything deeper.
-2. Run one of the setup scripts (`./setups/setup-unix-using-docker.sh`,
-   `./setups/setup-unix-using-pm2.sh`, `./setups/setup-windows-using-docker.sh`
-   or `./setups/setup-windows-using-pm2.sh`) to bring the environment up
-   locally. Each one is documented in `docs/`.
+2. Run `./setups/setup-docker.sh` (Docker Compose) or
+   `./setups/setup-pm2.sh` (PM2, no Docker) to bring the environment up
+   locally — both work on Linux, macOS and Windows 11 (WSL2 / Git Bash).
 3. Open an [issue](../../issues) before starting any large change (a new
    feature, an architecture refactor) to align on the approach before
    investing time writing code. Small bugs and typos can go straight to a
