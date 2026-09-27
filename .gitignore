@@ -81,3 +81,9 @@ mobile/google-play-service-account.json
 
 # personal scratch notes / task prompts — kept local, never committed
 TODO.md
+
+# EAS Simulator session file (holds a daemon token) — see .claude/skills/eas-simulator
+.env.eas-simulator
+
+# Playwright suite for the Expo web build (e2e-web/)
+mobile/dist-e2e/

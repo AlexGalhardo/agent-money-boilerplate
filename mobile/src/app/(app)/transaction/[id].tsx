@@ -1,29 +1,38 @@
-import { Feather } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Text, View } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { DateField } from "@/components/ui/date-field";
+import { LoadingState } from "@/components/ui/empty-state";
+import { Notice } from "@/components/ui/notice";
+import { Screen } from "@/components/ui/screen";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { TextField } from "@/components/ui/text-field";
 import { categoryLabels, expenseCategories, incomeCategories, type TransactionCategory } from "@/lib/categories";
 import { centsToBRDigits, MAX_AMOUNT_CENTS, MIN_AMOUNT_CENTS, maskBRLFromDigits, todayISO } from "@/lib/format";
-import { useAppColorScheme } from "@/lib/theme";
 import {
 	useCreateTransaction,
 	useDeleteTransaction,
 	useTransactionQuery,
 	useUpdateTransaction,
 } from "@/query/transactions";
-import { Pressable } from "@/shared/components/atoms/pressable";
+import { colors } from "@/theme";
 
 type TxType = "income" | "expense";
 
+const TYPE_OPTIONS = [
+	{ value: "expense", label: "Despesa", activeClassName: "text-expense" },
+	{ value: "income", label: "Receita", activeClassName: "text-income" },
+] as const;
+
 function categoriesForType(type: TxType): TransactionCategory[] {
 	return type === "income" ? incomeCategories : expenseCategories;
+}
+
+function firstCategory(type: TxType): TransactionCategory {
+	return categoriesForType(type)[0] as TransactionCategory;
 }
 
 export default function TransactionFormScreen() {
@@ -39,9 +48,7 @@ export default function TransactionFormScreen() {
 	const [type, setType] = useState<TxType>("expense");
 	const [amountCents, setAmountCents] = useState(0);
 	const [amountDisplay, setAmountDisplay] = useState("");
-	const [category, setCategory] = useState<TransactionCategory>(
-		categoriesForType("expense")[0] as TransactionCategory,
-	);
+	const [category, setCategory] = useState<TransactionCategory>(firstCategory("expense"));
 	const [description, setDescription] = useState("");
 	const [dateISO, setDateISO] = useState(todayISO());
 	const [error, setError] = useState<string | null>(null);
@@ -58,12 +65,9 @@ export default function TransactionFormScreen() {
 		setDateISO(existing.date.slice(0, 10));
 	}, [existing]);
 
-	const title = isNew ? "Nova transação" : "Editar transação";
-	const submitting = createMut.isPending || updateMut.isPending;
-
 	function onChangeType(next: TxType): void {
 		setType(next);
-		setCategory(categoriesForType(next)[0] as TransactionCategory);
+		setCategory(firstCategory(next));
 	}
 
 	function onChangeAmount(rawValue: string): void {
@@ -74,25 +78,16 @@ export default function TransactionFormScreen() {
 
 	async function onSubmit(): Promise<void> {
 		setError(null);
-		if (amountCents < MIN_AMOUNT_CENTS) {
-			setError("O valor mínimo é R$ 0,01.");
-			return;
-		}
-		if (amountCents > MAX_AMOUNT_CENTS) {
-			setError("O valor máximo é R$ 999.999,99.");
-			return;
-		}
-		if (!description.trim()) {
-			setError("Informe uma descrição.");
-			return;
-		}
+		if (amountCents < MIN_AMOUNT_CENTS) return setError("O valor mínimo é R$ 0,01.");
+		if (amountCents > MAX_AMOUNT_CENTS) return setError("O valor máximo é R$ 999.999,99.");
+		if (!description.trim()) return setError("Informe uma descrição.");
 
 		const input = {
 			type,
 			amount: amountCents,
 			category,
 			description: description.trim(),
-			date: new Date(dateISO).toISOString(),
+			date: new Date(`${dateISO}T12:00:00`).toISOString(),
 		};
 
 		try {
@@ -104,8 +99,8 @@ export default function TransactionFormScreen() {
 		}
 	}
 
+	// A native confirmation is right here: deleting is irreversible and rare.
 	function onDelete(): void {
-		if (isNew) return;
 		Alert.alert("Excluir transação", "Esta ação não pode ser desfeita.", [
 			{ text: "Cancelar", style: "cancel" },
 			{
@@ -119,142 +114,95 @@ export default function TransactionFormScreen() {
 		]);
 	}
 
-	const { isDark } = useAppColorScheme();
+	const header = (
+		<Stack.Screen
+			options={{
+				title: isNew ? "Nova transação" : "Editar transação",
+				headerLeft: () => (
+					<Pressable onPress={() => router.back()} hitSlop={10} className="active:opacity-60">
+						<Text className="text-body text-muted">Cancelar</Text>
+					</Pressable>
+				),
+			}}
+		/>
+	);
+
+	if (!isNew && loading) {
+		return (
+			<Screen edges={["left", "right"]}>
+				{header}
+				<LoadingState />
+			</Screen>
+		);
+	}
 
 	return (
-		<SafeAreaView className="flex-1 bg-white dark:bg-slate-950">
-			<View className="flex-row items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-slate-800">
-				<Pressable onPress={() => router.back()} hitSlop={8}>
-					<Text className="text-base font-medium text-blue-600 dark:text-blue-400">Cancelar</Text>
-				</Pressable>
-				<Text className="text-base font-semibold text-slate-900 dark:text-white">{title}</Text>
-				<View className="w-16" />
+		<Screen scroll edges={["left", "right", "bottom"]} contentClassName="gap-6">
+			{header}
+
+			<SegmentedControl options={TYPE_OPTIONS} value={type} onChange={onChangeType} />
+
+			<View className="items-center gap-1 py-2">
+				<Text className="text-footnote text-subtle">Valor</Text>
+				<View className="flex-row items-center justify-center gap-2">
+					<Text className="text-title text-subtle">R$</Text>
+					<TextInput
+						value={amountDisplay}
+						onChangeText={onChangeAmount}
+						placeholder="0,00"
+						placeholderTextColor={colors.subtle}
+						selectionColor={colors.brand}
+						keyboardType="number-pad"
+						inputMode="numeric"
+						testID="field-Valor"
+						accessibilityLabel="Valor"
+						className={`min-w-[120px] text-center text-[44px] font-bold web:outline-none ${type === "income" ? "text-income" : "text-fg"}`}
+					/>
+				</View>
+				<Text className="text-caption text-subtle">Entre R$ 0,01 e R$ 999.999,99</Text>
 			</View>
 
-			{!isNew && loading ? (
-				<View className="flex-1 items-center justify-center">
-					<ActivityIndicator />
+			<TextField
+				label="Descrição"
+				value={description}
+				onChangeText={setDescription}
+				placeholder="Ex: Supermercado"
+				maxLength={280}
+			/>
+
+			<View className="gap-2">
+				<Text className="text-footnote font-medium text-muted">Categoria</Text>
+				<View className="flex-row flex-wrap gap-2">
+					{categories.map((option) => (
+						<Chip
+							key={option}
+							label={categoryLabels[option]}
+							selected={category === option}
+							onPress={() => setCategory(option)}
+						/>
+					))}
 				</View>
-			) : (
-				<KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
-					<Animated.ScrollView
-						entering={FadeInDown.duration(240)}
-						contentContainerClassName="p-6 gap-5"
-						keyboardShouldPersistTaps="handled"
-					>
-						<View className="flex-row gap-3">
-							<Pressable
-								onPress={() => onChangeType("income")}
-								style={{
-									flex: 1,
-									height: 52,
-									flexDirection: "row",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: 8,
-									borderRadius: 12,
-									borderWidth: 1,
-									borderColor: type === "income" ? "#10b981" : isDark ? "#334155" : "#cbd5e1",
-									backgroundColor:
-										type === "income" ? (isDark ? "#064e3b40" : "#ecfdf5") : "transparent",
-								}}
-							>
-								<Feather
-									name="arrow-up-circle"
-									size={18}
-									color={type === "income" ? "#10b981" : "#64748b"}
-								/>
-								<Text
-									className={`text-base font-semibold ${type === "income" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}
-								>
-									RECEITA
-								</Text>
-							</Pressable>
-							<Pressable
-								onPress={() => onChangeType("expense")}
-								style={{
-									flex: 1,
-									height: 52,
-									flexDirection: "row",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: 8,
-									borderRadius: 12,
-									borderWidth: 1,
-									borderColor: type === "expense" ? "#ef4444" : isDark ? "#334155" : "#cbd5e1",
-									backgroundColor:
-										type === "expense" ? (isDark ? "#7f1d1d40" : "#fef2f2") : "transparent",
-								}}
-							>
-								<Feather
-									name="arrow-down-circle"
-									size={18}
-									color={type === "expense" ? "#ef4444" : "#64748b"}
-								/>
-								<Text
-									className={`text-base font-semibold ${type === "expense" ? "text-red-600 dark:text-red-400" : "text-slate-500 dark:text-slate-400"}`}
-								>
-									DESPESA
-								</Text>
-							</Pressable>
-						</View>
+			</View>
 
-						<View className="gap-2">
-							<Text className="text-sm font-medium text-slate-700 dark:text-slate-200">Categoria</Text>
-							<View className="flex-row flex-wrap gap-2">
-								{categories.map((option) => (
-									<Chip
-										key={option}
-										label={categoryLabels[option]}
-										selected={category === option}
-										onPress={() => setCategory(option)}
-									/>
-								))}
-							</View>
-						</View>
+			<DateField label="Data" value={dateISO} onChange={setDateISO} />
 
-						<DateField label="Data da transação" value={dateISO} onChange={setDateISO} />
+			<Notice kind="error" message={error} />
 
-						<TextField
-							label="Descrição"
-							value={description}
-							onChangeText={setDescription}
-							placeholder="Ex: Supermercado"
-						/>
-
-						<View className="gap-1">
-							<TextField
-								label="Valor"
-								value={amountDisplay}
-								onChangeText={onChangeAmount}
-								placeholder="R$ 0,00"
-								keyboardType="number-pad"
-								inputMode="numeric"
-							/>
-							<Text className="text-xs text-slate-400 dark:text-slate-500">
-								Entre R$ 0,01 e R$ 999.999,99
-							</Text>
-						</View>
-
-						{error ? (
-							<Animated.Text
-								entering={FadeInUp.duration(180)}
-								className="text-sm text-red-600 dark:text-red-400"
-							>
-								{error}
-							</Animated.Text>
-						) : null}
-
-						<Button
-							label={isNew ? "Adicionar" : "Salvar alterações"}
-							onPress={onSubmit}
-							loading={submitting}
-						/>
-
-						{!isNew ? <Button label="Excluir transação" variant="danger" onPress={onDelete} /> : null}
-					</Animated.ScrollView>
-				</KeyboardAvoidingView>
-			)}
-		</SafeAreaView>
+			<View className="gap-3">
+				<Button
+					label={isNew ? "Adicionar" : "Salvar alterações"}
+					onPress={onSubmit}
+					loading={createMut.isPending || updateMut.isPending}
+				/>
+				{!isNew ? (
+					<Button
+						label="Excluir transação"
+						variant="danger"
+						onPress={onDelete}
+						loading={deleteMut.isPending}
+					/>
+				) : null}
+			</View>
+		</Screen>
 	);
 }

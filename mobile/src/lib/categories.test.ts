@@ -28,6 +28,6 @@ describe("categories", () => {
 	it("assigns a color to every category and falls back for unknown ones", () => {
 		expect(getCategoryColor("food", "expense")).toMatch(/^#/);
 		expect(getCategoryColor("salary", "income")).toMatch(/^#/);
-		expect(getCategoryColor("not-a-real-category", "expense")).toBe("#525252");
+		expect(getCategoryColor("not-a-real-category", "expense")).toBe("#71717a");
 	});
 });

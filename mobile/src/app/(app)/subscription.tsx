@@ -1,43 +1,39 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { Image, Text, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, Pressable, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/button";
+import { Notice } from "@/components/ui/notice";
+import { Screen } from "@/components/ui/screen";
 import { api } from "@/lib/api";
-import { hasActivePlan, planDaysRemaining } from "@/lib/plan";
-import { Pressable } from "@/shared/components/atoms/pressable";
+import { hasActivePlan, planRemainingLabel } from "@/lib/plan";
+import { useMeQuery, useRefreshMe } from "@/query/me";
+import { colors } from "@/theme";
 
 type PlanId = "monthly" | "annual";
 type Charge = { id: string; brCode: string; brCodeBase64: string; expiresAt: string };
 
-const PLANS: { id: PlanId; label: string; price: string; description: string }[] = [
-	{ id: "monthly", label: "Mensal", price: "R$ 9,90", description: "1 mês de acesso ao plano PRO." },
+const PLANS: { id: PlanId; label: string; price: string; period: string; description: string; badge?: string }[] = [
+	{ id: "monthly", label: "Mensal", price: "R$ 9,90", period: "/mês", description: "1 mês de acesso ao plano PRO." },
 	{
 		id: "annual",
 		label: "Anual",
 		price: "R$ 99,90",
-		description: "12 meses de acesso ao plano PRO (2 meses grátis).",
+		period: "/ano",
+		description: "12 meses de acesso ao plano PRO.",
+		badge: "2 meses grátis",
 	},
 ];
 
+const BENEFITS = ["Transações ilimitadas", "Bot do Telegram", "Importação de extratos", "Relatórios em PDF"];
 const POLL_INTERVAL_MS = 3000;
 
 export default function SubscriptionScreen() {
 	const router = useRouter();
-	const queryClient = useQueryClient();
-
-	const meQuery = useQuery({
-		queryKey: ["me"],
-		queryFn: async () => {
-			const { data, error } = await api.users.me.get();
-			if (error || !data || !("user" in data)) throw new Error("Falha ao carregar dados da conta");
-			return data.user;
-		},
-	});
+	const meQuery = useMeQuery();
+	const refreshMe = useRefreshMe();
 
 	const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -56,14 +52,14 @@ export default function SubscriptionScreen() {
 			if (data.status === "paid" && !paidRef.current) {
 				paidRef.current = true;
 				setStatus("paid");
-				await queryClient.invalidateQueries({ queryKey: ["me"] });
+				await refreshMe();
 			} else if (data.status === "expired") {
 				setStatus("expired");
 			}
 		}, POLL_INTERVAL_MS);
 
 		return () => clearInterval(interval);
-	}, [charge, status, queryClient]);
+	}, [charge, status, refreshMe]);
 
 	async function handlePay(plan: PlanId): Promise<void> {
 		setError(null);
@@ -72,7 +68,7 @@ export default function SubscriptionScreen() {
 		setLoadingPlan(null);
 
 		if (requestError || !data || !("id" in data)) {
-			setError("Não foi possível gerar o PIX");
+			setError("Não foi possível gerar o PIX. Tente novamente em instantes.");
 			return;
 		}
 
@@ -88,107 +84,107 @@ export default function SubscriptionScreen() {
 		setTimeout(() => setCopied(false), 2000);
 	}
 
-	const activePlan = meQuery.data ? hasActivePlan(meQuery.data) : false;
-	const daysRemaining = meQuery.data ? planDaysRemaining(meQuery.data) : null;
+	const me = meQuery.data;
+	const activePlan = me ? hasActivePlan(me) : false;
+	const remaining = me ? planRemainingLabel(me) : null;
 	const qrSrc = charge?.brCodeBase64.startsWith("data:")
 		? charge.brCodeBase64
 		: `data:image/png;base64,${charge?.brCodeBase64}`;
 
+	if (status === "paid") {
+		return (
+			<Screen scroll edges={["left", "right", "bottom"]} contentClassName="items-center justify-center gap-4">
+				<View className="size-14 items-center justify-center rounded-full bg-income/15">
+					<Feather name="check" size={26} color={colors.income} />
+				</View>
+				<Text className="text-title text-fg">Pagamento confirmado</Text>
+				<Text className="text-center text-body text-muted">Sua conta já está no plano PRO.</Text>
+				<Button
+					label="Voltar ao início"
+					onPress={() => router.replace("/dashboard")}
+					className="self-stretch"
+				/>
+			</Screen>
+		);
+	}
+
 	return (
-		<SafeAreaView className="flex-1 bg-white">
-			<View className="flex-row items-center justify-between border-b border-slate-200 px-5 py-3">
-				<Pressable onPress={() => router.back()} hitSlop={8}>
-					<Text className="text-base font-medium text-blue-600">Voltar</Text>
-				</Pressable>
-				<Text className="text-base font-semibold text-slate-900">Assinatura</Text>
-				<View className="w-14" />
-			</View>
-
-			<Animated.ScrollView entering={FadeInDown.duration(240)} contentContainerClassName="p-6 gap-4">
-				{activePlan ? (
-					<Animated.View
-						entering={FadeInDown.duration(200)}
-						className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"
-					>
-						<Text className="text-sm font-semibold text-emerald-700">
-							Plano PRO ativo
-							{daysRemaining !== null
-								? ` — ${daysRemaining} dia${daysRemaining === 1 ? "" : "s"} restantes`
-								: ""}
-						</Text>
-					</Animated.View>
-				) : (
-					<Text className="text-sm text-slate-500">Pagamento único via PIX, sem renovação automática.</Text>
-				)}
-
-				{error ? <Text className="text-sm text-red-600">{error}</Text> : null}
-
-				{status === "paid" ? (
-					<Animated.View
-						entering={FadeInDown.duration(200)}
-						className="items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-6"
-					>
-						<Text className="text-base font-semibold text-emerald-700">Pagamento confirmado! 🎉</Text>
-						<Text className="text-sm text-emerald-600">Sua conta já está no plano PRO.</Text>
-						<Button
-							label="Voltar ao dashboard"
-							onPress={() => router.replace("/dashboard")}
-							variant="secondary"
-						/>
-					</Animated.View>
-				) : charge && status === "pending" ? (
-					<Animated.View
-						entering={FadeInDown.duration(200)}
-						className="items-center gap-4 rounded-xl border border-slate-200 p-4"
-					>
-						<Text className="text-sm text-slate-500">Escaneie o QR code ou copie o código PIX abaixo:</Text>
-						<Image source={{ uri: qrSrc }} className="size-56 rounded-lg border border-slate-200" />
-						<View className="w-full flex-row items-center gap-2">
-							<Text
-								className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs"
-								numberOfLines={1}
-							>
-								{charge.brCode}
-							</Text>
-							<Pressable
-								onPress={handleCopy}
-								style={{
-									borderRadius: 8,
-									borderWidth: 1,
-									borderColor: "#e2e8f0",
-									paddingHorizontal: 12,
-									paddingVertical: 8,
-								}}
-							>
-								<Text className="text-xs font-medium text-blue-600">
-									{copied ? "Copiado!" : "Copiar"}
-								</Text>
-							</Pressable>
+		<Screen scroll edges={["left", "right", "bottom"]} contentClassName="gap-6">
+			{activePlan ? (
+				<Notice kind="success" message={`Plano PRO ativo${remaining ? ` — ${remaining}` : ""}.`} />
+			) : (
+				<View className="gap-3">
+					<Text className="text-title text-fg">Seja PRO</Text>
+					{BENEFITS.map((benefit) => (
+						<View key={benefit} className="flex-row items-center gap-3">
+							<Feather name="check" size={16} color={colors.brand} />
+							<Text className="text-body text-muted">{benefit}</Text>
 						</View>
-						<Text className="text-xs text-slate-400">Aguardando confirmação do pagamento...</Text>
-					</Animated.View>
-				) : status === "expired" ? (
-					<Text className="text-sm text-red-600">Esse PIX expirou. Gere um novo código abaixo.</Text>
-				) : null}
+					))}
+					<Text className="text-footnote text-subtle">
+						Pagamento único via PIX, sem renovação automática.
+					</Text>
+				</View>
+			)}
 
-				{!activePlan && status !== "paid" ? (
-					<View className="mt-2 gap-3">
-						{PLANS.map((plan) => (
-							<View key={plan.id} className="rounded-xl border border-slate-200 p-4">
-								<Text className="text-lg font-semibold text-slate-900">{plan.label}</Text>
-								<Text className="mt-1 text-2xl font-bold text-slate-900">{plan.price}</Text>
-								<Text className="mt-1 text-sm text-slate-500">{plan.description}</Text>
-								<Button
-									label="Pagar com PIX"
-									onPress={() => handlePay(plan.id)}
-									loading={loadingPlan === plan.id}
-									className="mt-4"
-								/>
-							</View>
-						))}
+			<Notice kind="error" message={error} />
+
+			{charge && status === "pending" ? (
+				<View className="items-center gap-4 rounded-card bg-surface p-5">
+					<Text className="text-subhead text-muted">Escaneie o QR code ou copie o código PIX</Text>
+					<View className="rounded-control bg-white p-3">
+						<Image source={{ uri: qrSrc }} className="size-52" accessibilityLabel="QR code PIX" />
 					</View>
-				) : null}
-			</Animated.ScrollView>
-		</SafeAreaView>
+					<Pressable
+						onPress={handleCopy}
+						accessibilityRole="button"
+						accessibilityLabel="Copiar código PIX"
+						className="w-full flex-row items-center gap-3 rounded-control bg-raised px-4 py-3 active:opacity-70"
+					>
+						<Text className="flex-1 text-footnote text-muted" numberOfLines={1}>
+							{charge.brCode}
+						</Text>
+						<Feather
+							name={copied ? "check" : "copy"}
+							size={16}
+							color={copied ? colors.income : colors.fg}
+						/>
+					</Pressable>
+					<Text className="text-caption text-subtle">Aguardando confirmação do pagamento…</Text>
+				</View>
+			) : null}
+
+			{status === "expired" ? (
+				<Notice kind="warning" message="Esse PIX expirou. Gere um novo código abaixo." />
+			) : null}
+
+			{!activePlan ? (
+				<View className="gap-3">
+					{PLANS.map((plan) => (
+						<View key={plan.id} className="gap-4 rounded-card bg-surface p-5">
+							<View className="flex-row items-center justify-between">
+								<Text className="text-headline text-fg">{plan.label}</Text>
+								{plan.badge ? (
+									<View className="rounded-full bg-brand/15 px-2.5 py-1">
+										<Text className="text-caption font-semibold text-brand">{plan.badge}</Text>
+									</View>
+								) : null}
+							</View>
+							<View className="flex-row items-baseline gap-1">
+								<Text className="text-display text-fg">{plan.price}</Text>
+								<Text className="text-subhead text-subtle">{plan.period}</Text>
+							</View>
+							<Text className="text-subhead text-muted">{plan.description}</Text>
+							<Button
+								label="Pagar com PIX"
+								variant={plan.id === "annual" ? "primary" : "secondary"}
+								onPress={() => handlePay(plan.id)}
+								loading={loadingPlan === plan.id}
+							/>
+						</View>
+					))}
+				</View>
+			) : null}
+		</Screen>
 	);
 }

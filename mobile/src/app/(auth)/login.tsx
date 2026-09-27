@@ -1,11 +1,11 @@
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, Text, View } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text } from "react-native";
 
+import { AuthShell, Divider } from "@/components/auth-shell";
 import { Button } from "@/components/ui/button";
 import { GoogleButton } from "@/components/ui/google-button";
+import { Notice } from "@/components/ui/notice";
 import { TextField } from "@/components/ui/text-field";
 import { authClient, signIn } from "@/lib/auth-client";
 import { translateAuthError } from "@/lib/auth-errors";
@@ -27,11 +27,11 @@ export default function LoginScreen() {
 		setSubmitting(false);
 
 		if (signInError) {
-			if (signInError.code === "EMAIL_NOT_VERIFIED") {
-				setError("Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.");
-				return;
-			}
-			setError(translateAuthError(signInError, "E-mail e/ou senha incorretos"));
+			setError(
+				signInError.code === "EMAIL_NOT_VERIFIED"
+					? "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada."
+					: translateAuthError(signInError, "E-mail e/ou senha incorretos"),
+			);
 			return;
 		}
 
@@ -64,96 +64,72 @@ export default function LoginScreen() {
 		router.replace("/dashboard");
 	}
 
+	if (needsTwoFactor) {
+		return (
+			<AuthShell
+				title="Verificação"
+				subtitle="Enviamos um código de 6 dígitos para o seu e-mail. Digite abaixo para continuar."
+			>
+				<TextField
+					label="Código de verificação"
+					value={code}
+					onChangeText={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
+					placeholder="000000"
+					keyboardType="number-pad"
+					autoFocus
+				/>
+				<Notice kind="error" message={error} />
+				<Button
+					label="Verificar"
+					onPress={handleVerifyCode}
+					loading={submitting}
+					disabled={code.length !== 6}
+				/>
+			</AuthShell>
+		);
+	}
+
 	return (
-		<SafeAreaView className="flex-1 bg-white">
-			<KeyboardAvoidingView className="flex-1" behavior={Platform.OS === "ios" ? "padding" : undefined}>
-				<Animated.ScrollView
-					entering={FadeInDown.duration(240)}
-					contentContainerClassName="grow justify-center px-6 py-10"
-					keyboardShouldPersistTaps="handled"
-				>
-					<Text className="text-3xl font-bold text-slate-900">Entrar</Text>
-					<Text className="mt-2 text-base text-slate-500">
-						Acesse sua conta para gerenciar suas finanças.
-					</Text>
+		<AuthShell
+			title="Entrar"
+			subtitle="Acesse sua conta para acompanhar suas finanças."
+			footer={
+				<>
+					<Text className="text-subhead text-muted">Não tem uma conta?</Text>
+					<Link href="/signup" className="text-subhead font-semibold text-fg">
+						Criar conta
+					</Link>
+				</>
+			}
+		>
+			<TextField
+				label="E-mail"
+				value={email}
+				onChangeText={setEmail}
+				placeholder="voce@exemplo.com"
+				autoCapitalize="none"
+				autoCorrect={false}
+				autoComplete="email"
+				keyboardType="email-address"
+				inputMode="email"
+			/>
+			<TextField
+				label="Senha"
+				value={password}
+				onChangeText={setPassword}
+				placeholder="Sua senha"
+				autoComplete="current-password"
+				secureTextEntry
+			/>
+			<Link href="/forgot-password" className="-mt-2 self-end text-footnote font-medium text-muted">
+				Esqueci minha senha
+			</Link>
 
-					<View className="mt-8 gap-4">
-						{needsTwoFactor ? (
-							<>
-								<Text className="text-sm text-slate-500">
-									Enviamos um código de 6 dígitos para o seu e-mail. Digite abaixo para continuar.
-								</Text>
-								<TextField
-									label="Código de verificação"
-									value={code}
-									onChangeText={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
-									placeholder="123456"
-									keyboardType="number-pad"
-								/>
-								{error ? <Text className="text-sm text-red-600">{error}</Text> : null}
-								<Button
-									label="Verificar"
-									onPress={handleVerifyCode}
-									loading={submitting}
-									disabled={code.length !== 6}
-								/>
-							</>
-						) : (
-							<>
-								<TextField
-									label="E-mail"
-									value={email}
-									onChangeText={setEmail}
-									placeholder="voce@exemplo.com"
-									autoCapitalize="none"
-									autoCorrect={false}
-									keyboardType="email-address"
-									inputMode="email"
-								/>
-								<TextField
-									label="Senha"
-									value={password}
-									onChangeText={setPassword}
-									placeholder="Sua senha"
-									secureTextEntry
-								/>
+			<Notice kind="error" message={error} />
 
-								{error ? <Text className="text-sm text-red-600">{error}</Text> : null}
-
-								<Button
-									label="Entrar"
-									onPress={handleLogin}
-									loading={submitting}
-									disabled={!email || !password}
-								/>
-
-								<View className="flex-row items-center gap-3">
-									<View className="h-px flex-1 bg-slate-200" />
-									<Text className="text-xs text-slate-400">ou</Text>
-									<View className="h-px flex-1 bg-slate-200" />
-								</View>
-
-								<GoogleButton label="Entrar com Google" onError={setError} />
-
-								<View className="flex-row justify-center">
-									<Link href="/forgot-password" className="text-sm font-semibold text-blue-600">
-										Esqueci minha senha
-									</Link>
-								</View>
-							</>
-						)}
-					</View>
-
-					{!needsTwoFactor ? (
-						<View className="mt-6 flex-row justify-center gap-1">
-							<Text className="text-sm text-slate-500">Não tem uma conta?</Text>
-							<Link href="/signup" className="text-sm font-semibold text-blue-600">
-								Criar conta
-							</Link>
-						</View>
-					) : null}
-				</Animated.ScrollView>
-			</KeyboardAvoidingView>
-		</SafeAreaView>
+			<Button label="Entrar" onPress={handleLogin} loading={submitting} disabled={!email || !password} />
+			<Divider label="ou" />
+			<GoogleButton label="Entrar com Google" onError={setError} />
+		</AuthShell>
 	);
 }

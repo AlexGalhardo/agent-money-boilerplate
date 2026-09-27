@@ -1,7 +1,4 @@
-import { Text } from "react-native";
-
-import { useAppColorScheme } from "@/lib/theme";
-import { Pressable } from "@/shared/components/atoms/pressable";
+import { Pressable, Text } from "react-native";
 
 type Props = {
 	label: string;
@@ -10,26 +7,14 @@ type Props = {
 };
 
 export function Chip({ label, selected, onPress }: Props) {
-	const { isDark } = useAppColorScheme();
-	const unselectedBorder = isDark ? "#475569" : "#cbd5e1";
-	const unselectedBg = isDark ? "#1e293b" : "#ffffff";
-
 	return (
 		<Pressable
 			onPress={onPress}
 			accessibilityRole="button"
-			style={{
-				borderRadius: 999,
-				borderWidth: 1,
-				paddingHorizontal: 12,
-				paddingVertical: 8,
-				borderColor: selected ? "#2563eb" : unselectedBorder,
-				backgroundColor: selected ? "#2563eb" : unselectedBg,
-			}}
+			aria-selected={selected}
+			className={`rounded-full px-4 py-2 active:opacity-70 ${selected ? "bg-primary" : "bg-raised"}`}
 		>
-			<Text className={`text-sm font-medium ${selected ? "text-white" : "text-slate-700 dark:text-slate-200"}`}>
-				{label}
-			</Text>
+			<Text className={`text-subhead font-medium ${selected ? "text-on-primary" : "text-muted"}`}>{label}</Text>
 		</Pressable>
 	);
 }

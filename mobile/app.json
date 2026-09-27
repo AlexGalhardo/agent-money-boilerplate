@@ -6,7 +6,7 @@
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
 		"scheme": "money",
-		"userInterfaceStyle": "automatic",
+		"userInterfaceStyle": "dark",
 		"ios": {
 			"icon": "./assets/expo.icon",
 			"bundleIdentifier": "com.elysiagalhardofinances.money"
@@ -14,7 +14,7 @@
 		"android": {
 			"package": "com.elysiagalhardofinances.money",
 			"adaptiveIcon": {
-				"backgroundColor": "#E6F4FE",
+				"backgroundColor": "#09090B",
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
 				"backgroundImage": "./assets/images/android-icon-background.png",
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -30,7 +30,7 @@
 			[
 				"expo-splash-screen",
 				{
-					"backgroundColor": "#208AEF",
+					"backgroundColor": "#09090B",
 					"image": "./assets/images/splash-icon.png",
 					"imageWidth": 76
 				}
@@ -48,6 +48,7 @@
 			"eas": {
 				"projectId": "e828a701-7d11-4692-9983-4aea9eb2a2f5"
 			}
-		}
+		},
+		"backgroundColor": "#09090B"
 	}
 }

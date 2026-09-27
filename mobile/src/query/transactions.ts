@@ -1,17 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TransactionCategory } from "@/lib/categories";
+import { normalizeTransaction, type Transaction } from "./normalize";
 
-export type Transaction = {
-	id: string;
-	description: string;
-	amount: number;
-	category: TransactionCategory;
-	type: "income" | "expense";
-	date: string;
-	createdAt: string;
-	updatedAt: string | null;
-};
+export type { Transaction };
 
 export type TransactionInput = {
 	description: string;
@@ -21,9 +13,9 @@ export type TransactionInput = {
 	date: string;
 };
 
-// Mesma estratégia do dashboard web (ver frontend/src/routes/dashboard/index.tsx):
-// busca até 1000 transações já filtradas por categoria/data no servidor, e
-// faz busca por texto + paginação no cliente por cima desse conjunto.
+// Same strategy as the web dashboard (frontend/src/lib/queries.ts): fetch up
+// to 1000 transactions already filtered by category/date on the server, then
+// search + paginate on the client (descriptions are encrypted at rest).
 const FETCH_ALL_PER_PAGE = 1000;
 
 export function useTransactionsQuery(filters: { category?: TransactionCategory; from?: string; to?: string }) {
@@ -34,7 +26,7 @@ export function useTransactionsQuery(filters: { category?: TransactionCategory; 
 				query: { ...filters, page: 1, perPage: FETCH_ALL_PER_PAGE },
 			});
 			if (error || !data || !("transactions" in data)) throw new Error("Falha ao carregar transações");
-			return data.transactions as Transaction[];
+			return data.transactions.map(normalizeTransaction);
 		},
 	});
 }
@@ -57,7 +49,7 @@ export function useTransactionQuery(id: string, enabled: boolean) {
 		queryFn: async () => {
 			const { data, error } = await api.transactions({ id }).get();
 			if (error || !data || !("transaction" in data)) throw new Error("Transação não encontrada");
-			return data.transaction as Transaction;
+			return normalizeTransaction(data.transaction);
 		},
 	});
 }
