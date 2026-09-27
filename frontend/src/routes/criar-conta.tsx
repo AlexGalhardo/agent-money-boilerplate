@@ -68,8 +68,8 @@ function SignupPage() {
 			return;
 		}
 
-		// requireEmailVerification faz o cadastro suceder sem criar sessão (token: null) —
-		// o e-mail de confirmação já foi disparado pelo servidor nesse mesmo request.
+		// requireEmailVerification makes sign-up succeed without a session
+		// (token: null) — the confirmation e-mail was already sent by that request.
 		if (data?.token === null) {
 			setPendingVerificationEmail(result.data.email);
 			return;

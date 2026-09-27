@@ -55,9 +55,9 @@ function CheckoutPage() {
 	}
 
 	function handlePaid(): void {
-		// O próprio PixCheckoutModal mostra a confirmação e redireciona pro
-		// /dashboard após o cooldown — aqui só invalida o cache pra essas
-		// páginas já carregarem os dados de plano atualizados.
+		// PixCheckoutModal itself shows the confirmation and redirects to
+		// /dashboard after the cooldown — this only invalidates the cache so
+		// those pages load the updated plan data.
 		queryClient.invalidateQueries({ queryKey: ["me"] });
 		queryClient.invalidateQueries({ queryKey: ["plan-status"] });
 		queryClient.invalidateQueries({ queryKey: ["payment-history"] });

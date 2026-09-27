@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { api } from "../lib/api";
 import { apiErrorMessage } from "../lib/api-error";
+import { queryKeys } from "../lib/queries";
 
 /**
  * Linking happens only from the bot (logging in there, or through the
@@ -23,7 +24,7 @@ export function TelegramLinkSection({ telegramChatId }: { telegramChatId: string
 			setError(apiErrorMessage(requestError, "Não foi possível desvincular o Telegram"));
 			return;
 		}
-		await queryClient.invalidateQueries({ queryKey: ["me"] });
+		await queryClient.invalidateQueries({ queryKey: queryKeys.me });
 	}
 
 	return (

@@ -11,7 +11,8 @@
 		"generate-routes": "tsr generate",
 		"build": "vite build",
 		"start": "PORT=4001 bun server.ts",
-		"test:e2e": "playwright test"
+		"test:e2e": "playwright test",
+		"test": "bun test src"
 	},
 	"dependencies": {
 		"@agent-money-boilerplate/backend": "workspace:*",

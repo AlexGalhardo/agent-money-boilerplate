@@ -5,9 +5,9 @@ import { expenseCategories, incomeCategories } from "../lib/categories";
 import { FormField } from "./auth-card";
 import { CategorySelect } from "./category-select";
 
-// 280 caracteres para acompanhar o limite do backend (transaction.schema.ts)
-// — transações importadas de extrato bancário podem ter descrições bem mais
-// longas que as digitadas manualmente aqui.
+// 280 characters to match the backend limit (transaction.schema.ts) —
+// transactions imported from bank statements can carry much longer
+// descriptions than typed ones.
 const DESCRIPTION_MAX_LENGTH = 280;
 const LONG_DESCRIPTION_LENGTH = 60;
 

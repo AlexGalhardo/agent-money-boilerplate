@@ -66,8 +66,8 @@ export function PixCheckoutModal({
 		return () => clearInterval(interval);
 	}, [charge.id, status, onPaid]);
 
-	// Trava o fechamento do modal durante a contagem regressiva pro usuário
-	// obrigatoriamente ver a confirmação antes de ser levado ao dashboard.
+	// Locks closing during the countdown so the user always sees the
+	// confirmation before being sent to the dashboard.
 	useEffect(() => {
 		if (status !== "paid") return;
 		if (redirectCooldown <= 0) {

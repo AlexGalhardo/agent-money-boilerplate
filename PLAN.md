@@ -137,10 +137,11 @@ Skills: `code-review-and-quality`, `code-simplification`
 
 Skills: `code-review-and-quality`, `frontend-ui-engineering`, `vercel-react-best-practices`
 
-- [ ] Split `dashboard/index.tsx` (627 lines) and `minha-conta.tsx` into focused components
-- [ ] Minha conta: replace chat-ID input with link status + unlink (Group 2)
-- [ ] Translate comments to English
-- [ ] Verify: `typecheck:frontend`, `frontend:build`, Playwright E2E
+- [x] Split `dashboard/index.tsx` (627 lines) and `minha-conta.tsx` into focused components
+- [x] Minha conta: replace chat-ID input with link status + unlink (Group 2)
+- [x] Translate comments to English
+- [x] Shared query hooks (`lib/queries.ts`), pure search/pagination helpers with unit tests, router error boundary
+- [x] Verify: `typecheck:frontend`, `frontend:build`, Playwright E2E (21/21)
 
 ### Checkpoint B (after Groups 3–5)
 

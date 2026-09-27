@@ -23,10 +23,9 @@ export type TransactionCategory = keyof typeof categoryLabels;
 
 export const categoryOptions = Object.keys(categoryLabels) as TransactionCategory[];
 
-// Categorias de receita exibidas no card "Receitas por categoria", nos
-// filtros e no modal de adicionar/editar transação quando o tipo é
-// "income" — lista curada (não é só "o resto do enum"), por pedido do
-// dono do produto.
+// Income categories shown in the "income by category" card, the filters and
+// the add/edit modal for income — a curated list (not just "the rest of the
+// enum"), per the product owner.
 export const incomeCategories: TransactionCategory[] = [
 	"salary",
 	"investment",
@@ -47,8 +46,8 @@ export function getCategoryLabel(category: string): string {
 
 type ThemedColor = { light: string; dark: string };
 
-// Paleta categórica validada (CVD-safe) para gráficos — ordem fixa, nunca
-// ciclada dentro de um mesmo gráfico.
+// Validated (CVD-safe) categorical chart palette — fixed order, never cycled
+// within the same chart.
 function buildColorMap(order: TransactionCategory[]): Record<string, ThemedColor> {
 	const lightSlots = [
 		"#2a78d6",
@@ -86,9 +85,8 @@ function buildColorMap(order: TransactionCategory[]): Record<string, ThemedColor
 	return map;
 }
 
-// Cada categoria exibida em um card recebe uma cor fixa e única dentro
-// daquele card — despesa e receita são gráficos separados, então
-// reaproveitar tons entre eles não gera confusão.
+// Each category gets a fixed, unique color within its card — expense and
+// income are separate charts, so reusing hues across them is not confusing.
 export const expenseCategoryColor = buildColorMap(expenseCategories);
 
 export const incomeCategoryColor = buildColorMap(incomeCategories);

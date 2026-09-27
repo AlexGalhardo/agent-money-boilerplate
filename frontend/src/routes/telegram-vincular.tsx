@@ -17,11 +17,10 @@ export const Route = createFileRoute("/telegram-vincular")({
 });
 
 /**
- * Página de apoio pro login com Google dentro do bot do Telegram: o bot não
- * consegue abrir um fluxo OAuth dentro do chat, então manda o usuário pra cá
- * com um token de uso único (ver backend/src/modules/telegram). Assim que
- * há sessão autenticada, resgata o token e vincula o chat — o usuário só
- * precisa fechar a aba e voltar pro Telegram em seguida.
+ * Browser half of the bot's "log in through the browser" flow: the bot can't
+ * run OAuth inside the chat, so it sends the user here with a single-use
+ * token (see backend/src/modules/telegram). Once there is an authenticated
+ * session, the page redeems the token and links the chat.
  */
 function TelegramLinkPage() {
 	const { token } = Route.useSearch();
@@ -36,7 +35,7 @@ function TelegramLinkPage() {
 		},
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: linkMutation fica de fora de propósito — só deve disparar uma vez quando token+sessão ficam disponíveis, não a cada re-render.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: linkMutation is left out on purpose — it must fire once when token and session become available, not on every re-render.
 	useEffect(() => {
 		if (!token || !session || attempted.current) return;
 		attempted.current = true;
