@@ -20,17 +20,12 @@ test("a free account shows the Gratuito plan and usage counter", async ({ page }
 	await expect(page.getByText("0/10 transações utilizadas")).toBeVisible();
 });
 
-test("saves the Telegram Chat ID and keeps it after reload", async ({ page }) => {
+test("never offers a Telegram chat ID field — linking only happens from the bot", async ({ page }) => {
 	await signUp(page);
 
 	await page.goto("/minha-conta");
-	await page.getByLabel("Chat ID do Telegram").fill("123456789");
-	await page.getByRole("button", { name: "Salvar" }).nth(1).click();
-
-	await expect(page.getByText("Chat ID salvo com sucesso.")).toBeVisible();
-
-	await page.reload();
-	await expect(page.getByLabel("Chat ID do Telegram")).toHaveValue("123456789");
+	await expect(page.getByText("Nenhum chat vinculado.", { exact: false })).toBeVisible();
+	await expect(page.getByLabel("Chat ID do Telegram")).toHaveCount(0);
 });
 
 test("delete account modal shows the 10 second cooldown for free plan users", async ({ page }) => {

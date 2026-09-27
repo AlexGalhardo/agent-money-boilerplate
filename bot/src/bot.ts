@@ -14,6 +14,7 @@ import { reportConversation } from "./conversations/report.conversation";
 import { searchConversation } from "./conversations/search.conversation";
 import { startConversation } from "./conversations/start.conversation";
 import { categoryLabels } from "./formatting/format";
+import { withAuthorizedUser } from "./lib/authorized";
 import { buildMenu, withMainMenu } from "./lib/menu";
 import type { BotContext } from "./types";
 
@@ -21,41 +22,44 @@ function confirmLogoutKeyboard(): InlineKeyboard {
 	return new InlineKeyboard().text("✅ Sim, desconectar", "logout:confirm").text("❌ Cancelar", "logout:cancel");
 }
 
-// "entrar" isn't a real conversation of its own - it just re-enters "start",
-// which is what actually runs the login/signup/Google/link-by-ID flow (see
-// bot/src/conversations/start.conversation.ts). Routing it through the same
-// MENU_ACTIONS table as every other button keeps loginPromptKeyboard()'s
-// "menu:entrar" button working through the existing ^menu: callback handler
-// below, with no separate handler needed.
+// "login" isn't a conversation of its own — it re-enters "start", which runs
+// the access flow (conversations/start.conversation.ts). Routing it through
+// this table keeps loginPromptKeyboard()'s button on the same ^menu: handler.
 const MENU_ACTIONS: Record<string, string> = {
-	entrar: "start",
-	despesa: "add-expense",
-	receita: "add-income",
-	transacoes: "list-transactions",
-	resumo: "balance",
-	buscar: "search",
-	apagar: "delete-transaction",
-	relatorio: "report",
+	login: "start",
+	expense: "add-expense",
+	income: "add-income",
+	transactions: "list-transactions",
+	summary: "balance",
+	search: "search",
+	delete: "delete-transaction",
+	report: "report",
 };
 
 export function createBot(): Bot<BotContext> {
 	const bot = new Bot<BotContext>(env.TELEGRAM_BOT_TOKEN);
 
-	// @grammyjs/conversations v2 já vem com armazenamento próprio em memória
-	// (por chat), sem precisar do `session()` clássico do grammY.
+	// @grammyjs/conversations v2 ships its own in-memory storage (per chat),
+	// no classic grammY `session()` needed.
 	bot.use(conversations());
 
-	bot.use(createConversation(withMainMenu(startConversation), "start"));
-	bot.use(createConversation(withMainMenu(createAddTransactionConversation("expense", "despesa")), "add-expense"));
-	bot.use(createConversation(withMainMenu(createAddTransactionConversation("income", "receita")), "add-income"));
-	bot.use(createConversation(withMainMenu(listTransactionsConversation), "list-transactions"));
-	bot.use(createConversation(withMainMenu(balanceConversation), "balance"));
-	bot.use(createConversation(withMainMenu(searchConversation), "search"));
-	bot.use(createConversation(withMainMenu(deleteTransactionConversation), "delete-transaction"));
-	bot.use(createConversation(withMainMenu(reportConversation), "report"));
+	const authorizedConversations = {
+		"add-expense": createAddTransactionConversation("expense", "despesa"),
+		"add-income": createAddTransactionConversation("income", "receita"),
+		"list-transactions": listTransactionsConversation,
+		balance: balanceConversation,
+		search: searchConversation,
+		"delete-transaction": deleteTransactionConversation,
+		report: reportConversation,
+	};
 
-	// Comando de escape — funciona mesmo com uma conversation em andamento,
-	// já que sai de TODAS antes de qualquer outro middleware processar o update.
+	bot.use(createConversation(withMainMenu(startConversation), "start"));
+	for (const [id, conversation] of Object.entries(authorizedConversations)) {
+		bot.use(createConversation(withMainMenu(withAuthorizedUser(conversation)), id));
+	}
+
+	// Escape hatch — works even mid-conversation, since it leaves ALL of them
+	// before any other middleware sees the update.
 	bot.command("cancelar", async (ctx) => {
 		await ctx.conversation.exitAll();
 		const { text, keyboard } = await buildMenu(ctx.chat?.id);
@@ -70,19 +74,19 @@ export function createBot(): Bot<BotContext> {
 		await ctx.answerCallbackQuery();
 		const action = ctx.callbackQuery.data.slice("menu:".length);
 
-		if (action === "categorias") {
+		if (action === "categories") {
 			const list = transactionCategories.map((category) => `• ${categoryLabels[category]}`).join("\n");
 			await ctx.reply(`Categorias disponíveis:\n\n${list}`);
 			return;
 		}
 
-		if (action === "ajuda") {
+		if (action === "help") {
 			const { text, keyboard } = await buildMenu(ctx.chat?.id);
 			await ctx.reply(text, { parse_mode: "Markdown", reply_markup: keyboard });
 			return;
 		}
 
-		if (action === "trocar-conta") {
+		if (action === "switch-account") {
 			const chatId = ctx.chat?.id;
 			const linkedUserId = chatId === undefined ? null : await findUserIdByChatId(chatId);
 			if (!linkedUserId) {
@@ -109,26 +113,22 @@ export function createBot(): Bot<BotContext> {
 
 		if (action === "confirm" && chatId !== undefined) {
 			await unlinkChatFromUser(chatId);
-			await ctx.reply(
-				"🔌 Conta desconectada. Envie o *ID da conta* que deseja vincular na próxima vez que usar qualquer opção do menu.",
-				{ parse_mode: "Markdown" },
-			);
+			await ctx.reply("🔌 Conta desconectada. Toque em qualquer opção do menu para entrar com outra conta.");
 			return;
 		}
 
 		await ctx.reply("Operação cancelada.");
 	});
 
-	// Fallback global: qualquer update que não seja um comando conhecido nem
-	// esteja sendo consumido por uma conversation em andamento cai aqui —
-	// evita o bot ficar em silêncio (e o usuário achando que travou).
+	// Global fallback: anything that isn't a known command nor consumed by a
+	// running conversation lands here, so the bot never goes silent.
 	bot.on("message", async (ctx) => {
 		const { keyboard } = await buildMenu(ctx.chat?.id);
 		await ctx.reply("Não entendi. Use os botões abaixo:", { reply_markup: keyboard });
 	});
 
 	bot.catch(({ error, ctx }) => {
-		console.error(`Erro não tratado para update ${ctx.update.update_id}:`, error);
+		console.error(`Unhandled error for update ${ctx.update.update_id}:`, error);
 		buildMenu(ctx.chat?.id)
 			.then(({ keyboard }) =>
 				ctx.reply("⚠️ Ocorreu um erro inesperado. Toque em um botão abaixo para continuar:", {

@@ -1,21 +1,21 @@
 import { env } from "../config/env";
+import { AppError } from "./errors";
 
 const BASE_URL = "https://api.abacatepay.com/v2";
 
-export class AbacatePayNotConfiguredError extends Error {
+export class AbacatePayNotConfiguredError extends AppError {
 	constructor() {
-		super("AbacatePay não está configurado (ENABLE_ABACATEPAY=false ou ABACATEPAY_API_KEY ausente)");
-		this.name = "AbacatePayNotConfiguredError";
+		super("Pagamentos PIX indisponíveis no momento", 503);
 	}
 }
 
-export class AbacatePayRequestError extends Error {
+/** Upstream failure — answered as 502 so it is never mistaken for a client error. */
+export class AbacatePayRequestError extends AppError {
 	constructor(
-		public readonly status: number,
+		public readonly upstreamStatus: number,
 		message: string,
 	) {
-		super(message);
-		this.name = "AbacatePayRequestError";
+		super(message, 502);
 	}
 }
 
@@ -29,10 +29,9 @@ export type PixCharge = {
 
 type ApiEnvelope<T> = { data: T; success: boolean; error: string | null };
 
-// ABACATEPAY_PIX_TEST_MODE liga o fluxo de sandbox (chave de dev + endpoint
-// de simulação de pagamento) sem depender do feature flag geral
-// ENABLE_ABACATEPAY — assim o checkout PIX funciona em ambiente de teste
-// mesmo com pagamentos "de verdade" desligados.
+// ABACATEPAY_PIX_TEST_MODE enables the sandbox flow (dev key + payment
+// simulation endpoint) independently of ENABLE_ABACATEPAY, so PIX checkout
+// works in test environments with real payments switched off.
 function requireApiKey(): string {
 	if (!env.ABACATEPAY_API_KEY || (!env.ENABLE_ABACATEPAY && !env.ABACATEPAY_PIX_TEST_MODE)) {
 		throw new AbacatePayNotConfiguredError();
@@ -48,10 +47,11 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
 		headers: { ...init.headers, Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
 	});
 
-	const body = (await response.json()) as ApiEnvelope<T>;
+	const body = (await response.json().catch(() => null)) as ApiEnvelope<T> | null;
 
-	if (!response.ok || !body.success) {
-		throw new AbacatePayRequestError(response.status, body.error ?? `Falha na requisição à AbacatePay (${path})`);
+	if (!response.ok || !body?.success) {
+		console.error(`[abacatepay] ${path} failed with ${response.status}: ${body?.error ?? "no body"}`);
+		throw new AbacatePayRequestError(response.status, "Falha ao comunicar com o provedor de pagamentos");
 	}
 
 	return body.data;
@@ -82,8 +82,8 @@ export const abacatepay = {
 		return request<PixCharge>(`/transparents/check?id=${encodeURIComponent(id)}`, { method: "GET" });
 	},
 
-	// A AbacatePay espera o id como query param aqui (não no corpo) —
-	// mesmo padrão de /transparents/check, apesar do método ser POST.
+	// AbacatePay expects the id as a query param here (not in the body) —
+	// same as /transparents/check, even though this one is a POST.
 	async simulatePayment(id: string): Promise<PixCharge> {
 		return request<PixCharge>(`/transparents/simulate-payment?id=${encodeURIComponent(id)}`, {
 			method: "POST",

@@ -1,7 +1,8 @@
 import type { Prisma, Transaction } from "../../../prisma/generated/client/client";
-import { prisma } from "../../config/prisma";
 import { decrypt, encrypt } from "../../lib/encryption";
-import { FREE_TRANSACTION_LIMIT, FreeLimitReachedError, hasActivePlan } from "../../lib/plan";
+import { AppError } from "../../lib/errors";
+import { FreeLimitReachedError, transactionAllowance } from "../../lib/plan";
+import { userRepository } from "../users/user.repository";
 import { transactionRepository } from "./transaction.repository";
 import type {
 	CreateTransactionInput,
@@ -25,21 +26,17 @@ function toDTO(transaction: Transaction): TransactionDTO {
 	};
 }
 
-export class TransactionNotFoundError extends Error {
+export class TransactionNotFoundError extends AppError {
 	constructor() {
-		super("Transaction not found");
-		this.name = "TransactionNotFoundError";
+		super("Transação não encontrada", 404);
 	}
 }
 
 export const transactionService = {
 	async create(userId: string, input: CreateTransactionInput): Promise<TransactionDTO> {
-		const user = await prisma.user.findUniqueOrThrow({
-			where: { id: userId },
-			select: { planStatus: true, planExpiresAt: true, freeTransactionCount: true },
-		});
+		const quota = await userRepository.findPlanQuota(userId);
 
-		if (!hasActivePlan(user) && user.freeTransactionCount >= FREE_TRANSACTION_LIMIT) {
+		if (transactionAllowance(quota) < 1) {
 			throw new FreeLimitReachedError();
 		}
 
@@ -52,7 +49,7 @@ export const transactionService = {
 			...(input.date ? { date: new Date(input.date) } : {}),
 		});
 
-		await prisma.user.update({ where: { id: userId }, data: { freeTransactionCount: { increment: 1 } } });
+		await userRepository.incrementFreeTransactionCount(userId, 1);
 
 		return toDTO(created);
 	},
@@ -73,11 +70,10 @@ export const transactionService = {
 				: {}),
 		};
 
-		// description e amount ficam criptografados no banco, então busca
-		// textual (search) e paginação acontecem em memória, após decriptar.
-		// Aceitável no volume desta aplicação (centenas de transações por
-		// usuário); se o volume crescer, revisar para um índice de busca
-		// dedicado que não exponha os dados em texto plano.
+		// description and amount are encrypted at rest, so text search and
+		// pagination happen in memory after decrypting. Fine at this app's
+		// volume (hundreds of transactions per user); a larger volume needs a
+		// dedicated search index that doesn't expose plaintext.
 		const all = await transactionRepository.findMany(userId, where, 0, Number.MAX_SAFE_INTEGER);
 		const decrypted = all.map(toDTO);
 

@@ -3,11 +3,10 @@ import { ensureUserReady } from "../lib/user-gate";
 import type { BotConversation } from "../types";
 
 /**
- * /start não mostra o menu diretamente — primeiro garante que o chat está
- * vinculado a uma conta (senão, dispara o mesmo fluxo de vinculação usado
- * por qualquer outro botão) e que a conta tem plano ativo. Quem mostra o
- * menu depois é sempre o wrapper `withMainMenu` (ver bot/src/lib/menu.ts),
- * não esta função.
+ * /start doesn't show the menu directly — it first makes sure the chat is
+ * linked to an account (running the same access flow as any other button)
+ * with an active plan. The menu itself is always rendered afterwards by the
+ * `withMainMenu` wrapper (lib/menu.ts), not here.
  */
 export async function startConversation(conversation: BotConversation, ctx: Context): Promise<void> {
 	await ensureUserReady(conversation, ctx);

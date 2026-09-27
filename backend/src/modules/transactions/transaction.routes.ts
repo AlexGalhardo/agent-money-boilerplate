@@ -1,86 +1,50 @@
 import { Elysia } from "elysia";
 import { authPlugin } from "../../lib/auth.plugin";
-import { FreeLimitReachedError } from "../../lib/plan";
 import {
 	createTransactionSchema,
 	listTransactionsQuerySchema,
 	transactionIdParamSchema,
 	updateTransactionSchema,
 } from "./transaction.schema";
-import { TransactionNotFoundError, transactionService } from "./transaction.service";
+import { transactionService } from "./transaction.service";
 
 export const transactionRoutes = new Elysia({ prefix: "/transactions" })
 	.use(authPlugin)
 	.guard({ auth: true })
-	.get(
-		"/",
-		async ({ user, query }) => {
-			const result = await transactionService.list(user.id, query);
-			return { success: true, ...result };
-		},
-		{ query: listTransactionsQuerySchema },
-	)
-	.get("/statistics", async ({ user }) => {
-		const stats = await transactionService.statsByCategory(user.id);
-		return { success: true, stats };
+	.get("/", async ({ user, query }) => ({ success: true, ...(await transactionService.list(user.id, query)) }), {
+		query: listTransactionsQuerySchema,
 	})
+	.get("/statistics", async ({ user }) => ({
+		success: true,
+		stats: await transactionService.statsByCategory(user.id),
+	}))
 	.get(
 		"/:id",
-		async ({ user, params, status }) => {
-			try {
-				const transaction = await transactionService.findById(user.id, params.id);
-				return { success: true, transaction };
-			} catch (error) {
-				if (error instanceof TransactionNotFoundError) {
-					return status(404, { success: false, message: error.message });
-				}
-				throw error;
-			}
-		},
+		async ({ user, params }) => ({
+			success: true,
+			transaction: await transactionService.findById(user.id, params.id),
+		}),
 		{ params: transactionIdParamSchema },
 	)
 	.post(
 		"/",
-		async ({ user, body, status }) => {
-			try {
-				const transaction = await transactionService.create(user.id, body);
-				return status(201, { success: true, transaction });
-			} catch (error) {
-				if (error instanceof FreeLimitReachedError) {
-					return status(403, { success: false, message: error.message });
-				}
-				throw error;
-			}
-		},
+		async ({ user, body, status }) =>
+			status(201, { success: true, transaction: await transactionService.create(user.id, body) }),
 		{ body: createTransactionSchema },
 	)
 	.put(
 		"/:id",
-		async ({ user, params, body, status }) => {
-			try {
-				const transaction = await transactionService.update(user.id, params.id, body);
-				return { success: true, transaction };
-			} catch (error) {
-				if (error instanceof TransactionNotFoundError) {
-					return status(404, { success: false, message: error.message });
-				}
-				throw error;
-			}
-		},
+		async ({ user, params, body }) => ({
+			success: true,
+			transaction: await transactionService.update(user.id, params.id, body),
+		}),
 		{ params: transactionIdParamSchema, body: updateTransactionSchema },
 	)
 	.delete(
 		"/:id",
-		async ({ user, params, status }) => {
-			try {
-				await transactionService.remove(user.id, params.id);
-				return { success: true, message: "Transaction deleted successfully" };
-			} catch (error) {
-				if (error instanceof TransactionNotFoundError) {
-					return status(404, { success: false, message: error.message });
-				}
-				throw error;
-			}
+		async ({ user, params }) => {
+			await transactionService.remove(user.id, params.id);
+			return { success: true, message: "Transação apagada" };
 		},
 		{ params: transactionIdParamSchema },
 	);

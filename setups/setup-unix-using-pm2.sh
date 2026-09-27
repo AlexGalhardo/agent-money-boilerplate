@@ -58,7 +58,7 @@ else
 	(cd backend && bun run db:deploy && bun run db:generate)
 fi
 
-echo "==> Populando banco (admin@gmail.com / adminBR@123 + aleexgvieira@gmail.com / galhardyn)"
+echo "==> Populando banco (admin@gmail.com / adminBR@123)"
 (cd backend && bun run db:seed)
 
 write_bot_env "$PROVIDER" "$BOT_DATABASE_URL"

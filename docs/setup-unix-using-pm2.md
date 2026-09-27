@@ -41,7 +41,7 @@ O script:
    Postgres foi escolhido, sobe só o container do banco
    (`docker compose up -d postgres`) quando o Docker está disponível.
 3. Aplica migrations, gera o Prisma Client e popula o banco
-   (`db:seed` — `admin@gmail.com` / `adminBR@123` + `aleexgvieira@gmail.com` / `galhardyn`).
+   (`db:seed` — `admin@gmail.com` / `adminBR@123`).
 4. Sobe `elysia-backend` e `elysia-frontend` com
    `pm2 start infra/ecosystem.local.config.js --only elysia-backend,elysia-frontend`.
    `elysia-bot` só é iniciado automaticamente se `bot/.env` já tiver

@@ -5,9 +5,7 @@ export const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null
 
 export async function sendEmail(params: { to: string; subject: string; html: string; text?: string }): Promise<void> {
 	if (!resend || !env.RESEND_FROM_EMAIL) {
-		console.warn(
-			`[email] Resend não configurado — e-mail para ${params.to} ("${params.subject}") não foi enviado.`,
-		);
+		console.warn(`[email] Resend is not configured — "${params.subject}" was not sent.`);
 		return;
 	}
 

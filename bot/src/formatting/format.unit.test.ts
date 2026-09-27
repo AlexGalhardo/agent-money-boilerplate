@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { formatCurrencyCents, formatDate, formatTransactionList, getCategoryLabel } from "./format";
 
-// toLocaleString com currency:"BRL" separa "R$" do valor com um espaço
-// inquebrável (U+00A0), não um espaço comum.
+// toLocaleString with currency:"BRL" separates "R$" from the value with a
+// non-breaking space (U+00A0), not a regular space.
 const NBSP = " ";
 
 describe("formatCurrencyCents", () => {

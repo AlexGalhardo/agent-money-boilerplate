@@ -23,9 +23,14 @@ export const transactionCategories = [
 
 export const transactionTypes = ["income", "expense"] as const;
 
+// R$ 1 billion — far above any personal transaction, low enough that sums
+// of thousands of rows stay well inside Number.MAX_SAFE_INTEGER.
+export const MAX_AMOUNT_CENTS = 100_000_000_000;
+export const MAX_DESCRIPTION_LENGTH = 280;
+
 export const createTransactionSchema = z.object({
-	description: z.string().trim().min(1).max(280),
-	amount: z.number().int("amount deve ser um inteiro em centavos").positive(),
+	description: z.string().trim().min(1).max(MAX_DESCRIPTION_LENGTH),
+	amount: z.number().int("amount must be an integer number of cents").positive().max(MAX_AMOUNT_CENTS),
 	category: z.enum(transactionCategories),
 	type: z.enum(transactionTypes),
 	date: z.iso.datetime().optional(),
@@ -34,7 +39,7 @@ export const createTransactionSchema = z.object({
 export const updateTransactionSchema = createTransactionSchema.partial();
 
 export const listTransactionsQuerySchema = z.object({
-	search: z.string().trim().min(1).optional(),
+	search: z.string().trim().min(1).max(MAX_DESCRIPTION_LENGTH).optional(),
 	category: z.enum(transactionCategories).optional(),
 	from: z.iso.datetime().optional(),
 	to: z.iso.datetime().optional(),

@@ -80,7 +80,7 @@ export function monthRange(value: string): DateRange {
 	}
 
 	const from = startOfDayUTC(year, month - 1, 1);
-	// Dia 0 do mês seguinte, em UTC, é o último dia do mês pedido.
+	// Day 0 of the next month, in UTC, is the last day of the requested month.
 	const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
 	const to = endOfDayUTC(year, month - 1, lastDay);
 

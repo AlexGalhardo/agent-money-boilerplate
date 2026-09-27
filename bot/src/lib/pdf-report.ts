@@ -19,11 +19,9 @@ function aggregateByCategory(
 	return [...totals.entries()].map(([category, total]) => ({ category, total })).sort((a, b) => b.total - a.total);
 }
 
-// Sem biblioteca de gráficos: pdfkit é uma API de desenho vetorial, e um
-// gráfico de barras horizontais (retângulos) é muito mais simples e robusto
-// de desenhar à mão do que um gráfico de pizza (exigiria calcular arcos
-// SVG) — mesma informação de "total por categoria" do dashboard web, só que
-// em barra em vez de fatia.
+// No chart library: pdfkit is a vector drawing API, and horizontal bars
+// (rectangles) are far simpler and sturdier to draw by hand than a pie chart
+// (arc math) — same "total per category" information as the web dashboard.
 function drawCategoryBarChart(doc: PDFKit.PDFDocument, title: string, rows: CategoryTotal[], color: string): void {
 	doc.fontSize(13).fillColor("black").text(title);
 	doc.moveDown(0.3);

@@ -1,17 +1,17 @@
 import { defineConfig, env } from "prisma/config";
 
-// Ao contrário do runtime do Bun, o carregador de config do Prisma 7 não
-// lê o .env sozinho — sem isso, `prisma generate`/`migrate` falha com
-// "Cannot resolve environment variable" mesmo com o .env presente.
+// Unlike the Bun runtime, Prisma 7's config loader doesn't read .env on its
+// own — without this, `prisma generate`/`migrate` fail with "Cannot resolve
+// environment variable" even with a .env present.
 try {
 	process.loadEnvFile(".env");
 } catch {
-	// sem .env (ex.: variáveis já vêm do ambiente, como em containers)
+	// no .env (variables already come from the environment, e.g. containers)
 }
 
-// SQLite é o padrão para desenvolvimento local sem dependências externas
-// (ver feature flags da spec). DATABASE_PROVIDER=postgresql troca para o
-// schema/migrations de Postgres, usados em dev completo e produção.
+// SQLite is the default for local development with no external services.
+// DATABASE_PROVIDER=postgresql switches to the Postgres schema/migrations,
+// used for full local dev and production.
 const provider = process.env.DATABASE_PROVIDER === "postgresql" ? "postgresql" : "sqlite";
 
 export default defineConfig({

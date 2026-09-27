@@ -52,8 +52,7 @@ O script:
 - Frontend: <http://localhost:4001>
 
 Usuários de teste: `admin@gmail.com` / `adminBR@123` (500 transações de
-demonstração) e `aleexgvieira@gmail.com` / `galhardyn` (conta pessoal, sem
-transações — pronta para importar seu extrato pelo botão **Importar**).
+demonstração).
 
 ## Bot do Telegram (opcional)
 

@@ -52,7 +52,6 @@ export default function ProfileScreen() {
 	const [passwordError, setPasswordError] = useState<string | null>(null);
 	const [savingPassword, setSavingPassword] = useState(false);
 
-	const [telegramChatId, setTelegramChatId] = useState("");
 	const [telegramStatus, setTelegramStatus] = useState<string | null>(null);
 	const [telegramError, setTelegramError] = useState<string | null>(null);
 	const [savingTelegram, setSavingTelegram] = useState(false);
@@ -102,18 +101,18 @@ export default function ProfileScreen() {
 		setNewPassword("");
 	}
 
-	async function onSaveTelegram(): Promise<void> {
+	async function onUnlinkTelegram(): Promise<void> {
 		setTelegramStatus(null);
 		setTelegramError(null);
 		setSavingTelegram(true);
-		const { error } = await api.users.me.put({ telegramChatId: telegramChatId.trim() });
+		const { error } = await api.telegram.link.delete();
 		setSavingTelegram(false);
 
 		if (error) {
-			setTelegramError("Não foi possível salvar o Chat ID do Telegram");
+			setTelegramError("Não foi possível desvincular o Telegram");
 			return;
 		}
-		setTelegramStatus("Chat ID salvo.");
+		setTelegramStatus("Telegram desvinculado.");
 		await queryClient.invalidateQueries({ queryKey: ["me"] });
 	}
 
@@ -342,16 +341,10 @@ export default function ProfileScreen() {
 							Bot do Telegram
 						</Text>
 						<Text className="text-xs text-slate-500 dark:text-slate-400">
-							ID da conta: <Text className="font-mono">{meQuery.data?.id}</Text> — envie esse ID pro bot
-							quando ele pedir, ou informe o Chat ID manualmente aqui.
+							{meQuery.data?.telegramChatId
+								? "Sua conta está vinculada a um chat do Telegram."
+								: "Nenhum chat vinculado. Abra o bot no Telegram e entre com seu e-mail e senha."}
 						</Text>
-						<TextField
-							label="Chat ID do Telegram"
-							value={telegramChatId || meQuery.data?.telegramChatId || ""}
-							onChangeText={setTelegramChatId}
-							placeholder="Ex: 123456789"
-							keyboardType="numbers-and-punctuation"
-						/>
 						{telegramError ? (
 							<Animated.Text
 								entering={FadeInUp.duration(160)}
@@ -368,12 +361,14 @@ export default function ProfileScreen() {
 								{telegramStatus}
 							</Animated.Text>
 						) : null}
-						<Button
-							label="Salvar Chat ID"
-							onPress={onSaveTelegram}
-							loading={savingTelegram}
-							variant="secondary"
-						/>
+						{meQuery.data?.telegramChatId ? (
+							<Button
+								label="Desvincular Telegram"
+								onPress={onUnlinkTelegram}
+								loading={savingTelegram}
+								variant="secondary"
+							/>
+						) : null}
 					</View>
 
 					<View className="gap-3 border-t border-red-200 pt-6 dark:border-red-900">

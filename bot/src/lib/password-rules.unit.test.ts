@@ -16,7 +16,7 @@ describe("password-rules", () => {
 	});
 
 	it("rejects a password missing an uppercase letter", () => {
-		expect(isStrongPassword("galhardyn123!")).toBe(false);
+		expect(isStrongPassword("correcthorse123!")).toBe(false);
 	});
 
 	it("rejects a password missing a number", () => {
@@ -28,7 +28,7 @@ describe("password-rules", () => {
 	});
 
 	it("lists only the rules that still fail", () => {
-		const failing = failingPasswordRules("galhardyn");
+		const failing = failingPasswordRules("correcthorse");
 
 		expect(failing).toContain("Uma letra maiúscula (A-Z)");
 		expect(failing).toContain("Um número (0-9)");

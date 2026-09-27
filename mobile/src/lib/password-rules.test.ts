@@ -7,7 +7,7 @@ describe("password-rules", () => {
 
 	it("rejects a password missing complexity requirements", () => {
 		expect(isStrongPassword("short")).toBe(false);
-		expect(isStrongPassword("galhardyn123!")).toBe(false);
+		expect(isStrongPassword("correcthorse123!")).toBe(false);
 		expect(isStrongPassword("GALHARDYN123!")).toBe(false);
 		expect(isStrongPassword("Galhardyn!!!!")).toBe(false);
 		expect(isStrongPassword("Galhardyn1234")).toBe(false);

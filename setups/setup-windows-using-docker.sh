@@ -56,7 +56,7 @@ trap 'echo ""; echo "==> Encerrando containers..."; kill "$COMPOSE_PID" 2>/dev/n
 
 echo "==> Aguardando a API terminar migrations + Prisma Client (entrypoint do container)"
 if wait_for_http "http://localhost:4000/docs" 30; then
-	echo "==> Populando banco de dados (admin@gmail.com / adminBR@123 + aleexgvieira@gmail.com / galhardyn)"
+	echo "==> Populando banco de dados (admin@gmail.com / adminBR@123)"
 	docker compose "${COMPOSE_ARGS[@]}" exec -T backend bun run db:seed
 else
 	echo "A API não respondeu a tempo. Confira os logs acima e, se tudo estiver ok, rode manualmente:" >&2

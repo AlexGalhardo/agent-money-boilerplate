@@ -5,6 +5,7 @@ import { z } from "zod";
 import { AuthCard } from "../components/auth-card";
 import { GoogleButton } from "../components/google-button";
 import { api } from "../lib/api";
+import { apiErrorMessage } from "../lib/api-error";
 import { useSession } from "../lib/auth-client";
 
 const searchSchema = z.object({ token: z.string().optional() });
@@ -89,7 +90,7 @@ function TelegramLinkPage() {
 		return (
 			<AuthCard title="Não foi possível vincular" subtitle="Volte ao bot do Telegram e gere um novo link.">
 				<p role="alert" className="rounded-lg bg-red-500/10 px-4 py-2 text-sm text-red-500">
-					{linkErrorMessage(linkMutation.error)}
+					{apiErrorMessage(linkMutation.error, "Link inválido ou expirado")}
 				</p>
 			</AuthCard>
 		);
@@ -100,14 +101,4 @@ function TelegramLinkPage() {
 			<p className="text-sm text-(--color-fg-muted)">Aguarde um instante.</p>
 		</AuthCard>
 	);
-}
-
-function linkErrorMessage(error: unknown): string {
-	if (error && typeof error === "object" && "value" in error) {
-		const value = (error as { value?: unknown }).value;
-		if (value && typeof value === "object" && "message" in value) {
-			return String((value as { message: unknown }).message);
-		}
-	}
-	return "Link inválido ou expirado";
 }

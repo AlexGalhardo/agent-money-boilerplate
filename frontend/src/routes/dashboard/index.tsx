@@ -14,6 +14,7 @@ import type { TransactionFormInitial, TransactionFormSubmitValues } from "../../
 import { TransactionForm } from "../../components/transaction-form";
 import { UserMenu } from "../../components/user-menu";
 import { api } from "../../lib/api";
+import { apiErrorMessage } from "../../lib/api-error";
 import { useSession } from "../../lib/auth-client";
 import type { TransactionCategory } from "../../lib/categories";
 import {
@@ -145,7 +146,7 @@ function DashboardPage() {
 			setFormError(null);
 			invalidateAll();
 		},
-		onError: (error: unknown) => setFormError(errorMessage(error)),
+		onError: (error: unknown) => setFormError(apiErrorMessage(error, "Não foi possível salvar a transação")),
 	});
 
 	const updateMutation = useMutation({
@@ -159,7 +160,7 @@ function DashboardPage() {
 			setFormError(null);
 			invalidateAll();
 		},
-		onError: (error: unknown) => setFormError(errorMessage(error)),
+		onError: (error: unknown) => setFormError(apiErrorMessage(error, "Não foi possível salvar a transação")),
 	});
 
 	const deleteMutation = useMutation({
@@ -614,14 +615,4 @@ function DashboardPage() {
 			)}
 		</PageLayout>
 	);
-}
-
-function errorMessage(error: unknown): string {
-	if (error && typeof error === "object" && "value" in error) {
-		const value = (error as { value?: unknown }).value;
-		if (value && typeof value === "object" && "message" in value) {
-			return String((value as { message: unknown }).message);
-		}
-	}
-	return "Não foi possível salvar a transação";
 }

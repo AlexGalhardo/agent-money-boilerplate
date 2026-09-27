@@ -1,5 +1,4 @@
 import type { TransactionCategory } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
-import { transactionCategories } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.schema";
 import { transactionService } from "@agent-money-boilerplate/backend/src/modules/transactions/transaction.service";
 import type { Context } from "grammy";
 import { InlineKeyboard } from "grammy";
@@ -11,10 +10,9 @@ import {
 	monthRange,
 	yearRange,
 } from "../date-ranges/date-ranges";
-import { categoryLabels, formatTransactionList } from "../formatting/format";
+import { formatTransactionList } from "../formatting/format";
 import { chunk } from "../lib/chunk";
-import { ensureUserReady } from "../lib/user-gate";
-import { requirePassword } from "../lib/verify-password-step";
+import { categoryKeyboard, parseCategoryCallback } from "../lib/keyboards";
 import type { BotConversation } from "../types";
 
 const PER_PAGE = 20;
@@ -32,15 +30,6 @@ function filterMenuKeyboard(): InlineKeyboard {
 	];
 	for (const row of chunk(options, 2)) {
 		for (const [label, data] of row) keyboard.text(label, data);
-		keyboard.row();
-	}
-	return keyboard;
-}
-
-function categoryKeyboard(): InlineKeyboard {
-	const keyboard = new InlineKeyboard();
-	for (const row of chunk(transactionCategories, 2)) {
-		for (const category of row) keyboard.text(categoryLabels[category], `cat:${category}`);
 		keyboard.row();
 	}
 	return keyboard;
@@ -64,13 +53,7 @@ async function runSearch(
 	await ctx.reply(`${header}\n\n${formatTransactionList(result.transactions)}`);
 }
 
-export async function searchConversation(conversation: BotConversation, ctx: Context): Promise<void> {
-	const userId = await ensureUserReady(conversation, ctx);
-	if (!userId) return;
-
-	const passed = await requirePassword(conversation, ctx);
-	if (!passed) return;
-
+export async function searchConversation(conversation: BotConversation, ctx: Context, userId: string): Promise<void> {
 	await ctx.reply("🔎 Como você quer buscar?", { reply_markup: filterMenuKeyboard() });
 
 	const choice = await conversation.waitFor("callback_query:data", {
@@ -96,7 +79,11 @@ export async function searchConversation(conversation: BotConversation, ctx: Con
 			otherwise: (otherCtx) => otherCtx.reply("Use os botões acima para escolher a categoria."),
 		});
 		await categoryChoice.answerCallbackQuery();
-		const category = categoryChoice.callbackQuery.data.slice("cat:".length) as TransactionCategory;
+		const category = parseCategoryCallback(categoryChoice.callbackQuery.data);
+		if (!category) {
+			await categoryChoice.reply("Categoria inválida.");
+			return;
+		}
 		await runSearch(categoryChoice, conversation, userId, { category });
 		return;
 	}

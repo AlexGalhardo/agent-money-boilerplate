@@ -6,9 +6,9 @@ const DIGITS = "0123456789";
 const SYMBOLS = "!@#$%^&*()-_=+";
 const ALL_CHARS = LOWERCASE + UPPERCASE + DIGITS + SYMBOLS;
 
-/** Gera uma senha aleatória (crypto-secure) contendo pelo menos um caractere
- * de cada classe (minúscula, maiúscula, dígito, símbolo) — usada para a
- * senha automática de contas criadas só via Google (ver auth.ts). */
+/** Cryptographically random password with at least one character of each
+ * class (lower, upper, digit, symbol) — the auto-generated password of
+ * Google-only accounts (see auth.ts). */
 export function generateStrongPassword(length = 32): string {
 	const required = [LOWERCASE, UPPERCASE, DIGITS, SYMBOLS].map((set) => set[randomInt(set.length)]);
 	const rest = Array.from({ length: length - required.length }, () => ALL_CHARS[randomInt(ALL_CHARS.length)]);

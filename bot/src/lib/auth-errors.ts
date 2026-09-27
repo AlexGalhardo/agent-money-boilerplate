@@ -1,10 +1,7 @@
-// Mesmo mapa de error codes do better-auth usado no frontend (ver
-// frontend/src/lib/auth-errors.ts) — duplicado de propósito, no mesmo
-// espírito de categoryLabels em bot/src/formatting/format.ts, pra não
-// depender do workspace do frontend só por causa de um mapa de strings.
-// `error.body.code` (better-auth chamado direto via `auth.api.*`, sem HTTP)
-// é estável entre versões; `error.body.message` não é — vem sempre em
-// inglês, então nunca deve ir pro chat sem passar por essa tradução.
+// Same better-auth error-code map as the frontend (frontend/src/lib/auth-errors.ts),
+// duplicated on purpose (see docs/code-conventions.md, sync points).
+// `error.body.code` is stable across versions; `error.body.message` isn't and
+// is always English, so it must never reach the chat untranslated.
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
 	USER_NOT_FOUND: "Usuário não encontrado",
 	FAILED_TO_CREATE_USER: "Não foi possível criar o usuário",
@@ -31,9 +28,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 };
 
 /**
- * Traduz um erro do better-auth (lançado como `APIError`, com `.body.code`)
- * pro português. Quando o code não está mapeado, usa o `fallback` (já em
- * português) passado pelo chamador.
+ * Translates a better-auth error code (from `APIError.body.code`) to
+ * Portuguese, falling back to the caller's (already Portuguese) message.
  */
 export function translateAuthError(code: string | null | undefined, fallback: string): string {
 	if (code && code in AUTH_ERROR_MESSAGES) return AUTH_ERROR_MESSAGES[code] as string;

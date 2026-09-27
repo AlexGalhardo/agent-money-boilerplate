@@ -58,8 +58,7 @@ comportamento é idêntico ao `setups/setup-unix-using-docker.sh`:
 - Frontend: <http://localhost:4001>
 
 Usuários de teste: `admin@gmail.com` / `adminBR@123` (500 transações de
-demonstração) e `aleexgvieira@gmail.com` / `galhardyn` (conta pessoal, sem
-transações).
+demonstração).
 
 ## Bot do Telegram (opcional)
 
