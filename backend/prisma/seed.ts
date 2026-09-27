@@ -41,8 +41,23 @@ const descriptionsByCategory: Record<(typeof transactionCategories)[number], str
 	other: ["Doação", "Taxa bancária", "Diversos"],
 };
 
+// Deterministic PRNG (mulberry32) with a fixed seed: every environment —
+// local, CI, E2E — gets the same demo transactions, so tests that look for
+// seeded data (e.g. searching "Uber") can't flake on an unlucky draw.
+function createRandom(seed: number): () => number {
+	let state = seed;
+	return () => {
+		state = (state + 0x6d2b79f5) | 0;
+		let t = Math.imul(state ^ (state >>> 15), 1 | state);
+		t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
+const random = createRandom(20260927);
+
 function randomFrom<T>(items: readonly T[]): T {
-	const item = items[Math.floor(Math.random() * items.length)];
+	const item = items[Math.floor(random() * items.length)];
 	if (item === undefined) {
 		throw new Error("randomFrom called with an empty array");
 	}
@@ -52,7 +67,7 @@ function randomFrom<T>(items: readonly T[]): T {
 function randomDateWithinLastYear(): Date {
 	const now = Date.now();
 	const oneYearMs = 365 * 24 * 60 * 60 * 1000;
-	return new Date(now - Math.floor(Math.random() * oneYearMs));
+	return new Date(now - Math.floor(random() * oneYearMs));
 }
 
 async function seedAdminUser(): Promise<string> {
@@ -105,7 +120,7 @@ async function seedTransactions(userId: string): Promise<void> {
 					? "expense"
 					: randomFrom(transactionTypes);
 		const description = randomFrom(descriptionsByCategory[category]);
-		const amount = Math.floor(Math.random() * 490_00) + 10_00; // 10.00 to 500.00
+		const amount = Math.floor(random() * 490_00) + 10_00; // 10.00 to 500.00
 
 		return {
 			userId,
