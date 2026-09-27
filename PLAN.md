@@ -107,8 +107,8 @@ Skills: `security-and-hardening`, `doubt-driven-development`, `test-driven-devel
 
 ### Checkpoint A (after Groups 1–2)
 
-- [ ] lint + typecheck + backend/bot/mobile tests green
-- [ ] Commit(s) on `dev`
+- [x] lint + typecheck + backend/bot/mobile tests green
+- [x] Commit(s) on `dev`
 
 ## Group 3 — Backend refactor
 
@@ -121,7 +121,7 @@ Skills: `code-review-and-quality`, `api-and-interface-design`, `code-simplificat
 - [x] Validate route params (`/payments/pix/:id`)
 - [x] Translate Portuguese comments/messages in code to English (user-facing API messages stay pt-BR only where shown to end users)
 - [x] Fix stale `backend/.env.example` (FRONTEND_URL missing, dead vars)
-- [ ] Verify: `bun run test`, `bun run build`
+- [x] Verify: `bun run test`, `bun run build`
 
 ## Group 4 — Bot refactor
 
@@ -131,7 +131,7 @@ Skills: `code-review-and-quality`, `code-simplification`
 - [x] Shared `categoryKeyboard` (duplicated in add + search)
 - [x] Validate bot input with the backend Zod schema before calling services
 - [x] Translate comments to English; fix the failing test
-- [ ] Verify: `bun run bot:test`, `typecheck:bot`
+- [x] Verify: `bun run bot:test`, `typecheck:bot`
 
 ## Group 5 — Frontend refactor
 
@@ -145,26 +145,27 @@ Skills: `code-review-and-quality`, `frontend-ui-engineering`, `vercel-react-best
 
 ### Checkpoint B (after Groups 3–5)
 
-- [ ] Everything green, E2E green, commit
+- [x] Everything green, E2E green, commit
 
 ## Group 6 — Mobile: dark-only professional redesign
 
 Skills: `impeccable`, `frontend-ui-engineering`, `minimalist-ui`, `expo` skills (`.claude/skills/expo-*`), `vercel-react-native-skills`
 
-- [ ] Design tokens (dark palette, type scale, radii) in `tailwind.config.js`
-- [ ] Remove light theme + toggle (`lib/theme.ts`, `dark:` variants), `userInterfaceStyle: "dark"`
-- [ ] Rebuild UI primitives with pure NativeWind (Button, TextField, Chip, DateField, Card, Screen)
-- [ ] Redesign auth screens (login, signup, forgot, reset)
-- [ ] Redesign app screens (dashboard, search, transaction form, profile, subscription, 2FA, import)
-- [ ] Remove unused reacticx copies once nothing imports them
-- [ ] Keep every `testID`/`accessibilityLabel` used by `mobile/maestro/*.yaml`
-- [ ] Verify: `typecheck:mobile`, `mobile:test`, `expo export` bundles, screenshots via Expo web
+- [x] Design tokens (dark palette, type scale, radii) in `tailwind.config.js`
+- [x] Remove light theme + toggle (`lib/theme.ts`, `dark:` variants), `userInterfaceStyle: "dark"`
+- [x] Rebuild UI primitives with pure NativeWind (Button, TextField, Chip, DateField, Card, Screen)
+- [x] Redesign auth screens (login, signup, forgot, reset)
+- [x] Redesign app screens (dashboard, search, transaction form, profile, subscription, 2FA, import)
+- [x] Remove unused reacticx copies once nothing imports them
+- [x] Keep every `testID`/`accessibilityLabel` used by `mobile/maestro/*.yaml`
+- [x] Verify: `typecheck:mobile`, `mobile:test`, `expo export` bundles, screenshots via Expo web
 
 ## Group 7 — Mobile E2E
 
 Skills: `test-driven-development`, `browser-testing-with-devtools`
 
-- [ ] Keep Maestro as the native E2E runner (flows in `mobile/maestro/`)
+- [x] Keep Maestro as the native E2E runner (flows in `mobile/maestro/`, updated for the redesign, stable `nav-*` testIDs)
+- [x] Playwright suite on the Expo web build (`mobile/e2e-web/`, `bun run test:e2e:web`) — 6 flows passing against the real API
 - [ ] Run flows on an emulator — **blocked here**: no Android SDK/Java/Maestro on this machine (see chat suggestion)
 - [ ] Add CI job that runs Maestro on an Android emulator (optional, needs user confirmation — CI minutes)
 
@@ -172,12 +173,29 @@ Skills: `test-driven-development`, `browser-testing-with-devtools`
 
 Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versioning`
 
-- [ ] Vendor Expo skills (`github.com/expo/skills`) into `.claude/skills/`, record commit in `SOURCES.md`
-- [ ] Translate `.claude/skills/SOURCES.md` to English; drop skills written for another project (`respondeae-*`)
+- [x] Vendor Expo skills (`github.com/expo/skills`) into `.claude/skills/`, record commit in `SOURCES.md`
+- [x] Translate `.claude/skills/SOURCES.md` to English (`respondeae-*` kept, flagged as another project's examples)
 - [ ] Write project skills for repeated workflows (verify-all, monorepo install/lockfile, add-category sync points, security fix)
 - [ ] `CHANGELOG.md` (Keep a Changelog) from git history v0.0.1 → v0.1.0 + Unreleased; delete `mobile/CHANGELOG.md`
 - [ ] `docs/` reorganized: `README.md` index, `tooling.md`, `architecture.md`, `workflows.md`, `security.md`, `decisions/` (ADRs), `deploy/` (setup/deploy guides)
 - [ ] Update CLAUDE.md + AGENTS.md (changelog rule, new commands, skills locations)
+
+## Group 10 — Requests added during the session
+
+- [x] `docs/design-system.md` — mobile design system source of truth (tokens, components, patterns, testing hooks)
+- [x] `/api` page renders the API reference with Scalar (`@scalar/api-reference-react`) from an OpenAPI spec generated by `@elysiajs/openapi` out of the routes' Zod schemas
+- [x] Fix found on the way: invalid `x-api-key` answered 500 → 401
+- [x] Commit the user's LICENSE / VS Code settings changes, gitignore `TODO.md`
+- [x] Push `dev` and merge to `main` mid-session so no work is lost
+
+## Group 11 — Infra and setup scripts (found during the docs review)
+
+- [x] Per-service Dockerfiles never copied `patches/` → `docker build` failed ("Couldn't find patch file"); fixed and verified with real builds of all three images
+- [x] Docker setup waited on a nonexistent `/docs` endpoint and silently skipped seeding → waits on `/`
+- [x] PM2 + Postgres setup called `docker compose` without `-f infra/...` → fixed
+- [x] AbacatePay dev key hardcoded in `scripts/common.sh` → prompted at setup (rotation pending)
+- [x] Four near-identical setup scripts consolidated into `setups/setup-docker.sh` and `setups/setup-pm2.sh` (WSL/Git Bash detection), translated to English
+- [ ] Translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`, `infra/*` comments
 
 ## Group 9 — Final verification and handoff
 
