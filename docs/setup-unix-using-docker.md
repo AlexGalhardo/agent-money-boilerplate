@@ -20,7 +20,7 @@ cd galhardo-money-bot
 
 O script pergunta qual banco usar:
 
-```
+```text
 Qual banco de dados você quer usar?
   a) SQLite   (configuração rápida, padrão)
   b) Postgres
@@ -48,8 +48,8 @@ O script:
 
 ## Rodando
 
-- API: http://localhost:4000 (docs OpenAPI em `/docs`)
-- Frontend: http://localhost:4001
+- API: <http://localhost:4000> (docs OpenAPI em `/docs`)
+- Frontend: <http://localhost:4001>
 
 Usuários de teste: `admin@gmail.com` / `adminBR@123` (500 transações de
 demonstração) e `aleexgvieira@gmail.com` / `galhardyn` (conta pessoal, sem

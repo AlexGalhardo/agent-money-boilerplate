@@ -16,7 +16,7 @@ Guide for Claude Code (and any AI agent) working in this repository.
 3. **Follow open source practice**: [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
    (enforced by `.husky/commit-msg`), [SemVer](https://semver.org/), and
    the PR checklist in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
-4. **No obvious comments** — only the *why* when it's non-obvious. Tabs,
+4. **No obvious comments** — only the _why_ when it's non-obvious. Tabs,
    not spaces (Biome owns formatting, `bun run format`).
 5. Never create or edit any `changelog.md`. Never commit `*.csv` (real
    bank statements have leaked before — see

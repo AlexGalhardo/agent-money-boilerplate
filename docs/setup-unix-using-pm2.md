@@ -24,7 +24,7 @@ cd galhardo-money-bot
 
 O script pergunta qual banco usar:
 
-```
+```text
 Qual banco de dados você quer usar?
   a) SQLite   (configuração rápida, padrão)
   b) Postgres
@@ -53,8 +53,8 @@ já compilados (ver [`setup-vps-ubuntu-from-zero.md`](./setup-vps-ubuntu-from-ze
 
 ## Rodando
 
-- API: http://localhost:4000 (docs OpenAPI em `/docs`)
-- Frontend: http://localhost:4001
+- API: <http://localhost:4000> (docs OpenAPI em `/docs`)
+- Frontend: <http://localhost:4001>
 
 ## Bot do Telegram (opcional)
 

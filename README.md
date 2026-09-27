@@ -1,3 +1,4 @@
+<!-- markdownlint-disable-next-line MD041 -->
 <div align="center">
 
 <img src="./docs/assets/logo.svg" alt="Money bag logo" width="120" />
@@ -53,18 +54,18 @@ auth, payments, multi-client (web/bot/mobile) and agent-tooling scaffolding
 
 ## Tech stack
 
-| Layer                | Technology                                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Runtime / API         | [Bun](https://bun.sh) + [ElysiaJS](https://elysiajs.com)                                                         |
-| ORM                   | [Prisma](https://www.prisma.io) (dual schema — SQLite for local dev, PostgreSQL for production)                  |
-| Validation            | [Zod](https://zod.dev)                                                                                           |
-| Authentication        | [better-auth](https://www.better-auth.com) (cookie sessions, optional 2FA, Google OAuth)                         |
-| Frontend              | [TanStack Start](https://tanstack.com/start) + [Tailwind CSS v4](https://tailwindcss.com)                        |
+| Layer                 | Technology                                                                                                        |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Runtime / API         | [Bun](https://bun.sh) + [ElysiaJS](https://elysiajs.com)                                                          |
+| ORM                   | [Prisma](https://www.prisma.io) (dual schema — SQLite for local dev, PostgreSQL for production)                   |
+| Validation            | [Zod](https://zod.dev)                                                                                            |
+| Authentication        | [better-auth](https://www.better-auth.com) (cookie sessions, optional 2FA, Google OAuth)                          |
+| Frontend              | [TanStack Start](https://tanstack.com/start) + [Tailwind CSS v4](https://tailwindcss.com)                         |
 | Mobile                | [Expo](https://expo.dev) + React Native ([@better-auth/expo](https://www.better-auth.com/docs/integrations/expo)) |
 | Telegram bot          | [grammY](https://grammy.dev)                                                                                      |
 | Transactional e-mail  | [Resend](https://resend.com) + [react-email](https://react.email)                                                 |
 | Payments              | [AbacatePay](https://www.abacatepay.com) (PIX)                                                                    |
-| Testing               | `bun:test` (unit/integration) + [Playwright](https://playwright.dev) (E2E)                                       |
+| Testing               | `bun:test` (unit/integration) + [Playwright](https://playwright.dev) (E2E)                                        |
 | Lint / format         | [Biome](https://biomejs.dev) (tabs, 120-column lines)                                                             |
 | Process manager (VPS) | [PM2](https://pm2.keymetrics.io)                                                                                  |
 | TLS (VPS)             | [Caddy](https://caddyserver.com)                                                                                  |
@@ -74,18 +75,18 @@ auth, payments, multi-client (web/bot/mobile) and agent-tooling scaffolding
 
 Guides live in [`docs/`](./docs):
 
-| Guide                                                                            | What it covers                                             |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [`setup-unix-using-docker.md`](./docs/setup-unix-using-docker.md)               | Local setup on Linux/macOS via Docker Compose               |
-| [`setup-unix-using-pm2.md`](./docs/setup-unix-using-pm2.md)                     | Local setup on Linux/macOS via PM2, no Docker                |
-| [`setup-windows-using-docker.md`](./docs/setup-windows-using-docker.md)         | Local setup on Windows 11 + WSL2 via Docker Desktop           |
-| [`setup-windows-using-pm2.md`](./docs/setup-windows-using-pm2.md)               | Local setup on Windows 11 + WSL2 via PM2, no Docker           |
-| [`deploy-railway.md`](./docs/deploy-railway.md)                                 | Production deploy to Railway                                 |
-| [`setup-vps-ubuntu.md`](./docs/setup-vps-ubuntu.md)                             | Deploy to an Ubuntu VPS with Docker                           |
-| [`setup-vps-ubuntu-from-zero.md`](./docs/setup-vps-ubuntu-from-zero.md)         | Deploy to a fresh Ubuntu VPS without Docker                   |
-| [`setup-vercel-flyio.md`](./docs/setup-vercel-flyio.md)                         | Deploy the frontend to Vercel and the backend to Fly.io       |
-| [`deploy-android.md`](./docs/deploy-android.md)                                 | Android app deploy — sideloadable APK and Google Play         |
-| [`ci-cd-setup.md`](./docs/ci-cd-setup.md)                                       | GitHub Actions CI/CD and the Railway production deploy gate   |
+| Guide                                                                   | What it covers                                              |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------- |
+| [`setup-unix-using-docker.md`](./docs/setup-unix-using-docker.md)       | Local setup on Linux/macOS via Docker Compose               |
+| [`setup-unix-using-pm2.md`](./docs/setup-unix-using-pm2.md)             | Local setup on Linux/macOS via PM2, no Docker               |
+| [`setup-windows-using-docker.md`](./docs/setup-windows-using-docker.md) | Local setup on Windows 11 + WSL2 via Docker Desktop         |
+| [`setup-windows-using-pm2.md`](./docs/setup-windows-using-pm2.md)       | Local setup on Windows 11 + WSL2 via PM2, no Docker         |
+| [`deploy-railway.md`](./docs/deploy-railway.md)                         | Production deploy to Railway                                |
+| [`setup-vps-ubuntu.md`](./docs/setup-vps-ubuntu.md)                     | Deploy to an Ubuntu VPS with Docker                         |
+| [`setup-vps-ubuntu-from-zero.md`](./docs/setup-vps-ubuntu-from-zero.md) | Deploy to a fresh Ubuntu VPS without Docker                 |
+| [`setup-vercel-flyio.md`](./docs/setup-vercel-flyio.md)                 | Deploy the frontend to Vercel and the backend to Fly.io     |
+| [`deploy-android.md`](./docs/deploy-android.md)                         | Android app deploy — sideloadable APK and Google Play       |
+| [`ci-cd-setup.md`](./docs/ci-cd-setup.md)                               | GitHub Actions CI/CD and the Railway production deploy gate |
 
 ## Setups
 
@@ -93,14 +94,14 @@ Executable bootstrap/deploy scripts live in [`setups/`](./setups) — each
 asks interactively for SQLite or PostgreSQL, or accepts it as an argument to
 skip the prompt (e.g. `./setups/setup-unix-using-docker.sh postgres`):
 
-| Script                                                                     | What it does                                                        |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`setup-unix-using-docker.sh`](./setups/setup-unix-using-docker.sh)       | Bootstrap locally via Docker Compose (Linux/macOS)                    |
-| [`setup-unix-using-pm2.sh`](./setups/setup-unix-using-pm2.sh)             | Bootstrap locally via PM2, no Docker (Linux/macOS)                    |
-| [`setup-windows-using-docker.sh`](./setups/setup-windows-using-docker.sh) | Bootstrap locally via Docker Desktop (Windows 11 + WSL2)               |
-| [`setup-windows-using-pm2.sh`](./setups/setup-windows-using-pm2.sh)       | Bootstrap locally via PM2, no Docker (Windows 11 + WSL2)               |
-| [`deploy-android-apk.sh`](./setups/deploy-android-apk.sh)                 | Build a sideloadable Android APK (EAS cloud build or local)           |
-| [`deploy-android-play-store.sh`](./setups/deploy-android-play-store.sh)   | Build (and optionally submit) the Android App Bundle for Google Play  |
+| Script                                                                    | What it does                                                                |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`setup-unix-using-docker.sh`](./setups/setup-unix-using-docker.sh)       | Bootstrap locally via Docker Compose (Linux/macOS)                          |
+| [`setup-unix-using-pm2.sh`](./setups/setup-unix-using-pm2.sh)             | Bootstrap locally via PM2, no Docker (Linux/macOS)                          |
+| [`setup-windows-using-docker.sh`](./setups/setup-windows-using-docker.sh) | Bootstrap locally via Docker Desktop (Windows 11 + WSL2)                    |
+| [`setup-windows-using-pm2.sh`](./setups/setup-windows-using-pm2.sh)       | Bootstrap locally via PM2, no Docker (Windows 11 + WSL2)                    |
+| [`deploy-android-apk.sh`](./setups/deploy-android-apk.sh)                 | Build a sideloadable Android APK (EAS cloud build or local)                 |
+| [`deploy-android-play-store.sh`](./setups/deploy-android-play-store.sh)   | Build (and optionally submit) the Android App Bundle for Google Play        |
 | [`railway-entrypoint.sh`](./setups/railway-entrypoint.sh)                 | Container entrypoint used by the Railway deploy (see the root `Dockerfile`) |
 
 ## How to contribute

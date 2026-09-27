@@ -60,12 +60,12 @@ na stack do projeto (Drizzle, JWT+refresh, argon2, otplib, google-auth).
   responder `{ twoFactorRequired: true }` (HTTP 200) quando falta o código.
 - **Transações:** `GET /v1/transactions` (filtros categoria/busca/período +
   paginação + saldo agregado do mesmo filtro), `GET/POST/PUT/DELETE
-  /v1/transactions/:id`. Exclusão é *soft delete* (`deleted_at`) para o sync
+/v1/transactions/:id`. Exclusão é _soft delete_ (`deleted_at`) para o sync
   reportar a remoção. Isolamento por usuário em toda query.
 - **Sync (protocolo WatermelonDB):** `GET /v1/sync/pull?lastPulledAt=` e
   `POST /v1/sync/push`. Relógio de milissegundos monotônico (`server_seq`) como
   marca d'água. Conflito = last-write-wins; `onConflictDoUpdate ... setWhere
-  userId` impede um push mexer em linha de outro usuário.
+userId` impede um push mexer em linha de outro usuário.
 - **Categorias:** `GET /v1/categories` (catálogo fixo, exposto como endpoint para
   evolução futura sem mudança de contrato).
 - Validação de entrada com **Zod** em todas as rotas (`parse()` →
@@ -127,9 +127,9 @@ na stack do projeto (Drizzle, JWT+refresh, argon2, otplib, google-auth).
 
 ### Planos
 
-| Plano  | BRL     | USD     |
-|--------|---------|---------|
-| Mensal | R$ 4,99 | US$ 2,99 |
+| Plano  | BRL      | USD       |
+| ------ | -------- | --------- |
+| Mensal | R$ 4,99  | US$ 2,99  |
 | Anual  | R$ 49,90 | US$ 29,90 |
 
 Tabela canônica em `shared/src/subscriptions.ts` (`PLAN_PRICING`, em centavos).
@@ -158,7 +158,7 @@ Status: `incomplete` → `pending` (PIX aguardando) → `active` → `past_due` 
 ### AbacatePay (PIX)
 
 **Decisão (obrigatória — a AbacatePay não tem assinatura PIX nativa):** modelo
-*renovação por fatura*. O checkout PIX (`POST /transparents/create`, API v2,
+_renovação por fatura_. O checkout PIX (`POST /transparents/create`, API v2,
 valores em centavos) gera uma cobrança única do período; o webhook
 `transparent.completed` ativa/estende a assinatura por 30 dias (mensal) ou 365
 (anual). Próximo da expiração deve ser emitida uma nova cobrança PIX e enviado
@@ -167,8 +167,8 @@ pendências). Sem pagamento até `current_period_end`, a assinatura vira
 `expired`.
 
 - `POST /v1/subscriptions/checkout` com `paymentMethod: "pix"` → linha `pending`
-  + `pix_invoices` + retorno com `pixCode` (copia-e-cola) e `pixQrImage`
-  (`data:image/png;base64,...`).
+  - `pix_invoices` + retorno com `pixCode` (copia-e-cola) e `pixQrImage`
+    (`data:image/png;base64,...`).
 - `POST /v1/webhooks/abacatepay` valida HMAC-SHA256 do corpo cru contra
   `ABACATEPAY_WEBHOOK_SECRET`, deduplica, e em `transparent.completed` /
   `checkout.completed` ativa a assinatura e dispara o e-mail de confirmação.
@@ -188,7 +188,7 @@ pendências). Sem pagamento até `current_period_end`, a assinatura vira
 
 - **Unidade** (`bun test tests/unit`): `shared/src/money.ts` com `big.js` —
   saldo, conversão de moeda, juros simples e compostos, rateio de centavos,
-  arredondamento *half-up* exaustivo (tabela de casos incluindo `.5`, negativos,
+  arredondamento _half-up_ exaustivo (tabela de casos incluindo `.5`, negativos,
   strings). 26 casos.
 - **Integração/API** (`bun test tests/integration`): auth (signup/login/refresh
   com rotação/reset/2FA-gate), transações (CRUD, filtros, saldo, isolamento
@@ -199,7 +199,7 @@ pendências). Sem pagamento até `current_period_end`, a assinatura vira
   cancelamento). Providers Stripe/AbacatePay mockados via `mock.module` — nenhum
   serviço pago é tocado.
 - Bootstrap de teste (`tests/setup.ts`, `bunfig.toml` preload): SQLite temporário
-  + migrations reais antes de cada execução.
+  - migrations reais antes de cada execução.
 - Total: **47 testes / 122 asserts**, verdes.
 - `bun run typecheck` limpo.
 
