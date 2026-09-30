@@ -84,7 +84,7 @@ jobs:
           - os: ubuntu-latest
             smoke: xvfb-run -a ./release/linux-unpacked/agent-money --no-sandbox
           - os: macos-latest
-            smoke: '"./release/mac-arm64/Agent Money.app/Contents/MacOS/Agent Money"'
+            smoke: '"./$MAC_APP_BIN"'
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
@@ -107,8 +107,11 @@ jobs:
         if: runner.os == 'macOS'
         working-directory: desktop-electronjs/release
         run: |
-          codesign --force --deep --sign - "mac-arm64/Agent Money.app"
-          ditto -c -k --keepParent "mac-arm64/Agent Money.app" agent-money-desktop-macos-arm64.zip
+          app=$(find . -maxdepth 2 -name '*.app' -print -quit)
+          [ -n "$app" ] || { find . -maxdepth 3; exit 1; }
+          codesign --force --deep --sign - "$app"
+          ditto -c -k --keepParent "$app" agent-money-desktop-macos-arm64.zip
+          echo "MAC_APP_BIN=release/${app#./}/Contents/MacOS/$(ls "$app/Contents/MacOS")" >> "$GITHUB_ENV"
       - name: Smoke test the packaged app
         working-directory: desktop-electronjs
         shell: bash
