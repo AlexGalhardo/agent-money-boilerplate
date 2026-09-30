@@ -8,6 +8,7 @@
 	"scripts": {
 		"dev": "bun run --watch src/index.ts",
 		"start": "bun run src/index.ts",
+		"build": "bun build --compile --minify ./src/index.ts --outfile bot",
 		"test": "bun --env-file=.env.test test",
 		"test:unit": "bun --env-file=.env.test test src/**/*.unit.test.ts",
 		"hash-password": "bun run scripts/hash-password.ts"
