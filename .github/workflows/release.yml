@@ -1,20 +1,225 @@
 name: Release
 
+# Builds every downloadable: Bun executables (backend + bot), the Electron
+# desktop app for Windows/Linux/macOS, the Android APK and the iOS simulator
+# app. A `v*` tag publishes them as a GitHub Release; a manual run
+# (Actions > Release > Run workflow) builds them as workflow artifacts only.
 on:
   push:
-    tags:
-      - "v*"
+    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  # Baked into the desktop and mobile builds; override with repository
+  # variables (Settings > Secrets and variables > Actions > Variables).
+  DESKTOP_APP_URL: ${{ vars.DESKTOP_APP_URL || 'https://moneyzin-frontend.up.railway.app' }}
+  EXPO_PUBLIC_API_URL: ${{ vars.MOBILE_API_URL || 'https://moneyzin-backend.up.railway.app' }}
 
 jobs:
-  release:
+  # Each target compiles on its own OS: @libsql/client ships a per-platform
+  # native addon, so a cross-compiled binary would embed the wrong one.
+  binaries:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux-x64
+          - os: ubuntu-24.04-arm
+            name: linux-arm64
+          - os: macos-latest
+            name: macos-arm64
+          - os: windows-latest
+            name: windows-x64
+            ext: .exe
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      # Release binaries target PostgreSQL (production); SQLite is for local dev.
+      - name: Generate Prisma Client (PostgreSQL)
+        working-directory: backend
+        run: bun run db:generate:postgres
+        env:
+          DATABASE_URL: postgresql://unused@localhost/unused
+      - name: Compile
+        shell: bash
+        run: |
+          mkdir -p dist-bin
+          bun build --compile --minify backend/src/server.ts --outfile "dist-bin/agent-money-backend-${{ matrix.name }}${{ matrix.ext }}"
+          bun build --compile --minify bot/src/index.ts --outfile "dist-bin/agent-money-bot-${{ matrix.name }}${{ matrix.ext }}"
+      # Boots the API (the pg adapter connects lazily) and hits GET /.
+      - name: Smoke test the backend binary
+        shell: bash
+        env:
+          PORT: 4999
+          DATABASE_PROVIDER: postgresql
+          DATABASE_URL: postgresql://unused@localhost/unused
+          BETTER_AUTH_SECRET: ci-smoke-secret-at-least-32-characters-long
+          ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
+        run: |
+          "./dist-bin/agent-money-backend-${{ matrix.name }}${{ matrix.ext }}" &
+          for i in $(seq 30); do curl -sf http://localhost:4999/ && exit 0; sleep 1; done
+          exit 1
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: binaries-${{ matrix.name }}
+          path: dist-bin/*
+          if-no-files-found: error
+
+  electron:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            smoke: ./release/win-unpacked/agent-money.exe
+          - os: ubuntu-latest
+            smoke: xvfb-run -a ./release/linux-unpacked/agent-money --no-sandbox
+          - os: macos-latest
+            smoke: '"./release/mac-arm64/Agent Money.app/Contents/MacOS/Agent Money"'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - name: Package
+        working-directory: desktop-electronjs
+        shell: bash
+        run: |
+          bun run build
+          version=()
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then version=(-c.extraMetadata.version="${GITHUB_REF_NAME#v}"); fi
+          bunx electron-builder -c.extraMetadata.appUrl="$DESKTOP_APP_URL" "${version[@]}"
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+      # Apple Silicon only runs signed code; ad hoc is enough until a
+      # Developer ID (and notarization) is set up.
+      - name: Ad hoc sign and zip (macOS)
+        if: runner.os == 'macOS'
+        working-directory: desktop-electronjs/release
+        run: |
+          codesign --force --deep --sign - "mac-arm64/Agent Money.app"
+          ditto -c -k --keepParent "mac-arm64/Agent Money.app" agent-money-desktop-macos-arm64.zip
+      - name: Smoke test the packaged app
+        working-directory: desktop-electronjs
+        shell: bash
+        run: ${{ matrix.smoke }} --smoke
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir -p dist-desktop
+          cd desktop-electronjs/release
+          case "$RUNNER_OS" in
+            Windows) cp "Agent Money Setup"*.exe ../../dist-desktop/agent-money-desktop-windows-x64-setup.exe ;;
+            Linux) cp *.AppImage ../../dist-desktop/agent-money-desktop-linux-x64.AppImage ;;
+            macOS) cp agent-money-desktop-macos-arm64.zip ../../dist-desktop/ ;;
+          esac
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: desktop-${{ runner.os }}
+          path: dist-desktop/*
+          if-no-files-found: error
+
+  # Native build from `expo prebuild` + Gradle, no EAS quota. The release
+  # variant is signed with the template's debug keystore: installable by
+  # sideloading, not accepted by the Play Store (that path stays on EAS,
+  # see mobile-build.yml and docs/deploy/android.md).
+  android:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
         with:
-          generate_release_notes: true
-          prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') }}
+          bun-version: 1.4.2
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: bun install --frozen-lockfile
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
+      - name: Prebuild
+        working-directory: mobile
+        run: bunx expo prebuild --platform android --no-install
+      - name: Gradle assembleRelease
+        working-directory: mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+      - name: Collect
+        run: |
+          mkdir -p dist-mobile
+          cp mobile/android/app/build/outputs/apk/release/app-release.apk dist-mobile/agent-money-android.apk
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: android-apk
+          path: dist-mobile/*
+          if-no-files-found: error
+
+  # Simulator build: runs on any Mac with Xcode (drag the .app onto a
+  # simulator). A device .ipa needs an Apple Developer account — EAS path.
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - name: Generate Prisma Client
+        working-directory: backend
+        run: bun run db:generate
+        env:
+          DATABASE_URL: file:./ci.db
+      - name: Prebuild (runs pod install)
+        working-directory: mobile
+        run: bunx expo prebuild --platform ios
+      - name: xcodebuild (iOS Simulator)
+        working-directory: mobile/ios
+        run: |
+          xcodebuild -workspace Money.xcworkspace -scheme Money -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO | tail -n 40
+          test -d build/Build/Products/Release-iphonesimulator/Money.app
+      - name: Zip
+        run: |
+          mkdir -p dist-mobile
+          ditto -c -k --keepParent mobile/ios/build/Build/Products/Release-iphonesimulator/Money.app dist-mobile/agent-money-ios-simulator.zip
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: ios-simulator
+          path: dist-mobile/*
+          if-no-files-found: error
+
+  publish:
+    needs: [binaries, electron, android, ios]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Checksums
+        working-directory: assets
+        run: sha256sum * > SHA256SUMS.txt
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease";; esac
+          gh release create "$GITHUB_REF_NAME" assets/* --title "$GITHUB_REF_NAME" --generate-notes --verify-tag $pre
