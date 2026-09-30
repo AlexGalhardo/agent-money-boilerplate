@@ -4,15 +4,17 @@
 
 **Agent Money Boilerplate** — a forkable personal-finance boilerplate
 (transactions, categories, reports, PIX subscriptions) that shows one
-backend serving four clients: a REST API with a public developer API, a
-web dashboard, a Telegram bot and a mobile app — same auth, same business
-rules, same database.
+backend serving five clients: a REST API with a public developer API, a
+web dashboard, a Telegram bot, a mobile app and a desktop app — same auth,
+same business rules, same database.
 
 ```text
 backend/    ElysiaJS API — auth, transactions, payments, cron, OpenAPI spec
 frontend/   TanStack Start (SSR) web dashboard; proxies API paths through its origin
 bot/        Telegram bot (grammY) — calls backend services in-process, no HTTP
 mobile/     Expo + React Native app — talks to the API over HTTP (Eden)
+desktop-electronjs/  Electron shell that loads the web dashboard (ADR 0009)
+scripts/    dev.ts (whole local stack), qa.ts (QA/pentest pass over every app)
 infra/      Dockerfiles, docker-compose files, Caddyfiles, PM2 configs
 setups/     setup and deploy shell scripts (scripts/common.sh = shared functions)
 docs/       this knowledge base
@@ -29,6 +31,7 @@ docs/       this knowledge base
 | Web      | TanStack Start + TanStack Query + Tailwind CSS v4; Scalar for the API reference                        |
 | Mobile   | Expo SDK 57, Expo Router, NativeWind v4 (dark-only token system)                                       |
 | Bot      | grammY + @grammyjs/conversations, pdfkit reports                                                       |
+| Desktop  | Electron 44 + electron-builder (NSIS, AppImage, ad hoc signed macOS .app)                              |
 | Payments | AbacatePay PIX (transparent checkout v2)                                                               |
 | E-mail   | Resend + react-email                                                                                   |
 | Tests    | `bun:test` (backend, bot, frontend unit), Jest (mobile), Playwright (web + Expo web), Maestro (native) |
@@ -70,6 +73,7 @@ Each domain lives in `backend/src/modules/<domain>/`:
 | Web        | HTTP through its own origin — `frontend/server.ts` (prod) and Vite's proxy (dev) forward the paths in `frontend/proxy-paths.ts` | session cookie                                                                                                    | Frontend and API are different Railway domains; proxying makes the API's `Set-Cookie` land on the frontend domain so SSR (`getServerSession`) sees it                 |
 | Mobile     | HTTP, Eden treaty (`mobile/src/lib/api.ts`)                                                                                     | cookie stored by `@better-auth/expo` in SecureStore, re-attached by a custom fetcher (web build: browser cookies) | Eden revives ISO dates into `Date` objects — normalize at the query layer (`mobile/src/query/normalize.ts`)                                                           |
 | Bot        | **in-process** imports from `@agent-money-boilerplate/backend`                                                                  | chat ↔ account link (`user.telegramChatId`)                                                                       | No HTTP layer: route validation and better-auth's HTTP rate limiting don't apply — the bot validates with the backend's Zod schemas and has its own per-chat lockouts |
+| Desktop    | Loads the web dashboard's URL in a sandboxed window (`desktop-electronjs/src/main.ts`)                                          | same session cookie as the web (same origin)                                                                      | No client code of its own; foreign origins open in the system browser, so Google login finishes in the browser — use e-mail/password in the app                       |
 | Developers | HTTP, OpenAPI 3.1 at `/openapi/json`, rendered by Scalar on the web's `/api` page                                               | `x-api-key`                                                                                                       | Only `/transactions*` is documented                                                                                                                                   |
 
 End-to-end types: `frontend/src/lib/api.ts` and `mobile/src/lib/api.ts`

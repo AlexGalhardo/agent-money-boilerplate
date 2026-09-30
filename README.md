@@ -20,6 +20,7 @@ one auth system and one set of business rules.
 
 - [Introduction](#introduction)
 - [Tech stack](#tech-stack)
+- [Quick start](#quick-start)
 - [Docs](#docs)
 - [Setups](#setups)
 - [How to contribute](#how-to-contribute)
@@ -27,16 +28,19 @@ one auth system and one set of business rules.
 
 ## Introduction
 
-**Agent Money Boilerplate** is a Bun monorepo with four workspaces —
-`backend`, `frontend`, `bot` and `mobile` — plus two clients that consume the
-same API without being a workspace of their own (`bot` and `mobile` import
-`@agent-money-boilerplate/backend` directly):
+**Agent Money Boilerplate** is a Bun monorepo with five workspaces —
+`backend`, `frontend`, `bot`, `mobile` and `desktop-electronjs` — all
+consuming the same API (`bot` and `mobile` import
+`@agent-money-boilerplate/backend` directly; the desktop app wraps the web
+dashboard):
 
 ```text
 /backend/       → ElysiaJS (REST API, auth, payments, cron)
 /frontend/      → TanStack Start (SSR web dashboard)
 /bot/           → Telegram bot (reuses the API's Prisma/encryption/business rules)
 /mobile/        → Expo + React Native (same API as frontend/bot, no backend of its own)
+/desktop-electronjs/ → Electron shell around the web dashboard (Windows, Linux, macOS)
+/scripts/       → dev.ts (whole local stack in one command), qa.ts (QA/pentest pass)
 /http-client/   → reference HTTP calls (api.http)
 /docs/          → setup and deploy guides
 /setups/        → executable setup/deploy shell scripts
@@ -62,6 +66,7 @@ auth, payments, multi-client (web/bot/mobile) and agent-tooling scaffolding
 | Authentication        | [better-auth](https://www.better-auth.com) (cookie sessions, optional 2FA, Google OAuth)                          |
 | Frontend              | [TanStack Start](https://tanstack.com/start) + [Tailwind CSS v4](https://tailwindcss.com)                         |
 | Mobile                | [Expo](https://expo.dev) + React Native ([@better-auth/expo](https://www.better-auth.com/docs/integrations/expo)) |
+| Desktop               | [Electron](https://www.electronjs.org) + [electron-builder](https://www.electron.build)                           |
 | Telegram bot          | [grammY](https://grammy.dev)                                                                                      |
 | Transactional e-mail  | [Resend](https://resend.com) + [react-email](https://react.email)                                                 |
 | Payments              | [AbacatePay](https://www.abacatepay.com) (PIX)                                                                    |
@@ -70,6 +75,24 @@ auth, payments, multi-client (web/bot/mobile) and agent-tooling scaffolding
 | Process manager (VPS) | [PM2](https://pm2.keymetrics.io)                                                                                  |
 | TLS (VPS)             | [Caddy](https://caddyserver.com)                                                                                  |
 | CI/CD                 | GitHub Actions + Railway deploy gate                                                                              |
+
+## Quick start
+
+```bash
+bun install
+cp backend/.env.example backend/.env    # fill BETTER_AUTH_SECRET / ENCRYPTION_KEY (see the file)
+bun run dev:all                         # API :4000, web :4001, Expo QR code, desktop window
+bun run qa                              # QA/pentest pass on a throwaway seeded stack
+```
+
+`dev:all` points Expo at this computer's LAN IP, so Expo Go on a phone on
+the same Wi-Fi reaches the local API. `qa` also drives the native app in
+the Android emulator when an Android SDK is installed.
+
+Downloads (Bun executables for the API and bot, the Electron installers
+for Windows/Linux/macOS, the Android APK and the iOS simulator build) are
+attached to every [GitHub Release](../../releases), built by
+[`release.yml`](./.github/workflows/release.yml).
 
 ## Docs
 

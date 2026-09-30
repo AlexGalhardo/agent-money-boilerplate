@@ -15,6 +15,7 @@ with the project's `CLAUDE.md` / `AGENTS.md`, then open what the task needs.
 | [`decisions/`](./decisions)                    | Architecture decision records                                                         |
 | [`deploy/`](./deploy)                          | Local setup, VPS, Railway, Vercel + Fly.io, Android builds, CI/CD                     |
 
-Project-specific agent skills (`.claude/skills/agent-money-*`) turn the
-recurring workflows above into checklists; vendored skills and their
-sources are listed in `.claude/skills/SOURCES.md`.
+Project-specific agent skills live in `.agents/skills/` (branch workflow,
+pre-push checklist, `qa-pentest` for `scripts/qa.ts`); coding rules in
+`.claude/rules/` (Karpathy guidelines); vendored skills and their sources
+are listed in `.claude/skills/SOURCES.md`.

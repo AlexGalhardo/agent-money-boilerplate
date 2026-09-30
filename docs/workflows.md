@@ -31,8 +31,18 @@ the minor). After merging to `main`:
    update the compare links at the bottom ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)).
 2. Bump `version` in the root and workspace `package.json` files.
 3. `chore(release): vX.Y.Z` commit on `dev`, merge to `main`, then
-   `git tag vX.Y.Z && git push origin vX.Y.Z` — `release.yml` creates the
-   GitHub Release.
+   `git tag vX.Y.Z && git push origin vX.Y.Z` — `release.yml` builds every
+   downloadable (Bun executables, Electron installers, Android APK, iOS
+   simulator app) and attaches them, with `SHA256SUMS.txt`, to the GitHub
+   Release. Run it manually (Actions → Release → Run workflow) to build
+   the same files as workflow artifacts without releasing.
+
+## QA / pentest pass
+
+`bun run qa` (= `bun scripts/qa.ts --start`) behaves like a human tester
+over every app — see `.agents/skills/qa-pentest/SKILL.md`. Run it before a
+release and after security-sensitive changes; CI runs it without the
+Android group. A new screen or endpoint gets a check in the matching group.
 
 ## Adding or changing an API route
 

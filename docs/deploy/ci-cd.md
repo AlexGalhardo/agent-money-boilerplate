@@ -9,22 +9,29 @@ push dev  ─┬─ ci.yml ───────────► Railway "sandbox
            └─ mobile-build.yml ─► EAS preview build (.apk)
 push main ─┬─ ci.yml ───────────► Railway "production" (waits for CI)
            └─ mobile-build.yml ─► EAS production build (.aab, submit is manual)
-tag v*    ─── release.yml ──────► GitHub Release with generated notes
+tag v*    ─── release.yml ──────► GitHub Release with every downloadable attached
+manual    ─── release.yml ──────► same builds as workflow artifacts, no release
 ```
 
 ## Workflows
 
 ### `ci.yml` (push to `main`/`dev`, pull requests)
 
-| Job          | Runs                                                                          |
-| ------------ | ----------------------------------------------------------------------------- |
-| `lint`       | `bun run lint` — Biome + markdownlint + Prettier check                        |
-| `backend`    | Prisma generate, typecheck, unit + integration tests, binary build            |
-| `bot`        | Prisma generate, typecheck, unit tests                                        |
-| `frontend`   | Prisma generate, typecheck, unit tests, production build                      |
-| `mobile`     | Prisma generate, typecheck, Jest                                              |
-| `e2e`        | Playwright on the web app against a seeded API (needs backend, frontend)      |
-| `mobile-e2e` | Playwright on the Expo web build against a seeded API (needs backend, mobile) |
+| Job          | Runs                                                                           |
+| ------------ | ------------------------------------------------------------------------------ |
+| `lint`       | `bun run lint` — Biome + markdownlint + Prettier check                         |
+| `backend`    | Prisma generate, typecheck, unit + integration tests, binary build             |
+| `bot`        | Prisma generate, typecheck, unit tests, binary build                           |
+| `frontend`   | Prisma generate, typecheck, unit tests, production build                       |
+| `mobile`     | Prisma generate, typecheck, Jest                                               |
+| `e2e`        | Playwright on the web app against a seeded API (needs backend, frontend)       |
+| `mobile-e2e` | Playwright on the Expo web build against a seeded API (needs backend, mobile)  |
+| `desktop`    | Typecheck, package the Linux app unpacked, smoke-boot it under `xvfb`          |
+| `qa`         | `scripts/qa.ts` (API, web, desktop, bot) on a seeded stack; uploads the report |
+
+`lint` also typechecks `scripts/` (`dev.ts`, `qa.ts`). Cross-platform
+packaging lives in `release.yml`, not here, so a macOS/Windows runner
+hiccup never blocks a Railway deploy.
 
 Every job installs with `bun install --frozen-lockfile` — the lockfile must
 be committed in sync (and stay `lockfileVersion: 1`, see
@@ -37,10 +44,21 @@ Queues an EAS build with `--no-wait` (`preview` on `dev`, `production` on
 `main`). Needs the `EXPO_TOKEN` repository secret. EAS builds count against
 the Expo account's quota. `eas submit` is intentionally manual.
 
-### `release.yml` (tag `v*`)
+### `release.yml` (tag `v*`, or manual run)
 
-Creates a GitHub Release with generated notes; `-alpha`/`-beta` tags become
-pre-releases. Tag after merging to `main` when the change deserves a
+| Job        | Runner(s)                                | Output                                                                                     |
+| ---------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `binaries` | ubuntu x64, ubuntu arm64, macOS, Windows | `agent-money-backend-<os>-<arch>` and `agent-money-bot-…` (Bun `--compile`, PostgreSQL)    |
+| `electron` | Windows, Ubuntu, macOS                   | NSIS installer, AppImage, ad hoc signed `.app` zip — each smoke-booted                     |
+| `android`  | Ubuntu                                   | `agent-money-android.apk` (`expo prebuild` + Gradle, debug-keystore signed, sideload only) |
+| `ios`      | macOS                                    | `agent-money-ios-simulator.zip` (`xcodebuild -sdk iphonesimulator`, unsigned)              |
+| `publish`  | Ubuntu (tags only)                       | GitHub Release with all files + `SHA256SUMS.txt` and generated notes                       |
+
+Binaries compile on their own OS because `@libsql/client` ships a native
+addon per platform. Repository variables `DESKTOP_APP_URL` (desktop app)
+and `MOBILE_API_URL` (APK/iOS build) override the production URLs baked
+into the builds. Store builds (signed AAB/IPA) stay on EAS
+(`mobile-build.yml`). `-alpha`/`-beta` tags become pre-releases. Tag after merging to `main` when the change deserves a
 release — see [`../workflows.md`](../workflows.md#releasing).
 
 ## Railway gate
@@ -71,5 +89,9 @@ App secrets live in Railway variables per environment, never in GitHub.
       authorize the sandbox URL as a Google redirect URI).
 - [ ] Maestro on an Android emulator in CI (costs Actions minutes; needs a
       decision).
-- [ ] Upgrade `actions/checkout@v4` → a Node 24 release before GitHub drops
-      Node 20 runners (warnings on every run since 2026-09).
+- [x] Upgrade `actions/checkout@v4` → `@v7` (Node 24) and pin bun `1.4.2`.
+- [ ] First `release.yml` run: validate the Android/iOS native builds and
+      the macOS/Windows Electron jobs (never run yet — only the Windows
+      installer was built and smoke-tested locally).
+- [ ] Code signing: Windows (SmartScreen), macOS Developer ID +
+      notarization, a real Android upload keystore for GitHub APKs.

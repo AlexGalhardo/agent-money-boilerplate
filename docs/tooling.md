@@ -75,9 +75,11 @@ four. The backend and bot need a generated Prisma Client first
 | web E2E    | Playwright       | `cd frontend && bunx playwright test` | Backend `:4200`, Vite `:4201`, reseeded DB    |
 | mobile E2E | Playwright       | `cd mobile && bun run test:e2e:web`   | Backend `:4210`, Expo web export `:4301`      |
 | native E2E | Maestro          | `cd mobile && maestro test maestro/`  | Emulator/device required                      |
+| desktop    | Electron smoke   | `bun run desktop:smoke`               | Boots the window, exits 0 once a page renders |
+| QA/pentest | `scripts/qa.ts`  | `bun run qa`                          | API `:4400`, web `:4401`, Metro `:8091`       |
 
-Both Playwright configs reseed the E2E database (`backend/e2e.db`), so don't
-run them at the same time. The seed is deterministic (fixed-seed PRNG).
+Both Playwright configs and `bun run qa` reseed the E2E database
+(`backend/e2e.db`), so don't run them at the same time. The seed is deterministic (fixed-seed PRNG).
 
 ## Expo / Metro
 

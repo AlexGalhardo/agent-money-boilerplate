@@ -8,6 +8,31 @@ re-deriving context.
 Branch: `dev` (see `.agents/skills/git-branch-workflow`). Nothing lands on
 `main` until the final checkpoint is green.
 
+## Session status (2026-09-29, end of session 2)
+
+Delivered on `dev` (not merged — the new release jobs have never run on
+GitHub):
+
+- [x] `desktop-electronjs/` — fifth workspace, Electron shell around the web
+      dashboard (ADR 0009); packaged + smoke-tested locally on Windows.
+- [x] `ci.yml` — `desktop` (Linux package + smoke) and `qa` jobs, bot binary
+      build, `scripts/` typecheck, actions bumped to `checkout@v7`, bun 1.4.2.
+- [x] `release.yml` — Bun executables (4 targets), Electron (3 OS), Android
+      APK (prebuild + Gradle), iOS simulator app, checksums, GitHub Release.
+- [x] `scripts/qa.ts` — QA/pentest pass (API, web, desktop, bot, Android
+      emulator); all groups green locally. Skill `.agents/skills/qa-pentest`.
+- [x] `scripts/dev.ts` — `bun run dev:all` (API + web + Expo on the LAN IP +
+      desktop).
+- [x] Bug found by QA and fixed: bot `/cancelar` was swallowed by an active
+      conversation (handler registered after `createConversation`).
+- [x] `.claude/rules/karpathy.md`; docs updated (README, CLAUDE/AGENTS,
+      architecture, commands, tooling, workflows, local-setup, ci-cd).
+- [ ] Run `release.yml` manually on `dev` and fix whatever the Android/iOS/
+      macOS/Windows jobs report; then merge `dev` → `main` once `ci.yml`
+      (new `desktop` and `qa` jobs) is green.
+- [ ] Untracked `scripts/test.ts` holds a real production API key — revoke
+      it at /api and delete the file (never commit it).
+
 ## Session status (2026-09-27, end of session 1)
 
 - `main` = `34eec35`, CI green, deployed by Railway after CI. `dev` is ahead
