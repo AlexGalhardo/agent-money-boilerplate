@@ -8,6 +8,21 @@ re-deriving context.
 Branch: `dev` (see `.agents/skills/git-branch-workflow`). Nothing lands on
 `main` until the final checkpoint is green.
 
+## Session status (2026-09-30, end of session 3)
+
+- [x] `release.yml` run manually on `dev`: all 9 build jobs green after
+      fixing the hardcoded macOS `.app` path (run 36782414236).
+- [x] Maestro flows run on an Android emulator for the first time (2/2);
+      fixed a real amount-field bug and three flow selector bugs.
+- [x] QA web group flake (cold Vite dev server) fixed.
+- [x] Root `CHANGELOG.md`, `agent-money-*` skills, infra/setup comments in
+      English; `bun run check`, builds and E2E green; merged `dev` → `main`.
+- [ ] `mobile-build.yml` (EAS) is red on `dev` only because the EAS Free
+      plan ran out of Android builds this month — re-run it after the quota
+      resets; not a code issue.
+- [ ] Untracked `scripts/test.ts` holds a real production API key — revoke
+      it at /api and delete the file (never commit it).
+
 ## Session status (2026-09-29, end of session 2)
 
 Delivered on `dev` (not merged — the new release jobs have never run on
@@ -27,11 +42,10 @@ GitHub):
       conversation (handler registered after `createConversation`).
 - [x] `.claude/rules/karpathy.md`; docs updated (README, CLAUDE/AGENTS,
       architecture, commands, tooling, workflows, local-setup, ci-cd).
-- [ ] Run `release.yml` manually on `dev` and fix whatever the Android/iOS/
+- [x] Run `release.yml` manually on `dev` and fix whatever the Android/iOS/
       macOS/Windows jobs report; then merge `dev` → `main` once `ci.yml`
       (new `desktop` and `qa` jobs) is green.
-- [ ] Untracked `scripts/test.ts` holds a real production API key — revoke
-      it at /api and delete the file (never commit it).
+- [x] (tracked in session 3 above)
 
 ## Session status (2026-09-27, end of session 1)
 
@@ -240,9 +254,9 @@ Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versi
 
 Skills: `code-review-and-quality`, `shipping-and-launch`, `open-source-guidelines-pre-push`
 
-- [ ] `bun run check` green; backend build; frontend build; Playwright E2E
-- [ ] Commits follow Conventional Commits; no secrets staged (`git diff --cached`)
-- [ ] Summary + open questions reported to the user (merge to `main`/push only after user confirmation)
+- [x] `bun run check` green; backend build; frontend build; Playwright E2E
+- [x] Commits follow Conventional Commits; no secrets staged (`git diff --cached`)
+- [x] Summary + open questions reported to the user (merge to `main`/push only after user confirmation)
 
 ## Risks
 
