@@ -18,7 +18,9 @@ Guide for Claude Code (and any AI agent) working in this repository.
    the PR checklist in [`CONTRIBUTING.md`](./CONTRIBUTING.md).
 4. **No obvious comments** — only the _why_ when it's non-obvious. Tabs,
    not spaces (Biome owns formatting, `bun run format`).
-5. Never create or edit any `changelog.md`. Never commit `*.csv` (real
+5. Only the root `CHANGELOG.md` ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/))
+   is kept — add each change under `## [Unreleased]`; never create
+   per-workspace changelogs. Never commit `*.csv` (real
    bank statements have leaked before — see
    [`docs/security.md`](./docs/security.md)).
 6. `.claude/settings.json` is shared project config and stays tracked —
