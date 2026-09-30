@@ -214,7 +214,7 @@ Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versi
 
 - [x] Vendor Expo skills (`github.com/expo/skills`) into `.claude/skills/`, record commit in `SOURCES.md`
 - [x] Translate `.claude/skills/SOURCES.md` to English (`respondeae-*` kept, flagged as another project's examples)
-- [ ] Write project skills for repeated workflows (verify-all, monorepo install/lockfile, add-category sync points, security fix)
+- [x] Write project skills for repeated workflows (verify-all, monorepo install/lockfile, add-category sync points, security fix)
 - [x] `CHANGELOG.md` (Keep a Changelog) from git history v0.0.1 → v0.1.0 + Unreleased; delete `mobile/CHANGELOG.md`
 - [x] `docs/` reorganized: `README.md` index, `tooling.md`, `architecture.md`, `workflows.md`, `security.md`, `decisions/` (ADRs), `deploy/` (setup/deploy guides)
 - [x] Update CLAUDE.md + AGENTS.md deeper-docs section (rule 5 now points at the root CHANGELOG.md)
