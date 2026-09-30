@@ -1,5 +1,5 @@
-// Configuração do PM2 para deploy em VPS sem Docker (backend/server precisa
-// ter sido compilado antes com `bun run build` em backend/ e frontend/).
+// PM2 config for a VPS deploy without Docker (run `bun run build` in
+// backend/ and frontend/ first — backend/server is the compiled binary).
 module.exports = {
 	apps: [
 		{
@@ -17,11 +17,10 @@ module.exports = {
 			cwd: "./frontend",
 			script: "server.ts",
 			interpreter: "bun",
-			// VITE_API_URL aqui é lido em runtime pelo proxy de /auth, /users,
-			// /transactions etc. embutido em server.ts (ver
-			// frontend/proxy-paths.ts) — diferente do valor usado em build time
-			// (a URL pública, ver docs/setup-vps-ubuntu-from-zero.md), já que
-			// backend e frontend rodam no mesmo host aqui.
+			// Read at runtime by the /auth, /users, /transactions… proxy in
+			// server.ts (see frontend/proxy-paths.ts) — unlike the build-time
+			// value (the public URL, see docs/deploy/vps.md), since backend
+			// and frontend share this host.
 			env: { NODE_ENV: "production", PORT: "4001", VITE_API_URL: "http://localhost:4000" },
 			instances: 1,
 			autorestart: true,

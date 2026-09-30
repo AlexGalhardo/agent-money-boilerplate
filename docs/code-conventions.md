@@ -1,65 +1,81 @@
 # Code conventions
 
-## General
+## Language
 
-- **No obvious comments.** Only comment the _why_ when it's not obvious
-  from the code itself (a hidden constraint, a workaround, an invariant).
-  The existing codebase follows this closely — keep the pattern.
-- **Tabs, not spaces.** Formatting is Biome's job (`bun run format`), not
-  the editor's.
-- **English only.** Code, identifiers, comments, docs, commit messages —
-  everything. If you find Portuguese in this app's context (a holdover
-  from before the 2026-09-20 rename), translate it to English as you
-  touch that file.
-- **Domain-based modules** in `backend/src/modules/<domain>/`, always
-  following `*.routes.ts` (Elysia + inline Zod validation) →
-  `*.service.ts` (business logic, testable in isolation) →
-  `*.repository.ts` (the only layer that touches Prisma). See
-  `backend/src/modules/transactions/` as the reference.
-- **Tests live next to the file they test**: `foo.service.ts` and
-  `foo.service.unit.test.ts` in the same directory, never in `__tests__/`.
+- **English** for code, identifiers, comments, docs, commit messages and
+  developer-facing strings (logs, env validation errors, dev scripts).
+- **Portuguese (pt-BR)** only for text end users read: UI copy, API error
+  messages shown in the apps, bot messages, e-mails, and the OpenAPI
+  `summary`/`description` rendered on the `/api` page.
+- Found Portuguese in code or comments? Translate it when you touch the file.
 
-## The four manual sync points
+## Style
 
-Some things are intentionally duplicated across workspaces rather than
-shared, so that `bot` and `mobile` don't have to depend on the frontend's
-React/TanStack workspace just for a string map. Keep all four in sync
-when you touch any one of them.
+- Tabs, width 4 (`.editorconfig`); Markdown/YAML use 2 spaces. Biome formats
+  TS/JS/JSON/CSS, Prettier formats Markdown — never hand-format.
+- **No obvious comments.** Comment the _why_: a hidden constraint, a
+  workaround (with the upstream issue when there is one), an invariant, a
+  security decision.
+- Strict TypeScript: no `any` (use `unknown` + narrowing), explicit return
+  types on exported functions, no `@ts-ignore`/`@ts-expect-error` without a
+  reason next to it, no casts that hide a runtime mismatch (the Eden `Date`
+  bug hid behind `as Transaction[]`).
+- New dependencies: exact stable versions (no `^`, no `latest`/`next`/
+  pre-release), installed with `npx bun@1.3.14 add --exact <pkg>@<version>`.
 
-1. **Transaction categories** are a fixed enum
-   (`transactionCategories` in
-   `backend/src/modules/transactions/transaction.schema.ts`), not a
-   database table. Adding a category means editing that list **and**
-   `categoryLabels` in `frontend/src/lib/categories.ts` **and**
-   `bot/src/formatting/format.ts` **and** `mobile/src/lib/categories.ts`
-   (and reviewing the frontend's color palettes — see the dataviz
-   references in `frontend/`).
-2. **better-auth errors never reach the screen/chat in English.**
-   `error.message` from better-auth is always English and unstable
-   across versions — always translate via `error.code` through a local
-   map: `frontend/src/lib/auth-errors.ts` (`translateAuthError(error,
-fallback)`), `bot/src/lib/auth-errors.ts`, `mobile/src/lib/auth-errors.ts`.
-3. **Password rules** (8-32 characters + complexity) are duplicated in
+## Backend
+
+- Domain modules follow `schema → routes → service → repository` (see
+  [`architecture.md`](./architecture.md#backend-layering)); only
+  repositories import `prisma`.
+- Validate every input at the route with Zod (body, query, params) and give
+  public routes a `response` schema and OpenAPI `detail`.
+- Expected failures: throw an `AppError` subclass with the right status —
+  never `try/catch` in a route just to map errors.
+- Compare secrets with `secureCompare`; never log secrets, tokens or
+  personal data.
+- Anything that grants access (linking a Telegram chat, activating a plan)
+  must be driven by a verified credential or a verified upstream state —
+  never by an identifier the client supplies.
+
+## Clients
+
+- Web: data access through `frontend/src/lib/queries.ts` hooks; pure logic
+  in `lib/` with `*.unit.test.ts`; route files compose components from
+  `components/<area>/`.
+- Mobile: tokens and components from [`design-system.md`](./design-system.md);
+  data through `mobile/src/query/`; normalize API values at that boundary.
+- Bot: conversations receive the authorized `userId` from
+  `withAuthorizedUser`; results crossing `conversation.external()` must be
+  plain serializable values (the plugin `structuredClone`s them, which
+  strips Error subclasses).
+
+## Tests
+
+- Next to the code: `foo.ts` + `foo.unit.test.ts` (bun) or `foo.test.ts`
+  (mobile Jest). Backend integration tests: `src/server.integration.test.ts`.
+- Every bug fix and security fix gets a regression test that fails without
+  the fix.
+- E2E selectors: labels, roles, and the stable testIDs listed in
+  [`design-system.md`](./design-system.md#testing-hooks-dont-break-these).
+
+## Sync points (intentional duplication)
+
+`bot` and `mobile` must not depend on the frontend workspace for a string
+map, so these are duplicated — change them together:
+
+1. **Transaction categories** — `transactionCategories` in
+   `backend/src/modules/transactions/transaction.schema.ts`, labels in
+   `frontend/src/lib/categories.ts`, `bot/src/formatting/format.ts`,
+   `mobile/src/lib/categories.ts` (plus icons in the web/mobile
+   `category-icons` and the chart palettes).
+2. **better-auth error translations** — `frontend/src/lib/auth-errors.ts`,
+   `bot/src/lib/auth-errors.ts`, `mobile/src/lib/auth-errors.ts` (always
+   translate by `error.code`, never show `error.message`).
+3. **Password rules** (8–32 chars + complexity) —
    `frontend/src/components/password-strength-input.tsx`,
-   `bot/src/lib/password-rules.ts` and `mobile/src/lib/password-rules.ts`.
+   `bot/src/lib/password-rules.ts`, `mobile/src/lib/password-rules.ts`.
+4. **Plan rules** (`FREE_TRANSACTION_LIMIT`, `hasActivePlan`) —
+   `backend/src/lib/plan.ts`, `frontend/src/lib/plan.ts`, `mobile/src/lib/plan.ts`.
 
-## Google login inside the Telegram bot
-
-Not possible without leaving the chat (OAuth needs a browser). The flow:
-`bot/src/lib/auth-flows.ts` generates a single-use token
-(`backend/src/modules/telegram/telegram.service.ts`, the
-`TelegramLinkToken` model, expires in 15min) and sends a link to
-`frontend/src/routes/telegram-vincular.tsx`; that page, already
-authenticated, calls `POST /telegram/link`
-(`backend/src/modules/telegram/telegram.routes.ts`) to link the chat to
-the account. The bot only learns it worked when the user taps "verify
-link" (a manual poll — there's no push from the backend to the bot).
-
-## Per-transaction password confirmation in the bot
-
-Optional, controlled by the `TELEGRAM_BOT_USE_PASSWORD_TO_CONFIRM_ACTIONS`
-env var (`bot/.env`, defaults to `false`). When `true`,
-`requirePassword` (`bot/src/lib/verify-password-step.ts`) asks for the
-personal password (`BOT_PASSWORD_HASH_BASE64`) before expense, income,
-summary, search, delete and report actions. "Switch account" (main menu)
-never goes through this flow — it only shows a Yes/No confirmation.
+The `agent-money-sync-points` skill walks through a change to any of them.

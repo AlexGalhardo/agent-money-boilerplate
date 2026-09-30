@@ -58,8 +58,7 @@ as an open source repo.
 5. **`CLAUDE.md`/`AGENTS.md` updated** if the change introduced a new
    convention, command, structural dependency or architecture change
    (see the global `CLAUDE.md`'s "Documentation and changelog" section).
-   Never create or edit `changelog.md` — this project's `CLAUDE.md`
-   explicitly forbids it.
+   Add the change under `## [Unreleased]` in the root `CHANGELOG.md`.
 6. **Tests and build pass locally** — what the `pre-push` hook runs:
 
    ```bash

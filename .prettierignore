@@ -9,3 +9,4 @@ node_modules
 .agents/skills
 **/.tanstack
 **/generated
+qa-report.md

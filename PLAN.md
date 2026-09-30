@@ -8,6 +8,59 @@ re-deriving context.
 Branch: `dev` (see `.agents/skills/git-branch-workflow`). Nothing lands on
 `main` until the final checkpoint is green.
 
+## Session status (2026-09-30, end of session 3)
+
+- [x] `release.yml` run manually on `dev`: all 9 build jobs green after
+      fixing the hardcoded macOS `.app` path (run 36782414236).
+- [x] Maestro flows run on an Android emulator for the first time (2/2);
+      fixed a real amount-field bug and three flow selector bugs.
+- [x] QA web group flake (cold Vite dev server) fixed.
+- [x] Root `CHANGELOG.md`, `agent-money-*` skills, infra/setup comments in
+      English; `bun run check`, builds and E2E green; merged `dev` → `main`.
+- [ ] `mobile-build.yml` (EAS) is red on `dev` only because the EAS Free
+      plan ran out of Android builds this month — re-run it after the quota
+      resets; not a code issue.
+- [ ] Untracked `scripts/test.ts` holds a real production API key — revoke
+      it at /api and delete the file (never commit it).
+
+## Session status (2026-09-29, end of session 2)
+
+Delivered on `dev` (not merged — the new release jobs have never run on
+GitHub):
+
+- [x] `desktop-electronjs/` — fifth workspace, Electron shell around the web
+      dashboard (ADR 0009); packaged + smoke-tested locally on Windows.
+- [x] `ci.yml` — `desktop` (Linux package + smoke) and `qa` jobs, bot binary
+      build, `scripts/` typecheck, actions bumped to `checkout@v7`, bun 1.4.2.
+- [x] `release.yml` — Bun executables (4 targets), Electron (3 OS), Android
+      APK (prebuild + Gradle), iOS simulator app, checksums, GitHub Release.
+- [x] `scripts/qa.ts` — QA/pentest pass (API, web, desktop, bot, Android
+      emulator); all groups green locally. Skill `.agents/skills/qa-pentest`.
+- [x] `scripts/dev.ts` — `bun run dev:all` (API + web + Expo on the LAN IP +
+      desktop).
+- [x] Bug found by QA and fixed: bot `/cancelar` was swallowed by an active
+      conversation (handler registered after `createConversation`).
+- [x] `.claude/rules/karpathy.md`; docs updated (README, CLAUDE/AGENTS,
+      architecture, commands, tooling, workflows, local-setup, ci-cd).
+- [x] Run `release.yml` manually on `dev` and fix whatever the Android/iOS/
+      macOS/Windows jobs report; then merge `dev` → `main` once `ci.yml`
+      (new `desktop` and `qa` jobs) is green.
+- [x] (tracked in session 3 above)
+
+## Session status (2026-09-27, end of session 1)
+
+- `main` = `34eec35`, CI green, deployed by Railway after CI. `dev` is ahead
+  with the docs restructure and the new CI jobs (`mobile`, `mobile-e2e`,
+  frontend unit tests) — **merge `dev` → `main` only after `ci.yml` on
+  `dev` is green** (the new jobs have not run on GitHub yet).
+- Next up, in order: CHANGELOG.md (Keep a Changelog, from git history
+  v0.0.1 → v0.1.0 + Unreleased, delete `mobile/CHANGELOG.md`, then update
+  rule 5 in CLAUDE.md/AGENTS.md) → project skills `agent-money-*`
+  (ship, verify, sync-points, mobile-ui, security) referenced by
+  `docs/workflows.md` → dedupe the local-setup rows in README's docs table
+  → translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`,
+  `infra/*` comments → Group 9 final verification.
+
 ## How to resume
 
 1. Read this file top to bottom, then `CLAUDE.md`.
@@ -166,8 +219,8 @@ Skills: `test-driven-development`, `browser-testing-with-devtools`
 
 - [x] Keep Maestro as the native E2E runner (flows in `mobile/maestro/`, updated for the redesign, stable `nav-*` testIDs)
 - [x] Playwright suite on the Expo web build (`mobile/e2e-web/`, `bun run test:e2e:web`) — 6 flows passing against the real API
-- [ ] Run flows on an emulator — **blocked here**: no Android SDK/Java/Maestro on this machine (see chat suggestion)
-- [ ] Add CI job that runs Maestro on an Android emulator (optional, needs user confirmation — CI minutes)
+- [x] Run flows on an emulator — Maestro 2.11.0 on a local release APK, 2/2 green (2026-09-30); found and fixed the amount-field caret bug and three flow selector bugs
+- [x] ~~Add CI job that runs Maestro on an Android emulator~~ — declined by the user (2026-09-30); run locally, see `mobile/maestro/README.md`
 
 ## Group 8 — Docs, changelog, skills
 
@@ -175,10 +228,10 @@ Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versi
 
 - [x] Vendor Expo skills (`github.com/expo/skills`) into `.claude/skills/`, record commit in `SOURCES.md`
 - [x] Translate `.claude/skills/SOURCES.md` to English (`respondeae-*` kept, flagged as another project's examples)
-- [ ] Write project skills for repeated workflows (verify-all, monorepo install/lockfile, add-category sync points, security fix)
-- [ ] `CHANGELOG.md` (Keep a Changelog) from git history v0.0.1 → v0.1.0 + Unreleased; delete `mobile/CHANGELOG.md`
-- [ ] `docs/` reorganized: `README.md` index, `tooling.md`, `architecture.md`, `workflows.md`, `security.md`, `decisions/` (ADRs), `deploy/` (setup/deploy guides)
-- [ ] Update CLAUDE.md + AGENTS.md (changelog rule, new commands, skills locations)
+- [x] Write project skills for repeated workflows (verify-all, monorepo install/lockfile, add-category sync points, security fix)
+- [x] `CHANGELOG.md` (Keep a Changelog) from git history v0.0.1 → v0.1.0 + Unreleased; delete `mobile/CHANGELOG.md`
+- [x] `docs/` reorganized: `README.md` index, `tooling.md`, `architecture.md`, `workflows.md`, `security.md`, `decisions/` (ADRs), `deploy/` (setup/deploy guides)
+- [x] Update CLAUDE.md + AGENTS.md deeper-docs section (rule 5 now points at the root CHANGELOG.md)
 
 ## Group 10 — Requests added during the session
 
@@ -195,15 +248,15 @@ Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versi
 - [x] PM2 + Postgres setup called `docker compose` without `-f infra/...` → fixed
 - [x] AbacatePay dev key hardcoded in `scripts/common.sh` → prompted at setup (rotation pending)
 - [x] Four near-identical setup scripts consolidated into `setups/setup-docker.sh` and `setups/setup-pm2.sh` (WSL/Git Bash detection), translated to English
-- [ ] Translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`, `infra/*` comments
+- [x] Translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`, `infra/*` comments
 
 ## Group 9 — Final verification and handoff
 
 Skills: `code-review-and-quality`, `shipping-and-launch`, `open-source-guidelines-pre-push`
 
-- [ ] `bun run check` green; backend build; frontend build; Playwright E2E
-- [ ] Commits follow Conventional Commits; no secrets staged (`git diff --cached`)
-- [ ] Summary + open questions reported to the user (merge to `main`/push only after user confirmation)
+- [x] `bun run check` green; backend build; frontend build; Playwright E2E
+- [x] Commits follow Conventional Commits; no secrets staged (`git diff --cached`)
+- [x] Summary + open questions reported to the user (merge to `main`/push only after user confirmation)
 
 ## Risks
 
@@ -217,5 +270,4 @@ Skills: `code-review-and-quality`, `shipping-and-launch`, `open-source-guideline
 ## Open questions (for the user)
 
 - Rotate the API key hardcoded in the untracked `scripts/test.ts` and delete the file?
-- Install Android Studio + Maestro locally (or add a CI emulator job) to actually run mobile E2E?
 - The bot's `BOT_PASSWORD_HASH_BASE64` is one global password shared by every user of a multi-tenant bot — keep, or remove the feature?

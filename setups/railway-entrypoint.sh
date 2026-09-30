@@ -1,9 +1,8 @@
 #!/bin/sh
-# Dispatcher dos 3 serviços do Railway (backend, frontend, bot) a partir da
-# MESMA imagem — ver docs/deploy-railway.md para o porquê (Railway não
-# suporta escolher um build target de Dockerfile por serviço). Cada
-# Railway service define a variável RAILWAY_SERVICE_TARGET para escolher
-# qual processo esse container efetivamente roda.
+# Dispatches the 3 Railway services (backend, frontend, bot) from the SAME
+# image — see docs/deploy/railway.md for why (Railway can't pick a
+# Dockerfile build target per service). Each Railway service sets
+# RAILWAY_SERVICE_TARGET to choose which process this container runs.
 set -e
 
 case "$RAILWAY_SERVICE_TARGET" in
@@ -18,15 +17,15 @@ case "$RAILWAY_SERVICE_TARGET" in
 		exec bun server.ts
 		;;
 	bot)
-		# O bot usa o Prisma Client gerado dentro de backend/prisma/generated (mesmo
-		# schema, mesmo banco da API) — precisa ser gerado no filesystem deste
-		# container também.
+		# The bot uses the Prisma Client generated in backend/prisma/generated
+		# (same schema, same database as the API), so it must be generated on
+		# this container's filesystem too.
 		(cd backend && bunx prisma generate)
 		cd bot
 		exec bun run src/index.ts
 		;;
 	*)
-		echo "RAILWAY_SERVICE_TARGET precisa ser 'backend', 'frontend' ou 'bot' (valor atual: '${RAILWAY_SERVICE_TARGET}'). Configure essa variável nas Variables do serviço no Railway — ver docs/deploy-railway.md." >&2
+		echo "RAILWAY_SERVICE_TARGET must be 'backend', 'frontend' or 'bot' (current value: '${RAILWAY_SERVICE_TARGET}'). Set it in the service's Variables on Railway — see docs/deploy/railway.md." >&2
 		exit 1
 		;;
 esac

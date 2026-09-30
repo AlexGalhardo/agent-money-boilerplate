@@ -4,6 +4,9 @@ Skills vendored (copied) from upstream repositories. To update one, clone
 the repo at the desired commit and replace the matching folder — don't edit
 the files by hand, so they don't drift from upstream.
 
+Not vendored: `agent-money-*` are this project's own skills — edit them
+freely and keep them in sync with `docs/workflows.md`.
+
 | Skill(s)                                                                                                                                                                                                         | Repository                                                                            | Commit                                     | License                        |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------ |
 | `impeccable` (+ `.claude/agents/impeccable-*.md`)                                                                                                                                                                | [pbakaus/impeccable](https://github.com/pbakaus/impeccable)                           | `9d715cc4f5564a990ca8345abfdd5df6dc9b41c8` | Apache-2.0                     |

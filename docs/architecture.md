@@ -2,113 +2,117 @@
 
 ## What this is
 
-**Agent Money Boilerplate** — a forkable personal finance boilerplate
-(transactions, categories, visual reports) built to demonstrate a
-multi-client product sharing one backend: a REST API, a web dashboard, a
-Telegram bot and a mobile app, all driven by the same auth, business
-rules and database.
-
-A Bun monorepo with four workspaces (`backend`, `frontend`, `bot`,
-`mobile`) plus two clients that consume the API without being a workspace
-of their own (`bot` and `mobile` import `@agent-money-boilerplate/backend`
-directly):
+**Agent Money Boilerplate** — a forkable personal-finance boilerplate
+(transactions, categories, reports, PIX subscriptions) that shows one
+backend serving five clients: a REST API with a public developer API, a
+web dashboard, a Telegram bot, a mobile app and a desktop app — same auth,
+same business rules, same database.
 
 ```text
-/backend/       → ElysiaJS (REST API, auth, payments, cron)
-/frontend/      → TanStack Start (SSR web dashboard)
-/bot/           → Telegram bot (reuses the API's Prisma/encryption/business rules)
-/mobile/        → Expo + React Native (same API as frontend/bot, no backend of its own)
-/http-client/   → reference HTTP calls (api.http)
-/docs/          → this directory — setup, deploy and architecture guides
-/setups/        → executable setup/deploy shell scripts
-/infra/         → Dockerfile, docker-compose*.yml, Caddyfiles, PM2 ecosystem configs
+backend/    ElysiaJS API — auth, transactions, payments, cron, OpenAPI spec
+frontend/   TanStack Start (SSR) web dashboard; proxies API paths through its origin
+bot/        Telegram bot (grammY) — calls backend services in-process, no HTTP
+mobile/     Expo + React Native app — talks to the API over HTTP (Eden)
+desktop-electronjs/  Electron shell that loads the web dashboard (ADR 0009)
+scripts/    dev.ts (whole local stack), qa.ts (QA/pentest pass over every app)
+infra/      Dockerfiles, docker-compose files, Caddyfiles, PM2 configs
+setups/     setup and deploy shell scripts (scripts/common.sh = shared functions)
+docs/       this knowledge base
 ```
-
-"Agent Money Boilerplate" is the repository's public/README identity. The
-running app's own UI branding and the `@agent-money-boilerplate/*` package
-scope both use this same name now (renamed 2026-09-20, along with a
-Portuguese "Elysia Finanças" name that preceded it).
 
 ## Stack
 
-| Layer         | Technology                                                                               |
-| ------------- | ---------------------------------------------------------------------------------------- |
-| Runtime / API | Bun + ElysiaJS                                                                           |
-| ORM           | Prisma (dual schema: `schema.sqlite.prisma` and `schema.postgresql.prisma`)              |
-| Validation    | Zod                                                                                      |
-| Auth          | better-auth (cookie sessions, optional 2FA plugin)                                       |
-| Frontend      | TanStack Start + Tailwind CSS v4                                                         |
-| Mobile        | Expo + React Native + NativeWind (sessions via @better-auth/expo, no backend of its own) |
-| Testing       | `bun:test` (unit/integration/smoke) + Playwright (E2E)                                   |
-| Lint/format   | Biome (tabs, 120-column lines)                                                           |
+| Layer    | Technology                                                                                             |
+| -------- | ------------------------------------------------------------------------------------------------------ |
+| Runtime  | Bun ≥ 1.4 (lockfile generated with bun 1.3.14 — see `tooling.md`)                                      |
+| API      | ElysiaJS + Zod (validation, response schemas, OpenAPI via `@elysiajs/openapi`)                         |
+| Auth     | better-auth — cookie sessions, optional 2FA, API keys (`x-api-key`), Expo plugin                       |
+| Database | Prisma 7 with two schemas (`schema.sqlite.prisma` / `schema.postgresql.prisma`)                        |
+| Web      | TanStack Start + TanStack Query + Tailwind CSS v4; Scalar for the API reference                        |
+| Mobile   | Expo SDK 57, Expo Router, NativeWind v4 (dark-only token system)                                       |
+| Bot      | grammY + @grammyjs/conversations, pdfkit reports                                                       |
+| Desktop  | Electron 44 + electron-builder (NSIS, AppImage, ad hoc signed macOS .app)                              |
+| Payments | AbacatePay PIX (transparent checkout v2)                                                               |
+| E-mail   | Resend + react-email                                                                                   |
+| Tests    | `bun:test` (backend, bot, frontend unit), Jest (mobile), Playwright (web + Expo web), Maestro (native) |
+| Tooling  | Biome (TS/JS/JSON/CSS), Prettier + markdownlint (Markdown), commitlint, Husky                          |
 
-## End-to-end typing
+## Backend layering
 
-The API and the frontend/mobile share types via
-[Eden](https://elysiajs.com/eden/overview.html)
-(`frontend/src/lib/api.ts` and `mobile/src/lib/api.ts` import the `App`
-type exported by `backend/src/server.ts`) — any new backend route is
-already typed on both clients without generating anything.
+Each domain lives in `backend/src/modules/<domain>/`:
 
-## `bunfig.toml`: why `install.linker = "hoisted"`
+```text
+<domain>.schema.ts      Zod request/response schemas + DTO types (the contract)
+<domain>.routes.ts      Elysia routes: validation, auth guard, OpenAPI `detail`; no logic
+<domain>.service.ts     business rules; throws AppError subclasses; testable in isolation
+<domain>.repository.ts  the only layer that touches Prisma
+```
 
-This pins a single `node_modules` tree (instead of bun's default
-"isolated" linker) — **required for the Metro bundler (Expo) to work** in
-this monorepo: under "isolated", Metro doesn't understand the symlink
-structure inside `node_modules/.bun` (reproduced failures:
-`"tracked as a non-empty directory"` in the file crawler, and
-`MODULE_NOT_FOUND` loading Babel plugins).
+- `src/app.ts` builds the app (CORS, OpenAPI, global error mapper, routes)
+  without listening; `src/server.ts` only calls `listen()` and re-exports
+  the `App` type for Eden. Tests and tools import `app.ts`.
+- **Errors**: expected failures extend `AppError` (`src/lib/errors.ts`) with
+  an HTTP status; one `onError` in `app.ts` turns them into
+  `{ success: false, message }`. Validation errors answer
+  `{ success: false, message: "Dados inválidos", errors: [...] }` without
+  echoing schemas; anything else is logged and answered with a generic 500.
+- **Auth**: the `auth` macro (`src/lib/auth.plugin.ts`) resolves the
+  better-auth session from the cookie **or** an `x-api-key` header; invalid
+  credentials → 401.
+- **Encryption at rest**: transaction `description`/`amount` and
+  `user.autoGeneratedPassword` are AES-256-GCM encrypted with
+  `ENCRYPTION_KEY` (`src/lib/encryption.ts`). Text search therefore happens
+  in memory after decrypting (fine at this app's volume).
+- **Plans**: the free plan allows 10 transactions (`src/lib/plan.ts`,
+  `transactionAllowance`); PIX payments extend `planExpiresAt`.
 
-Side effect (positive): hoisted resolution incidentally fixes an `elysia`
-type duplication between `backend/` and `mobile/` that broke the Eden
-`treaty<App>()` typecheck under "isolated". Side effect (negative):
-`nativewind` (only `mobile/` depends on it) also gets hoisted to the root
-and starts resolving the frontend's Tailwind CSS v4 instead of the v3 it
-requires — patched in `mobile/metro.config.js` (commented there, along
-with why `maxWorkers = 1` is also necessary). Don't remove `bunfig.toml`
-without understanding these implications.
+## How each client reaches the backend
 
-## `bun.lock`: why it must stay `"lockfileVersion": 1`
+| Client     | Transport                                                                                                                       | Auth                                                                                                              | Notes                                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web        | HTTP through its own origin — `frontend/server.ts` (prod) and Vite's proxy (dev) forward the paths in `frontend/proxy-paths.ts` | session cookie                                                                                                    | Frontend and API are different Railway domains; proxying makes the API's `Set-Cookie` land on the frontend domain so SSR (`getServerSession`) sees it                 |
+| Mobile     | HTTP, Eden treaty (`mobile/src/lib/api.ts`)                                                                                     | cookie stored by `@better-auth/expo` in SecureStore, re-attached by a custom fetcher (web build: browser cookies) | Eden revives ISO dates into `Date` objects — normalize at the query layer (`mobile/src/query/normalize.ts`)                                                           |
+| Bot        | **in-process** imports from `@agent-money-boilerplate/backend`                                                                  | chat ↔ account link (`user.telegramChatId`)                                                                       | No HTTP layer: route validation and better-auth's HTTP rate limiting don't apply — the bot validates with the backend's Zod schemas and has its own per-chat lockouts |
+| Desktop    | Loads the web dashboard's URL in a sandboxed window (`desktop-electronjs/src/main.ts`)                                          | same session cookie as the web (same origin)                                                                      | No client code of its own; foreign origins open in the system browser, so Google login finishes in the browser — use e-mail/password in the app                       |
+| Developers | HTTP, OpenAPI 3.1 at `/openapi/json`, rendered by Scalar on the web's `/api` page                                               | `x-api-key`                                                                                                       | Only `/transactions*` is documented                                                                                                                                   |
 
-Android build images on EAS (used by `mobile/`) ship at most bun 1.3.14,
-which doesn't understand the `"lockfileVersion": 2` format that bun >= 1.4
-writes by default (reproduced error: `UnknownLockfileVersion` +
-`lockfile had changes, but lockfile is frozen` during the build). Newer
-bun (1.4.x, used in `infra/Dockerfile` and locally) reads the v1 format
-fine — it just can't be the one that _generates_ the lockfile.
+End-to-end types: `frontend/src/lib/api.ts` and `mobile/src/lib/api.ts`
+import `type App` from `backend/src/server.ts`, so a breaking API change
+fails the clients' typecheck.
 
-Whenever you add or update a dependency, regenerate the lockfile with a
-pinned bun version instead of the globally installed one:
-`npx bun@1.3.14 install` (no global install needed — `npx`/`bunx` fetches
-the right binary on demand). The `pre-commit` hook (`.husky/pre-commit`)
-blocks the commit if a staged `bun.lock` has any `lockfileVersion` other
-than 1. This restriction can be dropped once Expo ships a build image
-with bun >= 1.4.
+## Telegram linking
 
-## Mobile: light/dark theme
+A chat can only be linked by proving control of the account: the bot's
+e-mail/password login (rate-limited per chat), or a single-use 15-minute
+token the bot sends as a link to the web page `/telegram-vincular`, which
+redeems it for the logged-in account (works for Google and 2FA accounts).
+Linking by typing an ID was removed in the 2026-09-27 security audit.
+Unlinking: `DELETE /telegram/link` (web/mobile) or "Trocar de conta" in the bot.
 
-`mobile/src/lib/theme.ts` wraps NativeWind's built-in `colorScheme`
-controller (`tailwind.config.js` sets `darkMode: "class"`, required for
-manual toggling — with the default `"media"` it only ever follows the OS
-setting) with persistence via `expo-secure-store`. `useApplyStoredTheme()`
-runs once at the root layout; every screen/component reads
-`useAppColorScheme()` for `{ colorScheme, isDark, setTheme }`.
+## Monorepo quirks (don't undo without reading)
 
-`dark:` Tailwind variants only affect `className`, but several shared UI
-atoms (`Button`, `Chip`, `TextField`, `DateField`) pass raw hex colors
-through `style={{ ... }}` props to third-party components (reacticx's
-`Button`, the `AnimatedInputBar` input) that don't accept `className`.
-Those components call `useAppColorScheme()` directly and branch the hex
-value in JS instead — keep that pattern for any new shared atom that also
-takes color via a `style` prop, rather than assuming `dark:` classes will
-reach it.
+- **`bunfig.toml` → `install.linker = "hoisted"`** — Metro (Expo) can't walk
+  bun's isolated `node_modules/.bun` symlinks. Side effect: `nativewind`
+  resolves the frontend's Tailwind v4 instead of its v3; patched in
+  `mobile/metro.config.js` plus `patches/nativewind@4.2.7.patch` (hence
+  every Dockerfile must `COPY patches`).
+- **`bun.lock` must stay `lockfileVersion: 1`** — EAS build images ship bun
+  1.3.14. Regenerate only with `npx bun@1.3.14 install`; the pre-commit hook
+  enforces it.
+- **Two Prisma schemas** — Prisma can't switch providers dynamically; keep
+  both files identical except the provider. `DATABASE_PROVIDER` selects one
+  in `backend/prisma7.config.ts`; the generated client must match the
+  active provider (`bun run db:generate[:postgres]`).
+- **Mobile `EXPO_PUBLIC_*`** — inlined at transform time; exporting with a
+  different value needs `--clear`.
 
-## Docker/Railway build note
+## Mobile UI
 
-`bun.lock`'s `patchedDependencies` entry for `nativewind` (declared in the
-root `package.json`, only actually needed by `mobile/`) applies to every
-`bun install` run against this workspace, including inside
-`infra/Dockerfile`'s `install` stage, which never copies `mobile/` itself.
-The Dockerfile must still `COPY patches ./patches` before `bun install
---frozen-lockfile`, or the install fails with `Couldn't find patch file`
-(this broke the Railway deploy once — see `docs/deploy-railway.md`).
+Dark-only, NativeWind classes generated from `mobile/src/theme/palette.js`.
+Full rules: [`design-system.md`](./design-system.md).
+
+## Deployment topology
+
+Production: Railway (three services from `infra/Dockerfile` + Postgres),
+gated by CI. Alternatives: VPS (Docker or PM2 + Caddy), Vercel + Fly.io.
+Mobile: EAS Build. See [`deploy/`](./deploy).

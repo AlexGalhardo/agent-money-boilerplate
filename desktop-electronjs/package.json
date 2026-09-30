@@ -1,0 +1,22 @@
+{
+	"name": "@agent-money-boilerplate/desktop-electronjs",
+	"productName": "Agent Money",
+	"description": "Agent Money desktop app (Electron shell around the web dashboard).",
+	"author": "Alex Galhardo",
+	"private": true,
+	"version": "0.1.0",
+	"main": "dist/main.js",
+	"appUrl": "http://localhost:4001",
+	"scripts": {
+		"build": "bun build src/main.ts --outfile dist/main.js --target node --format cjs --external electron",
+		"start": "bun run build && electron .",
+		"smoke": "bun run build && electron . --smoke",
+		"dist": "bun run build && electron-builder",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"@types/node": "22.20.2",
+		"electron": "44.5.0",
+		"electron-builder": "26.15.3"
+	}
+}

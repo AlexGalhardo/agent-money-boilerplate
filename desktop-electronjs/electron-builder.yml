@@ -1,0 +1,27 @@
+# `bun run dist` packages the current OS only (electron-builder cannot build
+# macOS off a Mac); the release workflow runs it on each runner.
+appId: com.elysiagalhardofinances.money.desktop
+productName: Agent Money
+executableName: agent-money
+directories:
+  output: release
+  # The repo .gitignore ignores `build/`, electron-builder's default.
+  buildResources: assets
+files:
+  - dist/**
+  - assets/icon.png
+  - package.json
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+linux:
+  target: AppImage
+  category: Finance
+mac:
+  # Unsigned: the workflow ad hoc signs the .app (Apple Silicon refuses
+  # unsigned code) and zips it. A dmg/notarization needs a Developer ID.
+  target: dir
+  category: public.app-category.finance
+  identity: null

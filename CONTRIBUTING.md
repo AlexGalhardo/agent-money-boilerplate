@@ -83,7 +83,9 @@ releases.
 
 Each relevant release (typically when closing out a set of changes on
 `main`) gets a `vX.Y.Z` tag and a matching
-[GitHub Release](../../releases) summarizing the changes.
+[GitHub Release](../../releases) summarizing the changes. Every PR adds
+its user-facing changes under `## [Unreleased]` in
+[`CHANGELOG.md`](./CHANGELOG.md) ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/)).
 
 ## Code
 
