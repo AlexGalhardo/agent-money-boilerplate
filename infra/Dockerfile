@@ -1,31 +1,27 @@
-# Imagem única para os 3 serviços do Railway (backend, frontend, bot).
+# Single image for the 3 Railway services (backend, frontend, bot).
 #
-# Por que isso não é um Dockerfile com "FROM base AS backend / AS frontend
-# / AS bot" selecionado via `docker build --target` por serviço, como no
-# desenho original: o Railway NÃO suporta escolher um build target de
-# multi-stage Dockerfile por serviço — ele sempre builda o Dockerfile
-# inteiro (confirmado por um funcionário da Railway em
+# Why not one Dockerfile with "FROM base AS backend / AS frontend / AS bot"
+# picked per service via `docker build --target`: Railway does NOT support
+# choosing a multi-stage build target per service — it always builds the
+# whole Dockerfile (confirmed by Railway staff at
 # https://station.railway.com/questions/use-dockerfile-targets-564aea7a).
-# A alternativa aqui — recomendada pela própria comunidade da Railway como
-# workaround — é ter UM único estágio final ("runtime") com os 3 serviços
-# dentro da mesma imagem; cada Railway service aponta pra essa mesma
-# imagem/Dockerfile e escolhe qual processo rodar através da variável de
-# ambiente RAILWAY_SERVICE_TARGET (backend | frontend | bot), lida pelo
-# railway-entrypoint.sh. Isso ainda entrega os objetivos originais: um
-# único Dockerfile como fonte da verdade, e cada serviço no Railway com
-# deploy, logs, restart, scaling e variáveis de ambiente independentes.
-# Passo a passo completo: docs/deploy/railway.md. Fica em infra/ (não na
-# raiz) — o Railway não detecta isso automaticamente, então o "Dockerfile
-# Path" de cada um dos 3 serviços precisa apontar pra infra/Dockerfile
-# explicitamente (ver docs/deploy/railway.md).
+# The workaround the Railway community recommends is ONE final stage
+# ("runtime") holding all 3 services; every Railway service points at this
+# same image/Dockerfile and picks its process through the
+# RAILWAY_SERVICE_TARGET env var (backend | frontend | bot), read by
+# railway-entrypoint.sh. That still gives one Dockerfile as the source of
+# truth, with independent deploys, logs, restarts, scaling and env vars per
+# service. Full walkthrough: docs/deploy/railway.md. It lives in infra/ (not
+# the root), which Railway doesn't detect, so each service's "Dockerfile
+# Path" must point at infra/Dockerfile explicitly.
 #
-# Uso local (fora do Railway, rode a partir da raiz do repo):
+# Local use (outside Railway, run from the repo root):
 #   docker build -f infra/Dockerfile -t agent-money-boilerplate .
 #   docker run -p 4000:4000 -e RAILWAY_SERVICE_TARGET=backend --env-file backend/.env agent-money-boilerplate
 #
-# Para desenvolvimento local com Docker, prefira infra/docker-compose.yml /
-# infra/docker-compose.sqlite.yml — builda cada serviço a partir do seu
-# próprio Dockerfile (backend/, frontend/, bot/) e já sobe um banco junto.
+# For local development with Docker, prefer infra/docker-compose.yml /
+# infra/docker-compose.sqlite.yml — they build each service from its own
+# Dockerfile (backend/, frontend/, bot/) and start a database alongside.
 
 FROM oven/bun:1.4-alpine AS base
 WORKDIR /repo
@@ -43,15 +39,13 @@ COPY bot/package.json ./bot/package.json
 COPY patches ./patches
 RUN bun install --frozen-lockfile
 
-# O bundle SSR do frontend é gerado aqui mesmo que o container final vá
-# rodar como backend/bot — mais simples manter uma única imagem com tudo
-# pronto do que condicionar o build ao valor de uma env var em build time
-# (o Railway não permite variar isso por serviço, ver comentário acima).
+# The frontend SSR bundle is built even when the container will run as
+# backend/bot — one ready-made image is simpler than making the build depend
+# on a build-time env var (Railway can't vary it per service, see above).
 FROM install AS frontend-build
-# backend/src é necessário apenas para a resolução de tipos do Eden client
+# backend/src is only needed to resolve the Eden client types
 # (import type { App } from "@agent-money-boilerplate/backend/src/server")
-# durante o build — o runtime final não executa esse código do zero, só a
-# API "de verdade" (estágio runtime, mais abaixo) que roda quando
+# during the build; the API itself runs from the runtime stage below when
 # RAILWAY_SERVICE_TARGET=backend.
 COPY backend/src ./backend/src
 COPY backend/tsconfig.json ./backend/tsconfig.json
@@ -71,9 +65,8 @@ RUN chmod +x railway-entrypoint.sh \
 	&& mkdir -p /data && chown bun:bun /data
 USER bun
 
-# A API escuta em $PORT (padrão 4000) e o frontend em $PORT (padrão 4001,
-# ver frontend/server.ts) — o Railway injeta PORT automaticamente por
-# serviço, então normalmente você não precisa tocar nisso. O bot não expõe
-# porta nenhuma (é um worker, não um servidor HTTP).
+# The API listens on $PORT (default 4000) and the frontend on $PORT (default
+# 4001, see frontend/server.ts) — Railway injects PORT per service. The bot
+# exposes no port (it's a worker, not an HTTP server).
 EXPOSE 4000 4001
 ENTRYPOINT ["./railway-entrypoint.sh"]

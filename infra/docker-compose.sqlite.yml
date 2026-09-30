@@ -12,9 +12,9 @@ services:
       - sqlite_data:/data
     ports:
       - "4000:4000"
-      # Prisma Studio (sob demanda, ver `print_prisma_studio_hint` em
-      # scripts/common.sh) — o SQLite fica num volume nomeado, só visível
-      # de dentro do container, então o Studio também precisa rodar lá.
+      # Prisma Studio (on demand, see `print_prisma_studio_hint` in
+      # scripts/common.sh) — SQLite lives in a named volume visible
+      # only inside the container, so Studio has to run there too.
       - "5555:5555"
 
   frontend:
@@ -24,11 +24,11 @@ services:
       args:
         VITE_API_URL: http://localhost:4000
     environment:
-      # Diferente do build arg acima (usado pelo navegador): esse é lido em
-      # runtime pelo proxy de /auth, /users, /transactions etc. embutido em
-      # frontend/server.ts (ver frontend/proxy-paths.ts) — dentro do container
-      # "localhost" seria o próprio frontend, não o backend, então precisa do
-      # hostname do serviço na rede do compose.
+      # Unlike the build arg above (used by the browser), this is read at
+      # runtime by the /auth, /users, /transactions… proxy in
+      # frontend/server.ts (see frontend/proxy-paths.ts) — inside the
+      # container "localhost" is the frontend itself, so it needs the
+      # backend's service hostname on the compose network.
       VITE_API_URL: http://backend:4000
     ports:
       - "4001:4001"

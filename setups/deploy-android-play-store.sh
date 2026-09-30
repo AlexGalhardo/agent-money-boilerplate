@@ -1,65 +1,65 @@
 #!/usr/bin/env bash
-# Deploy "profissional" na Google Play: gera o .aab (Android App Bundle —
-# formato exigido pela Play Store, diferente do .apk usado pra sideload em
-# deploy-android-apk.sh) via EAS Build e, opcionalmente, já submete pra
-# faixa "internal testing" via EAS Submit.
+# Google Play release: builds the .aab (Android App Bundle — the format the
+# Play Store requires, unlike the sideload .apk from deploy-android-apk.sh)
+# via EAS Build and, optionally, submits it to the "internal testing" track
+# via EAS Submit.
 #
-# Pré-requisitos (só precisam ser feitos uma vez, manualmente):
-#   1. Conta Expo (https://expo.dev) — `eas login`.
-#   2. Conta de desenvolvedor Google Play (taxa única de USD 25,
-#      https://play.google.com/console) com o app já criado lá (nome,
-#      ficha na loja, política de privacidade — a Play Store exige uma
-#      URL publicada antes de aceitar qualquer build).
-#   3. Uma Service Account do Google Cloud com permissão de "Release
-#      manager" vinculada ao Play Console (Configurações > Acesso à API),
-#      com a chave JSON salva em mobile/google-play-service-account.json
-#      (arquivo sensível — NUNCA commitar; já coberto pelo .gitignore).
-#   4. mobile/.env com EXPO_PUBLIC_API_URL apontando pra API de produção.
+# Prerequisites (one-time, manual):
+#   1. Expo account (https://expo.dev) — `eas login`.
+#   2. Google Play developer account (one-time USD 25 fee,
+#      https://play.google.com/console) with the app already created there
+#      (name, store listing, privacy policy — the Play Store requires a
+#      published URL before it accepts any build).
+#   3. A Google Cloud Service Account with the "Release manager" permission
+#      linked to the Play Console (Settings > API access), its JSON key
+#      saved at mobile/google-play-service-account.json (sensitive — NEVER
+#      commit it; already covered by .gitignore).
+#   4. mobile/.env with EXPO_PUBLIC_API_URL pointing at the production API.
 #
-# Uso:
-#   ./setups/deploy-android-play-store.sh              # só builda o .aab
-#   ./setups/deploy-android-play-store.sh --submit      # builda e já submete (faixa "internal", ver mobile/eas.json)
+# Usage:
+#   ./setups/deploy-android-play-store.sh              # build the .aab only
+#   ./setups/deploy-android-play-store.sh --submit      # build and submit ("internal" track, see mobile/eas.json)
 
 set -e
 cd "$(dirname "$0")/../mobile"
 
 if ! command -v bun >/dev/null 2>&1; then
-	echo "Bun não encontrado. Instale em https://bun.sh antes de continuar." >&2
+	echo "Bun not found. Install it from https://bun.sh before continuing." >&2
 	exit 1
 fi
 
-echo "==> Instalando dependências (bun install)"
+echo "==> Installing dependencies (bun install)"
 bun install
 
 if [ ! -f .env ]; then
-	echo "mobile/.env não encontrado. Copie mobile/.env.example para mobile/.env e configure EXPO_PUBLIC_API_URL (apontando para a API de produção) antes de continuar." >&2
+	echo "mobile/.env not found. Copy mobile/.env.example to mobile/.env and set EXPO_PUBLIC_API_URL (pointing at the production API) before continuing." >&2
 	exit 1
 fi
 
-# Versão fixa (não "@latest") — ver deploy-android-apk.sh para o motivo.
-echo "==> Verificando login na Expo (eas whoami)"
+# Pinned version (not "@latest") — see deploy-android-apk.sh for why.
+echo "==> Checking Expo login (eas whoami)"
 if ! bunx eas-cli@24.7.0 whoami >/dev/null 2>&1; then
-	echo "Você não está logado na Expo. Rode 'bunx eas-cli@24.7.0 login' e tente de novo." >&2
+	echo "You are not logged in to Expo. Run 'bunx eas-cli@24.7.0 login' and try again." >&2
 	exit 1
 fi
 
-echo "==> Build de produção do .aab (perfil production, autoIncrement de versionCode ligado)"
+echo "==> Production .aab build (production profile, versionCode autoIncrement on)"
 bunx eas-cli@24.7.0 build --platform android --profile production --non-interactive
 
 if [ "$1" = "--submit" ]; then
 	if [ ! -f google-play-service-account.json ]; then
-		echo "mobile/google-play-service-account.json não encontrado — não dá pra submeter automaticamente." >&2
-		echo "Baixe a chave da Service Account no Google Cloud Console (ver comentário no topo deste script) e salve nesse caminho, ou suba o .aab manualmente em https://play.google.com/console." >&2
+		echo "mobile/google-play-service-account.json not found — can't submit automatically." >&2
+		echo "Download the Service Account key from the Google Cloud Console (see the comment at the top of this script) and save it at that path, or upload the .aab manually at https://play.google.com/console." >&2
 		exit 1
 	fi
-	echo "==> Submetendo o build mais recente pra faixa 'internal' da Play Store"
+	echo "==> Submitting the latest build to the Play Store 'internal' track"
 	bunx eas-cli@24.7.0 submit --platform android --profile production --latest
 	echo ""
-	echo "Enviado. Acompanhe o processamento em https://play.google.com/console — a faixa"
-	echo "'internal testing' costuma liberar em minutos; promover pra produção é manual."
+	echo "Submitted. Follow processing at https://play.google.com/console — the"
+	echo "'internal testing' track usually goes live in minutes; promoting to production is manual."
 else
 	echo ""
-	echo "Build do .aab concluído (link acima, ou em https://expo.dev). Pra publicar:"
+	echo ".aab build finished (link above, or at https://expo.dev). To publish:"
 	echo "  ./setups/deploy-android-play-store.sh --submit"
-	echo "ou suba o .aab manualmente em https://play.google.com/console."
+	echo "or upload the .aab manually at https://play.google.com/console."
 fi

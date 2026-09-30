@@ -234,7 +234,7 @@ Skills: `documentation-and-adrs`, `context-engineering`, `git-workflow-and-versi
 - [x] PM2 + Postgres setup called `docker compose` without `-f infra/...` → fixed
 - [x] AbacatePay dev key hardcoded in `scripts/common.sh` → prompted at setup (rotation pending)
 - [x] Four near-identical setup scripts consolidated into `setups/setup-docker.sh` and `setups/setup-pm2.sh` (WSL/Git Bash detection), translated to English
-- [ ] Translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`, `infra/*` comments
+- [x] Translate `setups/railway-entrypoint.sh`, `setups/deploy-android-*.sh`, `infra/*` comments
 
 ## Group 9 — Final verification and handoff
 

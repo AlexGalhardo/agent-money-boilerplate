@@ -1,8 +1,8 @@
-// PM2 para desenvolvimento local sem Docker — roda os 3 workspaces em modo
-// watch (`bun run dev` de cada um). Diferente de ecosystem.config.js
-// (deploy em VPS), que espera os builds já compilados (backend/server binário,
-// frontend/server.ts + frontend/dist) e não serve para iterar localmente.
-// Usado por setup-unix-using-pm2.sh e setup-windows-using-pm2.sh.
+// PM2 for local development without Docker — runs the 3 workspaces in watch
+// mode (`bun run dev` in each). Unlike ecosystem.config.js (VPS deploy),
+// which expects compiled builds (backend/server binary, frontend/server.ts +
+// frontend/dist) and isn't meant for iterating locally.
+// Used by setups/setup-pm2.sh.
 module.exports = {
 	apps: [
 		{
