@@ -24,6 +24,8 @@
 		".agents/skills/**",
 		"**/dist/**",
 		"**/.tanstack/**",
-		"TODO.md"
+		"TODO.md",
+		"qa-report.md",
+		"**/.expo/**"
 	]
 }
