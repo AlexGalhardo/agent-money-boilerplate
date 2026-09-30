@@ -527,6 +527,10 @@ await group("web", async () => {
 	// Every public page renders, has a title and no image without alt text
 	const context = await browser.newContext();
 	const page = await context.newPage();
+	// A cold Vite dev server optimizes deps on the first page load and the
+	// client entry import can fail meanwhile — load once before counting errors.
+	await page.goto(WEB);
+	await page.waitForLoadState("networkidle");
 	const errors = trackErrors(page);
 	for (const route of PUBLIC_ROUTES) {
 		errors.length = 0;
