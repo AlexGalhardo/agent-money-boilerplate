@@ -205,8 +205,8 @@ Skills: `test-driven-development`, `browser-testing-with-devtools`
 
 - [x] Keep Maestro as the native E2E runner (flows in `mobile/maestro/`, updated for the redesign, stable `nav-*` testIDs)
 - [x] Playwright suite on the Expo web build (`mobile/e2e-web/`, `bun run test:e2e:web`) — 6 flows passing against the real API
-- [ ] Run flows on an emulator — **blocked here**: no Android SDK/Java/Maestro on this machine (see chat suggestion)
-- [ ] Add CI job that runs Maestro on an Android emulator (optional, needs user confirmation — CI minutes)
+- [x] Run flows on an emulator — Maestro 2.11.0 on a local release APK, 2/2 green (2026-09-30); found and fixed the amount-field caret bug and three flow selector bugs
+- [x] ~~Add CI job that runs Maestro on an Android emulator~~ — declined by the user (2026-09-30); run locally, see `mobile/maestro/README.md`
 
 ## Group 8 — Docs, changelog, skills
 
@@ -256,5 +256,4 @@ Skills: `code-review-and-quality`, `shipping-and-launch`, `open-source-guideline
 ## Open questions (for the user)
 
 - Rotate the API key hardcoded in the untracked `scripts/test.ts` and delete the file?
-- Install Android Studio + Maestro locally (or add a CI emulator job) to actually run mobile E2E?
 - The bot's `BOT_PASSWORD_HASH_BASE64` is one global password shared by every user of a multi-tenant bot — keep, or remove the feature?

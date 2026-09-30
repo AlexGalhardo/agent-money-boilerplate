@@ -45,6 +45,10 @@ All notable changes to this project are documented here. The format follows
 ### Fixed
 
 - Bot `/cancelar` was swallowed by an active conversation.
+- Mobile amount field: editing with the caret mid-value scrambled the amount
+  (the caret now stays at the end).
+- Maestro flows fixed and run on an Android emulator for the first time.
+- QA web group no longer flakes on a cold Vite dev server.
 - Bot PIX checkout error, main menu reachable before login, Google login link.
 - Nubank CSV import button styling and import modal width.
 - Invalid `x-api-key` answered 500 instead of 401.

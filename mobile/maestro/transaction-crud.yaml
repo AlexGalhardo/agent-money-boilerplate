@@ -21,7 +21,9 @@ appId: com.elysiagalhardofinances.money
 # Create — the center "+" in the bottom bar opens /transaction/new.
 - tapOn:
     id: "nav-new-transaction"
-- assertVisible: "Nova transação"
+# Not "Nova transação": the "+" button's accessibilityLabel matches it too.
+- assertVisible:
+    id: "field-Valor"
 - tapOn: "Despesa"
 - tapOn:
     id: "field-Valor"
@@ -43,7 +45,11 @@ appId: com.elysiagalhardofinances.money
 - assertVisible: "Maestro E2E Compra"
 
 # Edit — tapping the row opens /transaction/[id] pre-filled.
-- tapOn: "Maestro E2E Compra"
+# `below`: the search input holds the same text.
+- tapOn:
+    text: "Maestro E2E Compra"
+    below:
+      id: "search-input"
 - assertVisible: "Editar transação"
 - tapOn:
     id: "field-Valor"
@@ -53,10 +59,14 @@ appId: com.elysiagalhardofinances.money
 - tapOn: "Salvar alterações"
 # Saving goes back to the still-mounted search screen, which re-renders
 # with the new amount once the update invalidates the transactions query.
-- assertVisible: ".*R\$ 99,99"
+- assertVisible: '.*R\$ 99,99'
 
 # Delete — the form's own button, then the native confirmation.
-- tapOn: "Maestro E2E Compra"
+# `below`: the search input holds the same text.
+- tapOn:
+    text: "Maestro E2E Compra"
+    below:
+      id: "search-input"
 - assertVisible: "Editar transação"
 - scrollUntilVisible:
     element:
@@ -64,4 +74,4 @@ appId: com.elysiagalhardofinances.money
 - tapOn: "Excluir transação"
 - tapOn:
     text: "^Excluir$"
-- assertNotVisible: "Maestro E2E Compra"
+- assertVisible: "Nenhum resultado"
