@@ -149,6 +149,9 @@ export default function TransactionFormScreen() {
 					<TextInput
 						value={amountDisplay}
 						onChangeText={onChangeAmount}
+						// The mask shifts digits in from the right, so an edit mid-value
+						// (caret where the user tapped) would scramble the amount.
+						selection={{ start: amountDisplay.length, end: amountDisplay.length }}
 						placeholder="0,00"
 						placeholderTextColor={colors.subtle}
 						selectionColor={colors.brand}
