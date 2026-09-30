@@ -43,6 +43,16 @@ export function createBot(): Bot<BotContext> {
 	// no classic grammY `session()` needed.
 	bot.use(conversations());
 
+	// Escape hatch — works even mid-conversation. It must be registered before
+	// the createConversation() middlewares: an active conversation consumes
+	// every update that reaches it, so "/cancelar" registered after them was
+	// read as an answer ("Número inválido") instead of leaving the flow.
+	bot.command("cancelar", async (ctx) => {
+		await ctx.conversation.exitAll();
+		const { text, keyboard } = await buildMenu(ctx.chat?.id);
+		await ctx.reply(text, { parse_mode: "Markdown", reply_markup: keyboard });
+	});
+
 	const authorizedConversations = {
 		"add-expense": createAddTransactionConversation("expense", "despesa"),
 		"add-income": createAddTransactionConversation("income", "receita"),
@@ -57,14 +67,6 @@ export function createBot(): Bot<BotContext> {
 	for (const [id, conversation] of Object.entries(authorizedConversations)) {
 		bot.use(createConversation(withMainMenu(withAuthorizedUser(conversation)), id));
 	}
-
-	// Escape hatch — works even mid-conversation, since it leaves ALL of them
-	// before any other middleware sees the update.
-	bot.command("cancelar", async (ctx) => {
-		await ctx.conversation.exitAll();
-		const { text, keyboard } = await buildMenu(ctx.chat?.id);
-		await ctx.reply(text, { parse_mode: "Markdown", reply_markup: keyboard });
-	});
 
 	bot.command("start", async (ctx) => {
 		await ctx.conversation.enter("start");
