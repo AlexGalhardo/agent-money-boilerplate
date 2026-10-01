@@ -7,8 +7,7 @@ branches (see `.agents/skills/git-branch-workflow`).
 ```text
 push dev  ─┬─ ci.yml ───────────► Railway "sandbox" (waits for CI)
            └─ mobile-build.yml ─► EAS preview build (.apk)
-push main ─┬─ ci.yml ───────────► Railway "production" (waits for CI)
-           └─ mobile-build.yml ─► EAS production build (.aab, submit is manual)
+push main ─── ci.yml ───────────► Railway "production" (waits for CI)
 tag v*    ─── release.yml ──────► GitHub Release with every downloadable attached
 manual    ─── release.yml ──────► same builds as workflow artifacts, no release
 ```
@@ -38,10 +37,11 @@ be committed in sync (and stay `lockfileVersion: 1`, see
 [`../tooling.md`](../tooling.md)). Jobs that typecheck need
 `bun run db:generate` first: the Prisma Client is generated, not committed.
 
-### `mobile-build.yml` (push touching `mobile/`, `backend/`, `bun.lock`)
+### `mobile-build.yml` (push to `dev` touching `mobile/`, `backend/`, `bun.lock`)
 
-Queues an EAS build with `--no-wait` (`preview` on `dev`, `production` on
-`main`). Needs the `EXPO_TOKEN` repository secret. EAS builds count against
+Queues an EAS `preview` build with `--no-wait`. `main` is skipped: its APK
+comes from `release.yml` (no EAS quota) and `production` (.aab) builds are
+queued by hand (`eas build --profile production`). Needs the `EXPO_TOKEN` repository secret. EAS builds count against
 the Expo account's quota. `eas submit` is intentionally manual.
 
 ### `release.yml` (tag `v*`, or manual run)
@@ -57,8 +57,9 @@ the Expo account's quota. `eas submit` is intentionally manual.
 Binaries compile on their own OS because `@libsql/client` ships a native
 addon per platform. Repository variables `DESKTOP_APP_URL` (desktop app)
 and `MOBILE_API_URL` (APK/iOS build) override the production URLs baked
-into the builds. Store builds (signed AAB/IPA) stay on EAS
-(`mobile-build.yml`). `-alpha`/`-beta` tags become pre-releases. Tag after merging to `main` when the change deserves a
+into the builds. Store builds (signed AAB/IPA) stay on EAS,
+queued by hand. Tags with a pre-release suffix (`-rc`, `-beta`, …) become
+pre-releases. Tag after merging to `main` when the change deserves a
 release — see [`../workflows.md`](../workflows.md#releasing).
 
 ## Railway gate

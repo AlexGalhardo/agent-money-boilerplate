@@ -1,7 +1,7 @@
 {
 	"name": "@agent-money-boilerplate/mobile",
 	"main": "expo-router/entry",
-	"version": "0.1.0",
+	"version": "1.0.0-rc",
 	"private": true,
 	"dependencies": {
 		"@agent-money-boilerplate/backend": "workspace:*",

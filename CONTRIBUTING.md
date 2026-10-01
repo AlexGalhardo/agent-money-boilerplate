@@ -73,13 +73,11 @@ This project follows [SemVer 2.0.0](https://semver.org/)
 - **MINOR** — a new backwards-compatible feature.
 - **PATCH** — a backwards-compatible bug fix.
 
-While the version is `0.MINOR.PATCH` (as it is today — see the root
-`package.json`), the public API is considered unstable and incompatible
-changes may land in `MINOR` releases, as SemVer itself allows for the
-`0.x` series. The project moves to `1.0.0` once the API between the four
-workspaces (backend routes consumed by frontend/bot/mobile via Eden) is
-considered stable enough to guarantee compatibility across `MINOR`
-releases.
+The project is at `1.0.0-rc` (see the root `package.json`): the API
+between the workspaces (backend routes consumed by frontend/bot/mobile via
+Eden) is a release candidate for the compatibility guarantee above.
+Incompatible changes may still land before the final `1.0.0`; from then on
+they bump `MAJOR`.
 
 Each relevant release (typically when closing out a set of changes on
 `main`) gets a `vX.Y.Z` tag and a matching

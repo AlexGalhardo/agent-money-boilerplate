@@ -11,8 +11,9 @@ builders — a **paid/quota-limited** service), configured in `mobile/eas.json`:
 | `production`  | `.aab`     | Google Play (required format) |
 
 CI builds automatically (`.github/workflows/mobile-build.yml`, needs the
-`EXPO_TOKEN` secret): a push to `dev` queues a `preview` build, a push to
-`main` a `production` build. Store submission stays manual on purpose.
+`EXPO_TOKEN` secret): a push to `dev` queues a `preview` build. `main` gets
+no EAS build — its sideload APK is attached to each `v*` GitHub Release by
+`release.yml`, and `production` builds plus store submission stay manual.
 
 ## Prerequisites
 

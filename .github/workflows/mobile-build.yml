@@ -2,7 +2,7 @@ name: Mobile Build
 
 on:
   push:
-    branches: [main, dev]
+    branches: [dev]
     paths:
       - "mobile/**"
       - "backend/**"
@@ -27,14 +27,9 @@ jobs:
         with:
           eas-version: 24.7.0
           token: ${{ secrets.EXPO_TOKEN }}
-      # dev -> perfil "preview" (.apk pra sideload/teste), main -> perfil
-      # "production" (.aab pronto pra submissão manual na Play Store — ver
-      # setups/deploy-android-play-store.sh; `eas submit` continua manual de propósito).
+      # `dev` only: `preview` profile (.apk for sideloading). `main` builds no
+      # EAS binary — its APK comes from release.yml (Gradle, no EAS quota) and
+      # store builds (`production`, .aab) are queued by hand.
       - name: EAS Build (preview)
-        if: github.ref == 'refs/heads/dev'
         working-directory: mobile
         run: eas build --platform android --profile preview --non-interactive --no-wait
-      - name: EAS Build (production)
-        if: github.ref == 'refs/heads/main'
-        working-directory: mobile
-        run: eas build --platform android --profile production --non-interactive --no-wait
