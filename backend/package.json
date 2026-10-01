@@ -27,8 +27,8 @@
 		"start:e2e": "bun --env-file=.env.e2e run src/server.ts"
 	},
 	"dependencies": {
-		"@better-auth/api-key": "1.7.5",
-		"@better-auth/expo": "1.7.4",
+		"@better-auth/api-key": "1.7.6",
+		"@better-auth/expo": "1.7.6",
 		"@elysiajs/bearer": "1.4.4",
 		"@elysiajs/cors": "1.4.2",
 		"@elysiajs/eden": "1.4.9",
@@ -39,19 +39,19 @@
 		"@prisma/client": "7.10.0",
 		"@react-email/components": "1.0.12",
 		"@react-email/render": "2.1.0",
-		"better-auth": "1.7.4",
+		"better-auth": "1.7.6",
 		"elysia": "1.4.30",
 		"pg": "8.23.0",
-		"react": "19.2.3",
-		"react-dom": "19.2.3",
-		"react-email": "6.9.5",
-		"resend": "6.28.0",
-		"zod": "4.6.2"
+		"react": "19.3.0",
+		"react-dom": "19.3.0",
+		"react-email": "6.11.0",
+		"resend": "6.30.0",
+		"zod": "4.6.5"
 	},
 	"devDependencies": {
 		"@types/bun": "1.4.2",
 		"@types/pg": "8.23.1",
-		"@types/react": "19.2.18",
+		"@types/react": "19.3.0",
 		"prisma": "7.10.0"
 	}
 }
