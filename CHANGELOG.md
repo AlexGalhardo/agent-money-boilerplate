@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0-rc] - 2026-09-30
+
 ### Added
 
 - Electron desktop app (`desktop-electronjs/`), the fifth workspace, wrapping
@@ -34,6 +36,8 @@ All notable changes to this project are documented here. The format follows
 - Setup scripts consolidated into `setups/setup-docker.sh` and
   `setups/setup-pm2.sh`; setup and infra comments translated to English.
 - CI: desktop package and QA jobs, bot binary build, `scripts/` typecheck.
+- `mobile-build.yml` no longer queues an EAS `production` build on `main`;
+  the release APK comes from `release.yml`.
 
 ### Removed
 
@@ -141,5 +145,6 @@ recorded from the commit history.
 - Initial application: auth, dashboard, transactions, PIX payments, Telegram
   bot.
 
-[Unreleased]: https://github.com/AlexGalhardo/agent-money-boilerplate/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/AlexGalhardo/agent-money-boilerplate/compare/v1.0.0-rc...HEAD
+[1.0.0-rc]: https://github.com/AlexGalhardo/agent-money-boilerplate/compare/v0.1.0...v1.0.0-rc
 [0.1.0]: https://github.com/AlexGalhardo/agent-money-boilerplate/releases/tag/v0.1.0

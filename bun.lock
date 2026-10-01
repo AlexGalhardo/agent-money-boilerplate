@@ -18,7 +18,7 @@
     },
     "backend": {
       "name": "@agent-money-boilerplate/backend",
-      "version": "0.1.0",
+      "version": "1.0.0-rc",
       "dependencies": {
         "@better-auth/api-key": "1.7.5",
         "@better-auth/expo": "1.7.4",
@@ -50,7 +50,7 @@
     },
     "bot": {
       "name": "@agent-money-boilerplate/bot",
-      "version": "0.1.0",
+      "version": "1.0.0-rc",
       "dependencies": {
         "@agent-money-boilerplate/backend": "workspace:*",
         "@grammyjs/conversations": "2.1.1",
@@ -67,7 +67,7 @@
     },
     "desktop-electronjs": {
       "name": "@agent-money-boilerplate/desktop-electronjs",
-      "version": "0.1.0",
+      "version": "1.0.0-rc",
       "devDependencies": {
         "@types/node": "22.20.2",
         "electron": "44.5.0",
@@ -76,7 +76,7 @@
     },
     "frontend": {
       "name": "@agent-money-boilerplate/frontend",
-      "version": "0.1.0",
+      "version": "1.0.0-rc",
       "dependencies": {
         "@agent-money-boilerplate/backend": "workspace:*",
         "@better-auth/api-key": "1.7.5",
@@ -117,7 +117,7 @@
     },
     "mobile": {
       "name": "@agent-money-boilerplate/mobile",
-      "version": "0.1.0",
+      "version": "1.0.0-rc",
       "dependencies": {
         "@agent-money-boilerplate/backend": "workspace:*",
         "@better-auth/api-key": "1.7.5",
