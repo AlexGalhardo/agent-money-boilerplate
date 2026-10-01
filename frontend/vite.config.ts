@@ -12,6 +12,26 @@ const BACKEND_URL = process.env.VITE_API_URL ?? "http://localhost:4000";
 const config = defineConfig({
 	resolve: { tsconfigPaths: true },
 	plugins: [devtools(), tailwindcss(), tanstackStart(), viteReact()],
+	// The dep scanner misses these (reached only through TanStack Start's
+	// virtual entries and the lazily loaded auth client), so a cold dev server
+	// discovered them mid-session and force-reloaded every open page — which
+	// aborted in-flight navigations in the QA run (`net::ERR_ABORTED`).
+	optimizeDeps: {
+		include: [
+			"@tanstack/router-core",
+			"@tanstack/router-core/isServer",
+			"@tanstack/router-core/ssr/client",
+			"seroval",
+			"@better-auth/core/env",
+			"@better-auth/core/error",
+			"@better-auth/core/utils/error-codes",
+			"@better-auth/core/utils/string",
+			"@better-auth/core/utils/url",
+			"@better-fetch/fetch",
+			"defu",
+			"nanostores",
+		],
+	},
 	server: {
 		// Mirrors the production proxy (frontend/server.ts) in Vite's dev server
 		// so the session cookie behaves the same in both. A key starting with "^"

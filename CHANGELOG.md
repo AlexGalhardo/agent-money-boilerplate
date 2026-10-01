@@ -6,6 +6,12 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- QA web group aborted (`net::ERR_ABORTED`) on CI: a cold Vite dev server
+  discovered TanStack Start and Better Auth deps mid-session and force-reloaded
+  the page; they are now pre-bundled via `optimizeDeps.include`.
+
 ## [1.0.0-rc] - 2026-09-30
 
 ### Added
