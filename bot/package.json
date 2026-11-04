@@ -20,13 +20,13 @@
 		"@galhardoalex/telegram-logger": "1.0.1",
 		"@grammyjs/conversations": "2.1.1",
 		"bcryptjs": "3.0.3",
-		"better-auth": "1.7.4",
+		"better-auth": "1.7.15",
 		"grammy": "1.46.0",
 		"pdfkit": "0.20.2",
-		"zod": "4.6.2"
+		"zod": "4.6.7"
 	},
 	"devDependencies": {
-		"@types/bun": "1.4.3",
-		"@types/pdfkit": "0.17.6"
+		"@types/bun": "1.4.4",
+		"@types/pdfkit": "0.17.7"
 	}
 }
