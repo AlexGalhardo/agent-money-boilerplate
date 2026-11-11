@@ -16,11 +16,11 @@
 		"typecheck": "bun check --no-script"
 	},
 	"dependencies": {
-		"zod": "4.6.2"
+		"zod": "4.6.7"
 	},
 	"devDependencies": {
-		"@types/node": "22.20.2",
+		"@types/node": "26.6.6",
 		"electron": "44.5.0",
-		"electron-builder": "26.15.3"
+		"electron-builder": "26.18.0"
 	}
 }
